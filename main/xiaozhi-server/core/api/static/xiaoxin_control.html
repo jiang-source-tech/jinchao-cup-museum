@@ -1,0 +1,2562 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>小芯调控控制台</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      background: #f4f1ea;
+      color: #1f2933;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f4f1ea; }
+    main { max-width: 1180px; margin: 0 auto; padding: 20px; display: grid; gap: 16px; }
+    header { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; }
+    h1, h2, h3 { margin: 0; }
+    h1 { font-size: 26px; }
+    h2 { font-size: 18px; }
+    h3 { font-size: 15px; }
+    section {
+      background: #fffdf9;
+      border: 1px solid #d7d2c8;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    button, input, select, textarea { font: inherit; }
+    button {
+      min-height: 38px;
+      border: 1px solid #1f7a6b;
+      background: #1f7a6b;
+      color: #fff;
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: #fffdf9;
+      color: #1f7a6b;
+    }
+    button.active {
+      background: #8a3b12;
+      border-color: #8a3b12;
+      color: #fff;
+    }
+    button.danger {
+      background: #b42318;
+      border-color: #b42318;
+      color: #fff;
+    }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr); gap: 16px; }
+    .stack, .quick-actions, .deliveries { display: grid; gap: 8px; }
+    .quick-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .status { min-height: 24px; color: #52606d; }
+    .device-row, .delivery-row, .speaker-row, .subject-row {
+      display: grid;
+      gap: 8px;
+      align-items: center;
+      border-bottom: 1px solid #ece7dd;
+      padding: 8px 0;
+    }
+    .device-row { grid-template-columns: 20px minmax(0, 1fr) 96px 96px 96px 190px; }
+    .delivery-row { grid-template-columns: minmax(0, 1.2fr) 110px 110px minmax(0, 1fr); width: 100%; }
+    .speaker-row { grid-template-columns: minmax(0, 1fr) 140px 120px minmax(220px, 1.1fr); }
+    .subject-row { grid-template-columns: minmax(0, 1fr); align-items: start; }
+    .subject-row > span { min-width: 0; overflow-wrap: anywhere; }
+    .subject-row .inline-actions { justify-content: flex-start; min-width: 0; width: 100%; }
+    .subject-row .inline-actions select { flex: 1 1 220px; max-width: 100%; }
+    .device-row:last-child, .delivery-row:last-child, .speaker-row:last-child, .subject-row:last-child { border-bottom: 0; }
+    .subject-history { border-top: 1px solid #d9d2c5; padding-top: 10px; }
+    .subject-history summary { color: #52606d; cursor: pointer; font-weight: 600; }
+    .subject-history .stack { margin-top: 8px; }
+    .device-meta {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+    .device-subtitle {
+      color: #7b8794;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+    .device-action {
+      justify-self: end;
+      min-width: 72px;
+    }
+    .inline-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .compact-input {
+      min-width: 0;
+      flex: 1 1 140px;
+    }
+    .badge {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 28px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #e4e7eb;
+      color: #334e68;
+    }
+    .badge.connected { background: #d8f3dc; color: #2d6a4f; }
+    .badge.wakeable { background: #ffe8b3; color: #9c5f00; }
+    .badge.offline, .badge.failed { background: #ffd6d6; color: #a61b1b; }
+    .badge.bound { background: #dbeafe; color: #1d4ed8; }
+    .badge.unbound, .badge.seen { background: #fff2cc; color: #8a5a00; }
+    form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    label { display: grid; gap: 4px; color: #52606d; font-size: 13px; }
+    input, select, textarea {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid #c7c0b5;
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: #fff;
+      color: #102a43;
+    }
+    textarea { min-height: 78px; resize: vertical; }
+    .full { grid-column: 1 / -1; }
+    .hidden { display: none !important; }
+    .auth-layout {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .auth-card {
+      border: 1px solid #ece7dd;
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      background: #fff;
+    }
+    .auth-card form {
+      grid-template-columns: 1fr;
+    }
+    .auth-hint {
+      color: #7b8794;
+      font-size: 13px;
+    }
+    .auth-message {
+      min-height: 20px;
+      color: #8a3b12;
+      font-size: 13px;
+    }
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border: 1px solid #d7d2c8;
+      border-radius: 999px;
+      background: #fffdf9;
+      color: #334e68;
+    }
+    pre {
+      margin: 0;
+      min-height: 72px;
+      max-width: 100%;
+      overflow: auto;
+      white-space: pre-wrap;
+      color: #334e68;
+      font-size: 13px;
+    }
+    .empty {
+      color: #7b8794;
+      min-height: 28px;
+      display: flex;
+      align-items: center;
+    }
+    .memory-panel {
+      display: grid;
+      gap: 12px;
+    }
+    .memory-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .memory-stat {
+      border: 1px solid #ece7dd;
+      border-radius: 6px;
+      padding: 10px;
+      background: #fff;
+      display: grid;
+      gap: 4px;
+    }
+    .memory-stat strong {
+      font-size: 20px;
+      color: #102a43;
+    }
+    .memory-list {
+      display: grid;
+      gap: 8px;
+    }
+    .memory-list-block {
+      border: 1px solid #ece7dd;
+      border-radius: 6px;
+      padding: 10px;
+      background: #fff;
+      display: grid;
+      gap: 8px;
+    }
+    .memory-list-block ul {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+    .memory-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: end;
+    }
+    .memory-actions form {
+      display: flex;
+      gap: 8px;
+      align-items: end;
+      grid-template-columns: none;
+      flex: 1 1 320px;
+    }
+    .memory-actions label {
+      flex: 1 1 auto;
+    }
+    .memory-workbench {
+      --memory-ink: #dce9f7;
+      --memory-muted: #91a8bd;
+      --memory-line: #28435d;
+      --memory-panel: #102a43;
+      background:
+        linear-gradient(135deg, rgba(67, 143, 190, 0.12), transparent 34%),
+        #091a2b;
+      border: 1px solid #28435d;
+      border-radius: 10px;
+      color: var(--memory-ink);
+      padding: 16px;
+    }
+    .memory-workbench-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .memory-eyebrow {
+      color: #70c1e8;
+      font: 700 11px/1.2 Consolas, "Courier New", monospace;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .memory-workbench h3 { color: #f5f9fd; font-size: 18px; }
+    .memory-readiness {
+      border: 1px solid #6d5830;
+      border-left: 4px solid #d5a84a;
+      border-radius: 6px;
+      padding: 12px 14px;
+      background: #211b12;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+    }
+    .memory-readiness[data-state="ready"] {
+      border-color: #2f6f62;
+      border-left-color: #4db6a4;
+      background: #0c2828;
+    }
+    .memory-readiness-copy { display: grid; gap: 4px; }
+    .memory-readiness-copy strong { color: #fff7e5; font-size: 15px; }
+    .memory-readiness[data-state="ready"] .memory-readiness-copy strong { color: #d8f3dc; }
+    .memory-readiness-copy span { color: #c9b991; font-size: 12px; line-height: 1.55; }
+    .memory-readiness[data-state="ready"] .memory-readiness-copy span { color: #9ed8ca; }
+    .memory-readiness-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .memory-readiness-actions button { min-height: 32px; padding: 5px 9px; font-size: 12px; }
+    .memory-usable-content { display: grid; gap: 12px; }
+    .memory-workbench .memory-stat,
+    .diagnostic-section {
+      background: rgba(16, 42, 67, 0.88);
+      border-color: var(--memory-line);
+    }
+    .memory-workbench .memory-list-block {
+      background: #0b2135;
+      border-color: var(--memory-line);
+      color: var(--memory-ink);
+    }
+    .memory-workbench .memory-list-block h3 { color: #f5f9fd; }
+    .memory-workbench .memory-list-block li { color: #b9d9ee; }
+    .memory-workbench .memory-stat span { color: var(--memory-muted); }
+    .memory-workbench .memory-stat strong { color: #f5f9fd; }
+    .memory-identity-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--memory-line);
+      border-radius: 8px;
+      background: var(--memory-line);
+    }
+    .memory-identity-token {
+      min-width: 0;
+      padding: 9px 10px;
+      background: #0d2439;
+    }
+    .memory-identity-token span {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--memory-muted);
+      font-size: 11px;
+    }
+    .memory-identity-token code,
+    .diagnostic-id {
+      color: #dce9f7;
+      font: 12px/1.45 Consolas, "Courier New", monospace;
+      overflow-wrap: anywhere;
+    }
+    .memory-profile {
+      border-top: 1px solid var(--memory-line);
+      border-bottom: 1px solid var(--memory-line);
+      padding: 14px 0;
+      display: grid;
+      gap: 12px;
+    }
+    .memory-profile-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .memory-profile-header h4 { margin: 0; color: #f5f9fd; font-size: 16px; }
+    .memory-profile-header span { color: var(--memory-muted); font-size: 11px; }
+    .memory-profile-overview {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.7fr) repeat(3, minmax(110px, 0.7fr));
+      border: 1px solid var(--memory-line);
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--memory-line);
+      gap: 1px;
+    }
+    .memory-profile-primary,
+    .memory-profile-metric {
+      min-width: 0;
+      padding: 11px 12px;
+      background: #0b2135;
+      display: grid;
+      gap: 4px;
+      align-content: center;
+    }
+    .memory-profile-primary span,
+    .memory-profile-metric span { color: var(--memory-muted); font-size: 11px; }
+    .memory-profile-primary strong {
+      color: #fff7e5;
+      font-size: 17px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+    .memory-profile-metric strong {
+      color: #f5f9fd;
+      font: 700 15px/1.3 Consolas, "Courier New", monospace;
+      overflow-wrap: anywhere;
+    }
+    .memory-profile-facts { display: grid; }
+    .memory-profile-fact {
+      display: grid;
+      grid-template-columns: minmax(120px, 0.45fr) minmax(0, 1.55fr) auto;
+      gap: 10px;
+      align-items: start;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(62, 92, 118, 0.65);
+    }
+    .memory-profile-fact:last-child { border-bottom: 0; }
+    .memory-profile-fact strong { color: #b9d9ee; font-size: 12px; }
+    .memory-profile-fact > span { color: #f5f9fd; font-size: 12px; line-height: 1.5; }
+    .memory-profile-fact time { color: var(--memory-muted); font-size: 11px; white-space: nowrap; }
+    .memory-advanced {
+      border-top: 1px solid var(--memory-line);
+      padding-top: 2px;
+    }
+    .memory-advanced > summary {
+      padding: 12px 2px;
+      color: #dce9f7;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .memory-advanced > summary span {
+      margin-left: 8px;
+      color: var(--memory-muted);
+      font-size: 11px;
+      font-weight: 400;
+    }
+    .memory-advanced[open] > summary { margin-bottom: 2px; }
+    .memory-diagnostic-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.75fr);
+      gap: 10px;
+      align-items: start;
+    }
+    .memory-diagnostic-main,
+    .memory-diagnostic-rail { display: grid; gap: 10px; }
+    .diagnostic-section {
+      border: 1px solid var(--memory-line);
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      min-width: 0;
+    }
+    .diagnostic-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .diagnostic-section h4 { margin: 0; color: #f5f9fd; font-size: 14px; }
+    .diagnostic-section .empty { color: var(--memory-muted); }
+    .memory-filter-toolbar { display: flex; gap: 6px; flex-wrap: wrap; }
+    .memory-filter-toolbar input,
+    .memory-filter-toolbar select {
+      width: auto;
+      min-width: 130px;
+      border-color: #3e5c76;
+      background: #091a2b;
+      color: #f5f9fd;
+    }
+    .evidence-timeline { display: grid; gap: 0; }
+    .evidence-node {
+      position: relative;
+      margin-left: 7px;
+      padding: 2px 0 16px 20px;
+      border-left: 1px solid #3e5c76;
+    }
+    .evidence-node::before {
+      content: "";
+      position: absolute;
+      top: 5px;
+      left: -5px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #70c1e8;
+      box-shadow: 0 0 0 3px #102a43;
+    }
+    .evidence-node[data-evidence-status="forgotten"]::before,
+    .evidence-node[data-evidence-status="superseded"]::before { background: #829ab1; }
+    .evidence-node[data-evidence-status="expired"]::before { background: #f0b429; }
+    .evidence-node[data-evidence-status="candidate"]::before { background: #9f7aea; }
+    .evidence-node:last-child { padding-bottom: 2px; }
+    .evidence-node-head {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-bottom: 5px;
+    }
+    .evidence-summary { color: #f5f9fd; line-height: 1.55; }
+    .evidence-meta {
+      display: flex;
+      gap: 6px 12px;
+      flex-wrap: wrap;
+      color: var(--memory-muted);
+      font-size: 11px;
+      margin-top: 5px;
+    }
+    .memory-status {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid #3e5c76;
+      border-radius: 999px;
+      padding: 2px 7px;
+      color: #b9d9ee;
+      font: 700 10px/1.4 Consolas, "Courier New", monospace;
+      text-transform: uppercase;
+    }
+    .lineage-stack, .epoch-stack { display: grid; gap: 7px; }
+    .lineage-card, .epoch-card {
+      border: 1px solid #28435d;
+      border-radius: 6px;
+      padding: 9px;
+      background: #0b2135;
+      display: grid;
+      gap: 5px;
+    }
+    .lineage-card strong, .epoch-card strong { color: #f5f9fd; font-size: 12px; }
+    .lineage-card span, .epoch-card span { color: var(--memory-muted); font-size: 11px; }
+    .pending-observation-stack { display: grid; gap: 7px; }
+    .pending-observation-card {
+      border: 1px solid #6d5830;
+      border-left: 3px solid #d5a84a;
+      border-radius: 6px;
+      padding: 9px;
+      background: #211b12;
+      display: grid;
+      gap: 5px;
+    }
+    .pending-observation-head {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .pending-observation-head strong { color: #fff7e5; font-size: 12px; }
+    .pending-observation-card span { color: #c9b991; font-size: 11px; line-height: 1.45; }
+    .pending-observation-card .memory-status { border-color: #8b6a2d; color: #f1cb79; }
+    .health-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .health-cell {
+      border-left: 2px solid #70c1e8;
+      padding: 6px 8px;
+      background: #0b2135;
+      display: grid;
+      gap: 2px;
+    }
+    .health-cell span { color: var(--memory-muted); font-size: 10px; }
+    .health-cell strong { color: #f5f9fd; font: 700 15px/1.2 Consolas, "Courier New", monospace; }
+    .memory-control-form { grid-template-columns: 1fr; }
+    .memory-control-form label { color: var(--memory-muted); }
+    .memory-control-form input,
+    .memory-control-form select,
+    .memory-control-form textarea {
+      border-color: #3e5c76;
+      background: #091a2b;
+      color: #f5f9fd;
+    }
+    .memory-control-form textarea {
+      min-height: 92px;
+      font: 12px/1.45 Consolas, "Courier New", monospace;
+    }
+    .memory-control-note { color: var(--memory-muted); font-size: 11px; line-height: 1.5; }
+    .memory-control-result { min-height: 20px; color: #b9d9ee; font-size: 12px; }
+    .evidence-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
+    .evidence-actions button { min-height: 28px; padding: 3px 8px; font-size: 11px; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 3px solid rgba(112, 193, 232, 0.45);
+      outline-offset: 2px;
+    }
+    .device-bind-form {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr) auto;
+      align-items: end;
+    }
+    .section-note {
+      color: #7b8794;
+      font-size: 13px;
+      margin: 4px 0 10px;
+    }
+    .demo-notification-preview {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .demo-notification-row {
+      display: grid;
+      grid-template-columns: 72px 92px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      border-top: 1px solid #ece7dd;
+      padding: 10px 0 2px;
+    }
+    .demo-notification-row:first-child { border-top: 0; }
+    .demo-notification-title {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+    .demo-notification-title strong {
+      color: #102a43;
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+    .demo-notification-title span {
+      color: #7b8794;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+    @media (max-width: 920px) {
+      main { padding: 12px; }
+      .grid, form, .quick-actions, .auth-layout { grid-template-columns: 1fr; }
+      .device-row, .delivery-row, .speaker-row, .subject-row { grid-template-columns: 1fr; }
+      .demo-notification-row { grid-template-columns: 1fr; }
+      header { align-items: start; }
+      .memory-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .memory-actions, .memory-actions form { display: grid; }
+      .memory-identity-strip, .memory-diagnostic-grid { grid-template-columns: 1fr; }
+      .memory-profile-overview, .memory-profile-fact { grid-template-columns: 1fr; }
+      .memory-profile-fact time { white-space: normal; }
+      .memory-readiness { grid-template-columns: 1fr; }
+      .memory-readiness-actions { justify-content: flex-start; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>小芯调控控制台</h1>
+      <div class="status" id="status">等待连接设备</div>
+    </div>
+    <div class="toolbar">
+      <div class="user-chip hidden" id="userChip">
+        <span id="userName"></span>
+        <button id="logoutBtn" class="secondary" type="button">退出</button>
+      </div>
+      <button class="secondary" type="button" id="refreshBtn">刷新</button>
+    </div>
+  </header>
+
+  <section id="authPanel" class="hidden">
+    <div class="stack">
+      <h2>登录后才能操作设备</h2>
+      <div class="auth-hint">已有会话会自动恢复。没有会话时，在这里注册或登录。</div>
+      <div class="auth-message" id="authMessage"></div>
+      <div class="auth-layout">
+        <div class="auth-card">
+          <h3>登录</h3>
+          <form id="loginForm">
+            <label>用户名
+              <input name="username" autocomplete="username" />
+            </label>
+            <label>密码
+              <input name="password" type="password" autocomplete="current-password" />
+            </label>
+            <button type="submit">登录</button>
+          </form>
+        </div>
+        <div class="auth-card">
+          <h3>注册</h3>
+          <form id="registerForm">
+            <label>用户名
+              <input name="username" autocomplete="username" />
+            </label>
+            <label>显示名
+              <input name="display_name" autocomplete="nickname" />
+            </label>
+            <label>密码
+              <input name="password" type="password" autocomplete="new-password" />
+            </label>
+            <button type="submit">注册并登录</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="appShell" class="hidden">
+    <div class="grid">
+      <section>
+        <h2>设备</h2>
+        <form id="wakeByIdForm">
+          <label>设备 ID
+            <input name="device_id" placeholder="设备 MAC 或固件 device_id" />
+          </label>
+          <button class="full secondary" type="submit">按设备 ID 敲门</button>
+        </form>
+        <div class="stack" id="devices"></div>
+      </section>
+
+      <section>
+        <h2>快速模板</h2>
+        <div class="quick-actions">
+          <button class="secondary" type="button" data-template="notification">普通提醒</button>
+          <button class="secondary" type="button" data-template="course">上课提醒</button>
+          <button class="secondary" type="button" data-template="todo">待办提醒</button>
+        </div>
+      </section>
+    </div>
+
+    <section>
+      <h2>文本测试对话</h2>
+      <form id="textChatForm">
+        <label class="full">测试文本
+          <textarea id="textChatInput" name="text" maxlength="500"></textarea>
+        </label>
+        <button class="full secondary" type="submit" id="sendTextChatBtn">发送文本</button>
+      </form>
+    </section>
+
+    <div class="grid">
+      <section>
+        <h2>说话人</h2>
+        <div class="stack" id="speakers"></div>
+      </section>
+
+      <section>
+        <h2>记忆主体</h2>
+        <div class="stack" id="memorySubjects"></div>
+      </section>
+    </div>
+
+    <section>
+      <h2>主体记忆</h2>
+      <div id="subjectMemoryEmpty" class="empty">请选择一个记忆主体查看 V2 安全投影。</div>
+      <div id="subjectMemoryPanel" class="memory-panel memory-workbench hidden">
+        <div class="memory-workbench-header">
+          <div>
+            <div class="memory-eyebrow">Memory status</div>
+            <h3>个人记忆状态</h3>
+          </div>
+          <button id="refreshMemoryBtn" class="secondary" type="button">刷新当前主体</button>
+        </div>
+        <div id="memoryIdentityStrip" class="memory-identity-strip"></div>
+        <div id="memoryReadiness" class="memory-readiness" data-state="blocked">
+          <div class="memory-readiness-copy">
+            <strong id="memoryReadinessTitle">正在检查个人记忆链路</strong>
+            <span id="memoryReadinessMessage">等待主体详情加载。</span>
+          </div>
+          <div id="memoryReadinessActions" class="memory-readiness-actions"></div>
+        </div>
+        <div id="memoryUsableContent" class="memory-usable-content hidden">
+          <div class="memory-profile" aria-label="用户画像">
+          <div class="memory-profile-header">
+            <h4>用户画像</h4>
+            <span>仅展示当前有效或待确认的用户事实</span>
+          </div>
+          <div class="memory-profile-overview">
+            <div class="memory-profile-primary">
+              <span>偏好称呼</span>
+              <strong id="memoryPreferredName">未记录</strong>
+            </div>
+            <div class="memory-profile-metric">
+              <span>已确认事实</span>
+              <strong id="memoryConfirmedFactCount">0</strong>
+            </div>
+            <div class="memory-profile-metric">
+              <span>待确认事实</span>
+              <strong id="memoryCandidateFactCount">0</strong>
+            </div>
+            <div class="memory-profile-metric">
+              <span>最近记忆更新</span>
+              <strong id="memoryLastFactAt">-</strong>
+            </div>
+          </div>
+          <div id="memoryProfileFacts" class="memory-profile-facts"></div>
+          </div>
+          <div class="memory-stats">
+            <div class="memory-stat"><span>小芯年龄</span><strong id="memoryAge">-</strong></div>
+            <div class="memory-stat"><span>关系阶段</span><strong id="memoryStage">-</strong></div>
+            <div class="memory-stat"><span>当前可用依据</span><strong id="memoryEvidenceCount">0</strong></div>
+            <div class="memory-stat"><span>陪伴章节</span><strong id="memoryChapterCount">0</strong></div>
+            <div class="memory-stat"><span>关系 Epoch</span><strong id="memoryEpochCount">0</strong></div>
+            <div class="memory-stat"><span>待整理任务</span><strong id="memoryPendingJobs">0</strong></div>
+          </div>
+          <details id="memoryAdvancedDiagnostics" class="memory-advanced">
+            <summary>高级诊断 <span>Evidence、召回、血缘、后台任务和控制命令</span></summary>
+            <div class="memory-diagnostic-grid">
+          <div class="memory-diagnostic-main">
+            <div class="diagnostic-section">
+              <div class="diagnostic-section-header">
+                <h4>Evidence 时间线</h4>
+                <div class="memory-filter-toolbar">
+                  <select id="memoryStatusFilter" aria-label="Evidence 状态筛选">
+                    <option value="">全部状态</option>
+                    <option value="active">active</option>
+                    <option value="candidate">candidate</option>
+                    <option value="superseded">superseded</option>
+                    <option value="forgotten">forgotten</option>
+                    <option value="expired">expired</option>
+                  </select>
+                  <input id="memorySearch" type="search" placeholder="搜索摘要、类型或 ID" aria-label="搜索 Evidence" />
+                </div>
+              </div>
+              <div id="memoryTimeline" class="evidence-timeline"></div>
+            </div>
+            <div class="diagnostic-section">
+              <div class="diagnostic-section-header"><h4>派生血缘</h4></div>
+              <div id="memoryLineage" class="lineage-stack"></div>
+            </div>
+            <div class="diagnostic-section">
+              <div class="diagnostic-section-header"><h4>当前安全投影</h4></div>
+              <div id="subjectMemoryLists" class="memory-list"></div>
+            </div>
+          </div>
+          <aside class="memory-diagnostic-rail">
+            <div class="diagnostic-section">
+              <div class="diagnostic-section-header"><h4>健康</h4></div>
+              <div id="memoryHealth" class="health-grid"></div>
+            </div>
+            <div class="diagnostic-section">
+              <div class="diagnostic-section-header"><h4>待处理 Observation</h4></div>
+              <div class="memory-control-note">仅展示安全摘要与队列状态，不展示原始 payload。</div>
+              <div id="memoryPendingObservations" class="pending-observation-stack"></div>
+            </div>
+            <div class="diagnostic-section">
+              <div class="diagnostic-section-header"><h4>召回审计</h4></div>
+              <div class="memory-control-note">仅展示查询摘要哈希、Evidence ID 和确定性分数，不展示用户查询原文。</div>
+              <div id="memoryRetrievalAudits" class="pending-observation-stack"></div>
+            </div>
+            <div class="diagnostic-section">
+              <div class="diagnostic-section-header"><h4>关系阶段事件</h4></div>
+              <div class="memory-control-note">展示跨日连续性、可靠了解、有效帮助和反馈契合度，不展示用户原文。</div>
+              <div id="memoryRelationshipStageEvents" class="pending-observation-stack"></div>
+            </div>
+            <div class="diagnostic-section">
+              <div class="diagnostic-section-header"><h4>关系 Epoch</h4></div>
+              <div id="memoryEpochs" class="epoch-stack"></div>
+            </div>
+            <div class="diagnostic-section">
+              <div class="diagnostic-section-header"><h4>确定性控制</h4></div>
+              <div class="memory-control-note">命令由 CompanionMind.apply_control 执行。重置关系保留用户事实；彻底清除不会删除账号、设备和 personal pet 归属。</div>
+              <form id="memoryControlForm" class="memory-control-form">
+                <label>操作
+                  <select id="memoryControlAction" name="action">
+                    <option value="forget_evidence">忘记 Evidence</option>
+                    <option value="confirm_candidate">确认候选记忆</option>
+                    <option value="reject_candidate">拒绝候选记忆</option>
+                    <option value="correct_evidence">纠正 Evidence</option>
+                    <option value="revoke_boundary">撤销边界</option>
+                    <option value="forget_theme">忘记主题</option>
+                    <option value="set_boundary">设置边界</option>
+                    <option value="reset_relationship">重置关系</option>
+                    <option value="purge_personal_memory">清除个人陪伴记忆</option>
+                  </select>
+                </label>
+                <label data-memory-control-field data-actions="forget_evidence,correct_evidence,revoke_boundary,confirm_candidate,reject_candidate">Evidence ID
+                  <input id="memoryControlEvidenceId" name="evidence_id" autocomplete="off" />
+                </label>
+                <label data-memory-control-field data-actions="forget_theme">主题标签
+                  <input id="memoryControlTheme" name="theme" autocomplete="off" placeholder="通用 content tag" />
+                </label>
+                <label data-memory-control-field data-actions="set_boundary">边界键
+                  <input id="memoryControlBoundaryKey" name="boundary_key" autocomplete="off" placeholder="question_frequency" />
+                </label>
+                <label data-memory-control-field data-actions="set_boundary">边界值（JSON 或文本）
+                  <input id="memoryControlBoundaryValue" name="boundary_value" autocomplete="off" placeholder='"none"' />
+                </label>
+                <label data-memory-control-field data-actions="correct_evidence,set_boundary">安全摘要
+                  <input id="memoryControlSummary" name="source_summary" autocomplete="off" />
+                </label>
+                <label data-memory-control-field data-actions="correct_evidence">替代内容 JSON
+                  <textarea id="memoryControlReplacement" name="replacement_content" spellcheck="false">{}</textarea>
+                </label>
+                <label data-memory-control-field data-actions="reset_relationship,purge_personal_memory">危险操作确认
+                  <input id="memoryControlConfirmation" name="confirmation" autocomplete="off" placeholder="输入要求的确认文本" />
+                </label>
+                <button id="memoryControlSubmit" type="submit">执行控制命令</button>
+                <div id="memoryControlResult" class="memory-control-result" aria-live="polite"></div>
+              </form>
+            </div>
+          </aside>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>演示数据</h2>
+      <div class="section-note">这里保存总览页和通知中心要消费的临时数据。后续接真实数据源时，替换服务端数据来源即可。</div>
+      <form id="demoOverviewForm">
+        <label>天气摘要
+          <input name="weather.summary" />
+        </label>
+        <label>天气详情
+          <input name="weather.detail" />
+        </label>
+        <label>下一节课
+          <input name="course.title" />
+        </label>
+        <label>课程详情
+          <input name="course.detail" />
+        </label>
+        <label>待办数量
+          <input name="todo.count" type="number" min="0" max="99" />
+        </label>
+        <label>待办详情
+          <input name="todo.detail" />
+        </label>
+      </form>
+      <div class="toolbar">
+        <button id="saveDemoDataBtn" type="button">保存演示数据</button>
+        <button id="syncDemoOverviewBtn" class="secondary" type="button">同步演示总览到当前设备</button>
+        <button id="showDemoNotificationsBtn" class="secondary" type="button">演示各种通知</button>
+      </div>
+      <div id="demoNotificationPreview" class="demo-notification-preview"></div>
+    </section>
+
+    <section>
+      <h2>事件立即下发</h2>
+      <span>立即下发测试</span>
+      <div class="toolbar">
+        <button type="button" class="active" data-event="notification">普通通知</button>
+        <button type="button" class="secondary" data-event="course_reminder">课表提醒</button>
+        <button type="button" class="secondary" data-event="todo_reminder">待办提醒</button>
+      </div>
+      <form id="eventForm">
+        <label>目标设备
+          <select id="deviceSelect" name="device_id"></select>
+        </label>
+        <label>优先级
+          <input name="priority" type="number" min="0" max="4" value="2" />
+        </label>
+        <label class="notification-field">标题
+          <input name="title" value="普通提醒" />
+        </label>
+        <label class="notification-field">标签
+          <input name="tag" value="通知" />
+        </label>
+        <label class="notification-field full">内容
+          <textarea name="body">记得喝水，休息一下眼睛。</textarea>
+        </label>
+        <label class="notification-field">有效期（毫秒）
+          <input name="ttl_ms" type="number" min="0" value="0" />
+        </label>
+        <label class="notification-field">播报
+          <select name="speak">
+            <option value="true">开启</option>
+            <option value="false">关闭</option>
+          </select>
+        </label>
+        <label class="notification-field full">播报文本
+          <textarea name="speak_text">小芯提醒你，记得喝水，休息一下眼睛。</textarea>
+        </label>
+        <label class="course-field">课程名
+          <input name="course_name" value="高等数学" />
+        </label>
+        <label class="course-field">教室
+          <input name="classroom" value="3教204" />
+        </label>
+        <label class="course-field">展示开始时间
+          <input name="starts_at" type="time" value="10:10" />
+        </label>
+        <label class="course-field">展示提前分钟
+          <input name="remind_before_min" type="number" min="0" value="15" />
+        </label>
+        <label class="todo-field">待办标题
+          <input name="todo_title" value="交实验报告" />
+        </label>
+        <label class="todo-field">展示截止时间
+          <input name="due_at" type="datetime-local" value="2026-07-03T18:00" />
+        </label>
+        <button class="full" type="submit" id="sendBtn">立即发送到小芯</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>投递记录</h2>
+      <div class="deliveries" id="deliveries"></div>
+      <pre id="timeline"></pre>
+    </section>
+  </div>
+</main>
+<script>
+  const state = {
+    event: "notification",
+    devices: [],
+    speakers: [],
+    memorySubjects: [],
+    demoData: null,
+    demoDataDirty: false,
+    demoDataLoaded: false,
+    selectedSubjectId: null,
+    subjectMemory: null,
+    subjectAdminDetail: null,
+    subjectMemoryError: "",
+    memoryStatusFilter: "",
+    memorySearch: "",
+    authEnabled: false,
+    authChecked: false,
+    user: null,
+  };
+
+  const statusEl = document.querySelector("#status");
+  const devicesEl = document.querySelector("#devices");
+  const wakeByIdForm = document.querySelector("#wakeByIdForm");
+  const speakersEl = document.querySelector("#speakers");
+  const memorySubjectsEl = document.querySelector("#memorySubjects");
+  const demoOverviewForm = document.querySelector("#demoOverviewForm");
+  const subjectMemoryEmptyEl = document.querySelector("#subjectMemoryEmpty");
+  const subjectMemoryPanelEl = document.querySelector("#subjectMemoryPanel");
+  const subjectMemoryListsEl = document.querySelector("#subjectMemoryLists");
+  const memoryAgeEl = document.querySelector("#memoryAge");
+  const memoryStageEl = document.querySelector("#memoryStage");
+  const memoryEvidenceCountEl = document.querySelector("#memoryEvidenceCount");
+  const memoryChapterCountEl = document.querySelector("#memoryChapterCount");
+  const memoryEpochCountEl = document.querySelector("#memoryEpochCount");
+  const memoryPendingJobsEl = document.querySelector("#memoryPendingJobs");
+  const memoryIdentityStripEl = document.querySelector("#memoryIdentityStrip");
+  const memoryReadinessEl = document.querySelector("#memoryReadiness");
+  const memoryReadinessTitleEl = document.querySelector("#memoryReadinessTitle");
+  const memoryReadinessMessageEl = document.querySelector("#memoryReadinessMessage");
+  const memoryReadinessActionsEl = document.querySelector("#memoryReadinessActions");
+  const memoryUsableContentEl = document.querySelector("#memoryUsableContent");
+  const memoryAdvancedDiagnosticsEl = document.querySelector("#memoryAdvancedDiagnostics");
+  const memoryPreferredNameEl = document.querySelector("#memoryPreferredName");
+  const memoryConfirmedFactCountEl = document.querySelector("#memoryConfirmedFactCount");
+  const memoryCandidateFactCountEl = document.querySelector("#memoryCandidateFactCount");
+  const memoryLastFactAtEl = document.querySelector("#memoryLastFactAt");
+  const memoryProfileFactsEl = document.querySelector("#memoryProfileFacts");
+  const memoryTimelineEl = document.querySelector("#memoryTimeline");
+  const memoryLineageEl = document.querySelector("#memoryLineage");
+  const memoryEpochsEl = document.querySelector("#memoryEpochs");
+  const memoryHealthEl = document.querySelector("#memoryHealth");
+  const memoryPendingObservationsEl = document.querySelector("#memoryPendingObservations");
+  const memoryRetrievalAuditsEl = document.querySelector("#memoryRetrievalAudits");
+  const memoryRelationshipStageEventsEl = document.querySelector("#memoryRelationshipStageEvents");
+  const memoryStatusFilterEl = document.querySelector("#memoryStatusFilter");
+  const memorySearchEl = document.querySelector("#memorySearch");
+  const memoryControlForm = document.querySelector("#memoryControlForm");
+  const memoryControlActionEl = document.querySelector("#memoryControlAction");
+  const memoryControlEvidenceIdEl = document.querySelector("#memoryControlEvidenceId");
+  const memoryControlThemeEl = document.querySelector("#memoryControlTheme");
+  const memoryControlBoundaryKeyEl = document.querySelector("#memoryControlBoundaryKey");
+  const memoryControlBoundaryValueEl = document.querySelector("#memoryControlBoundaryValue");
+  const memoryControlSummaryEl = document.querySelector("#memoryControlSummary");
+  const memoryControlReplacementEl = document.querySelector("#memoryControlReplacement");
+  const memoryControlConfirmationEl = document.querySelector("#memoryControlConfirmation");
+  const memoryControlResultEl = document.querySelector("#memoryControlResult");
+  const deliveriesEl = document.querySelector("#deliveries");
+  const timelineEl = document.querySelector("#timeline");
+  const form = document.querySelector("#eventForm");
+  const deviceSelect = document.querySelector("#deviceSelect");
+  const authPanel = document.querySelector("#authPanel");
+  const authMessageEl = document.querySelector("#authMessage");
+  const appShell = document.querySelector("#appShell");
+  const userChip = document.querySelector("#userChip");
+  const userNameEl = document.querySelector("#userName");
+  const demoNotificationPreviewEl = document.querySelector("#demoNotificationPreview");
+
+  function setStatus(text) {
+    statusEl.textContent = text;
+  }
+
+  function setAuthMessage(text) {
+    authMessageEl.textContent = text || "";
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function formatTimeForInput(value) {
+    const text = String(value || "").trim();
+    const match = text.match(/(?:^|[ T])(\d{2}:\d{2})(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})?$/);
+    return match ? match[1] : text;
+  }
+
+  function normalizeLocalDateTimeToOffset(value) {
+    const text = String(value || "").trim();
+    if (!text) {
+      return text;
+    }
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(text)) {
+      return `${text}:00+08:00`;
+    }
+    return text;
+  }
+
+  function labelFromMap(value, labels) {
+    const key = String(value || "");
+    return labels[key] || key;
+  }
+
+  function deviceStateLabel(value) {
+    return labelFromMap(value || "offline", {
+      connected: "在线",
+      wakeable: "可唤醒",
+      offline: "离线",
+    });
+  }
+
+  function bindStateLabel(value) {
+    return labelFromMap(value || "", {
+      seen: "未绑定",
+      bound: "已绑定",
+      unbound: "未绑定",
+    });
+  }
+
+  function bindStatusBadgeClass(status) {
+    const value = String(status || "seen");
+    return value === "bound" ? "bound" : value === "seen" ? "seen" : "unbound";
+  }
+
+  function deviceOwnerLabel(device) {
+    if (!device || !device.owner_user_id || device.bind_status !== "bound") {
+      return "未绑定";
+    }
+    const ownerId = String(device.owner_user_id);
+    return `owner: ${ownerId.slice(0, 8)}${ownerId.length > 8 ? "..." : ""}`;
+  }
+
+  function doorbellStateLabel(device) {
+    if (!device || !device.doorbell_state) {
+      return "门铃未知";
+    }
+    return `门铃${deviceStateLabel(device.doorbell_state)}`;
+  }
+
+  function deviceOptionLabel(device) {
+    const displayName = device.display_name || device.device_id;
+    return `${displayName} - ${bindStateLabel(device.bind_status)} - ${device.device_id}（${deviceStateLabel(device.state)}）`;
+  }
+
+  function overviewDiagnosticLabel(overview) {
+    if (!overview || overview.revision === null || overview.revision === undefined) {
+      return "MQTT Overview 尚未生成";
+    }
+    const weather = overview.weather || {};
+    const city = weather.city || "城市未配置";
+    return `MQTT Overview r${overview.revision} · ${overview.publish_state || "unknown"} · ${city} · ${weather.cache_status || "unknown"}`;
+  }
+
+  function speakerStatusLabel(value) {
+    return labelFromMap(value || "", {
+      confirmed: "已确认",
+      archived: "已归档",
+    });
+  }
+
+  function subjectKindLabel(value) {
+    return labelFromMap(value || "", {
+      user_speaker: "用户说话人",
+      device_unknown: "设备未知说话人",
+      device_fallback: "未绑定设备",
+    });
+  }
+
+  function eventLabel(value) {
+    return labelFromMap(value || "", {
+      notification: "普通通知",
+      course_reminder: "课表提醒",
+      todo_reminder: "待办提醒",
+    });
+  }
+
+  function deliveryStateLabel(value) {
+    return labelFromMap(value || "", {
+      pending: "待投递",
+      waking: "唤醒中",
+      sent: "已发送",
+      device_received: "设备已收到",
+      tts_done: "播报完成",
+      done: "完成",
+      failed: "失败",
+    });
+  }
+
+  function deliveryReasonLabel(value) {
+    return labelFromMap(value || "", {
+      device_offline: "设备离线",
+      wake_timeout: "唤醒超时",
+      ack_timeout: "确认超时",
+      tts_failed: "播报失败",
+    });
+  }
+
+  function renderSessionState() {
+    const needsAuth = state.authEnabled && !state.user;
+    const needsAdmin = Boolean(state.user && state.user.role !== "admin");
+    authPanel.classList.toggle("hidden", !needsAuth && !needsAdmin);
+    appShell.classList.toggle("hidden", needsAuth || needsAdmin);
+    userChip.classList.toggle("hidden", !state.user);
+    userNameEl.textContent = state.user ? `${state.user.display_name} (@${state.user.username})` : "";
+    if (needsAdmin) {
+      setAuthMessage("当前账号没有管理员权限");
+    }
+  }
+
+  async function apiFetch(url, options = {}) {
+    const headers = new Headers(options.headers || {});
+    const method = String(options.method || "GET").toUpperCase();
+    if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+      const csrfCookie = document.cookie
+        .split(";")
+        .map((item) => item.trim())
+        .find((item) => item.startsWith("xiaoxin_csrf="));
+      if (csrfCookie) {
+        headers.set("X-Xiaoxin-CSRF", decodeURIComponent(csrfCookie.split("=", 2)[1] || ""));
+      }
+    }
+    const response = await fetch(url, {
+      ...options,
+      credentials: "same-origin",
+      headers,
+    });
+
+    if (response.status === 401) {
+      state.authEnabled = true;
+      state.user = null;
+      renderSessionState();
+    }
+    return response;
+  }
+
+  function setSectionVisibility() {
+    document.querySelectorAll(".notification-field").forEach((element) => {
+      element.style.display = state.event === "notification" ? "grid" : "none";
+    });
+    document.querySelectorAll(".course-field").forEach((element) => {
+      element.style.display = state.event === "course_reminder" ? "grid" : "none";
+    });
+    document.querySelectorAll(".todo-field").forEach((element) => {
+      element.style.display = state.event === "todo_reminder" ? "grid" : "none";
+    });
+  }
+
+  function templateNameForEvent(eventName) {
+    if (eventName === "course_reminder") {
+      return "course";
+    }
+    if (eventName === "todo_reminder") {
+      return "todo";
+    }
+    return "notification";
+  }
+
+  function targetDevices() {
+    return state.devices;
+  }
+
+  async function wakeDeviceById(event) {
+    event.preventDefault();
+    const payload = Object.fromEntries(new FormData(wakeByIdForm).entries());
+    const response = await apiFetch("/api/xiaoxin/devices/wake-by-id", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setStatus(data.message || "敲门失败");
+      return;
+    }
+    wakeByIdForm.reset();
+    setStatus(`已敲门 ${data.device_id}`);
+    await loadDevices();
+  }
+
+  async function wakeDevice(deviceId) {
+    const response = await apiFetch(`/api/xiaoxin/devices/${encodeURIComponent(deviceId)}/wake`, {
+      method: "POST",
+    });
+    const data = await response.json().catch(() => ({}));
+    setStatus(response.ok ? `已敲门 ${deviceId}` : (data.message || "敲门失败"));
+  }
+
+  async function syncDeviceOverviewMqtt(deviceId, button) {
+    const previousLabel = button.textContent;
+    button.disabled = true;
+    button.textContent = "同步中...";
+    try {
+      const response = await apiFetch(`/api/xiaoxin/devices/${encodeURIComponent(deviceId)}/overview-mqtt-sync`, {
+        method: "POST",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setStatus(data.message || "MQTT Overview 同步失败");
+        return;
+      }
+      setStatus(`MQTT Overview 已排队：${deviceId} r${data.revision} (${data.publish_state})`);
+      await loadDevices();
+    } catch (_error) {
+      setStatus("MQTT Overview 同步失败");
+    } finally {
+      button.disabled = false;
+      button.textContent = previousLabel;
+    }
+  }
+
+  async function ensureAuthState() {
+    const response = await apiFetch("/api/xiaoxin/auth/me");
+    state.authChecked = true;
+
+    if (response.status === 404) {
+      state.authEnabled = false;
+      state.user = null;
+      renderSessionState();
+      return;
+    }
+
+    state.authEnabled = true;
+    if (response.status === 401) {
+      state.user = null;
+      renderSessionState();
+      return;
+    }
+
+    const data = await response.json();
+    state.user = data.user || null;
+    renderSessionState();
+  }
+
+  async function loadDevices() {
+    const response = await apiFetch("/api/xiaoxin/admin/devices");
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setStatus(data.message || "设备列表加载失败");
+      return;
+    }
+
+    const data = await response.json();
+    state.devices = data.devices || [];
+
+    if (!state.devices.length) {
+      devicesEl.innerHTML = '<div class="empty">暂无设备</div>';
+      deviceSelect.innerHTML = "";
+      return;
+    }
+
+    devicesEl.innerHTML = state.devices.map((device) => `
+      <label class="device-row">
+        <input type="radio" name="pickedDevice" value="${device.device_id}" />
+        <span class="device-meta">
+          <span>${escapeHtml(device.display_name || device.device_id)}</span>
+          <span class="device-subtitle">${escapeHtml(device.device_id)}</span>
+          <span class="device-subtitle">${escapeHtml(deviceOwnerLabel(device))}</span>
+          <span class="device-subtitle">${escapeHtml(overviewDiagnosticLabel(device.overview))}</span>
+        </span>
+        <span class="badge ${device.state || "offline"}">${deviceStateLabel(device.state)}</span>
+        <span class="badge ${bindStatusBadgeClass(device.bind_status)}">${bindStateLabel(device.bind_status)}</span>
+        <span class="badge ${device.doorbell_state || "offline"}">${doorbellStateLabel(device)}</span>
+        <span class="inline-actions">
+          <button class="secondary device-action" type="button" data-wake-device="${device.device_id}">敲门</button>
+          <button class="secondary device-action" type="button" data-sync-overview-mqtt="${device.device_id}">同步 MQTT Overview</button>
+        </span>
+      </label>
+    `).join("");
+
+    const selectableDevices = targetDevices();
+    deviceSelect.innerHTML = selectableDevices.map((device) => `
+      <option value="${device.device_id}">${escapeHtml(deviceOptionLabel(device))}</option>
+    `).join("");
+
+    const firstOption = deviceSelect.options[0];
+    if (firstOption) {
+      deviceSelect.value = firstOption.value;
+    }
+
+    document.querySelectorAll('input[name="pickedDevice"]').forEach((input) => {
+      input.addEventListener("change", () => {
+        deviceSelect.value = input.value;
+      });
+    });
+
+    document.querySelectorAll("[data-wake-device]").forEach((button) => {
+      button.addEventListener("click", async (event) => {
+        event.preventDefault();
+        await wakeDevice(button.dataset.wakeDevice);
+      });
+    });
+
+    document.querySelectorAll("[data-sync-overview-mqtt]").forEach((button) => {
+      button.addEventListener("click", async (event) => {
+        event.preventDefault();
+        await syncDeviceOverviewMqtt(button.dataset.syncOverviewMqtt, button);
+      });
+    });
+  }
+
+  function knownMergeTargets(currentId) {
+    const current = state.memorySubjects.find((subject) => subject.id === currentId);
+    if (!current) return [];
+    return state.memorySubjects.filter((subject) => {
+      return subject.id !== currentId
+        && !subject.merged_into_subject_id
+        && subject.owner?.id === current.owner?.id
+        && subject.kind === current.kind;
+    });
+  }
+
+  async function renameSpeaker(speakerId) {
+    const input = document.querySelector(`[data-speaker-name="${speakerId}"]`);
+    if (!input) {
+      return;
+    }
+
+    const response = await apiFetch(`/api/xiaoxin/speakers/${encodeURIComponent(speakerId)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ display_name: input.value }),
+    });
+    const data = await response.json().catch(() => ({}));
+    setStatus(response.ok ? "说话人已更新" : (data.message || "说话人更新失败"));
+    if (response.ok) {
+      await loadSpeakers();
+      await loadMemorySubjects();
+    }
+  }
+
+  async function archiveSpeaker(speakerId) {
+    const response = await apiFetch(`/api/xiaoxin/speakers/${encodeURIComponent(speakerId)}/archive`, {
+      method: "POST",
+    });
+    const data = await response.json().catch(() => ({}));
+    setStatus(response.ok ? "说话人已归档" : (data.message || "说话人归档失败"));
+    if (response.ok) {
+      await loadSpeakers();
+    }
+  }
+
+  async function mergeSubject(subjectId) {
+    const select = document.querySelector(`[data-merge-target="${subjectId}"]`);
+    if (!select || !select.value) {
+      setStatus("请选择合并目标");
+      return;
+    }
+
+    const response = await apiFetch(`/api/xiaoxin/admin/memory-subjects/${encodeURIComponent(subjectId)}/merge`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to_subject_id: select.value,
+        idempotency_key: nextMemoryControlKey("merge_subject"),
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    setStatus(response.ok ? "记忆主体已合并" : (data.message || "记忆主体合并失败"));
+    if (response.ok) {
+      await loadMemorySubjects();
+    }
+  }
+
+  function formatDiagnosticTime(value) {
+    const text = String(value || "").trim();
+    if (!text) return "-";
+    const parsed = new Date(text);
+    return Number.isNaN(parsed.getTime()) ? text : parsed.toLocaleString("zh-CN", { hour12: false });
+  }
+
+  function renderDiagnosticCounts(prefix, counts) {
+    const entries = Object.entries(counts || {});
+    return entries.map(([status, count]) => `
+      <div class="health-cell">
+        <span>${escapeHtml(prefix)} · ${escapeHtml(status)}</span>
+        <strong>${escapeHtml(count)}</strong>
+      </div>
+    `).join("");
+  }
+
+  function renderLineageCard(kind, item) {
+    const id = item.capsule_id || item.adjustment_id || item.chapter_id || item.relation_id || "-";
+    const summary = item.safe_summary
+      || item.safe_narrative
+      || (item.dimension ? `${item.dimension}: ${item.value}` : "")
+      || item.relation_kind
+      || "";
+    const evidenceIds = item.evidence_ids
+      || [item.source_evidence_id, item.target_evidence_id].filter(Boolean);
+    return `
+      <div class="lineage-card">
+        <strong>${escapeHtml(kind)} · ${escapeHtml(summary)}</strong>
+        <code class="diagnostic-id">${escapeHtml(id)}</code>
+        <span>Evidence: ${evidenceIds.length ? evidenceIds.map(escapeHtml).join(" · ") : "-"}</span>
+      </div>
+    `;
+  }
+
+  function parseJsonOrText(value) {
+    const text = String(value || "").trim();
+    if (!text) return "";
+    try {
+      return JSON.parse(text);
+    } catch (_error) {
+      return text;
+    }
+  }
+
+  function nextMemoryControlKey(action) {
+    const nonce = globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
+      ? globalThis.crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    return `console-${action}-${nonce}`;
+  }
+
+  function renderMemoryControlFields() {
+    const action = memoryControlActionEl.value;
+    document.querySelectorAll("[data-memory-control-field]").forEach((field) => {
+      const actions = String(field.dataset.actions || "").split(",");
+      field.classList.toggle("hidden", !actions.includes(action));
+    });
+    const confirmation = action === "reset_relationship"
+      ? "RESET_RELATIONSHIP"
+      : action === "purge_personal_memory"
+        ? "PURGE_PERSONAL_MEMORY"
+        : "";
+    memoryControlConfirmationEl.placeholder = confirmation
+      ? `输入 ${confirmation}`
+      : "输入要求的确认文本";
+    memoryControlResultEl.textContent = "";
+  }
+
+  function memoryControlPayload(action) {
+    if (["forget_evidence", "revoke_boundary", "confirm_candidate", "reject_candidate"].includes(action)) {
+      return { evidence_id: memoryControlEvidenceIdEl.value.trim() };
+    }
+    if (action === "forget_theme") {
+      return { theme: memoryControlThemeEl.value.trim() };
+    }
+    if (action === "correct_evidence") {
+      let replacement;
+      try {
+        replacement = JSON.parse(memoryControlReplacementEl.value || "{}");
+      } catch (_error) {
+        throw new Error("替代内容必须是有效 JSON 对象");
+      }
+      if (!replacement || Array.isArray(replacement) || typeof replacement !== "object") {
+        throw new Error("替代内容必须是 JSON 对象");
+      }
+      return {
+        evidence_id: memoryControlEvidenceIdEl.value.trim(),
+        replacement_content: replacement,
+        source_summary: memoryControlSummaryEl.value.trim(),
+      };
+    }
+    if (action === "set_boundary") {
+      return {
+        boundary_key: memoryControlBoundaryKeyEl.value.trim(),
+        value: parseJsonOrText(memoryControlBoundaryValueEl.value),
+        source_summary: memoryControlSummaryEl.value.trim(),
+      };
+    }
+    return {};
+  }
+
+  async function submitMemoryControl(event) {
+    event.preventDefault();
+    if (!state.selectedSubjectId) {
+      memoryControlResultEl.textContent = "请先选择记忆主体。";
+      return;
+    }
+    const action = memoryControlActionEl.value;
+    const confirmation = memoryControlConfirmationEl.value.trim();
+    if (action === "reset_relationship" && confirmation !== "RESET_RELATIONSHIP") {
+      memoryControlResultEl.textContent = "输入 RESET_RELATIONSHIP 后才能重置关系。";
+      return;
+    }
+    if (action === "purge_personal_memory" && confirmation !== "PURGE_PERSONAL_MEMORY") {
+      memoryControlResultEl.textContent = "输入 PURGE_PERSONAL_MEMORY 后才能清除个人陪伴记忆。";
+      return;
+    }
+    let payload;
+    try {
+      payload = memoryControlPayload(action);
+    } catch (error) {
+      memoryControlResultEl.textContent = error.message || "控制参数无效。";
+      return;
+    }
+    const response = await apiFetch(`/api/xiaoxin/admin/memory-subjects/${encodeURIComponent(state.selectedSubjectId)}/control`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action,
+        idempotency_key: nextMemoryControlKey(action),
+        confirmation,
+        payload,
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    memoryControlResultEl.textContent = response.ok
+      ? `${data.message || "控制命令已执行"}（${data.status || "applied"}）`
+      : (data.message || "控制命令执行失败");
+    if (response.ok) {
+      memoryControlConfirmationEl.value = "";
+      await loadSubjectMemoryDetail();
+    }
+  }
+
+  function prefillMemoryControl(action, evidenceId) {
+    memoryControlActionEl.value = action;
+    memoryControlEvidenceIdEl.value = evidenceId || "";
+    renderMemoryControlFields();
+    memoryControlForm.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  const MEMORY_FACT_LABELS = {
+    preferred_name: "偏好称呼",
+    "profile:preferred_name": "偏好称呼",
+    profile: "个人资料",
+    preference: "个人偏好",
+    interest: "兴趣",
+    goal: "目标",
+    life_event: "生活事件",
+    relationship_context: "关系背景",
+    wellbeing: "身心状态",
+  };
+
+  function memoryFactLabel(item) {
+    const factKey = String(item.fact_key || "");
+    if (MEMORY_FACT_LABELS[factKey]) return MEMORY_FACT_LABELS[factKey];
+    const namespace = factKey.includes(":") ? factKey.split(":", 1)[0] : "";
+    return MEMORY_FACT_LABELS[namespace] || factKey || item.kind || "用户事实";
+  }
+
+  function renderMemoryProfile(timeline) {
+    const confirmedFacts = timeline.filter((item) => item.fact_key && item.status === "active" && item.ownership_scope === "user" && item.is_current_epoch !== false);
+    const candidateFacts = timeline.filter((item) => item.fact_key && item.status === "candidate" && item.ownership_scope === "user" && item.is_current_epoch !== false);
+    const profileFacts = [...confirmedFacts, ...candidateFacts].sort((left, right) => {
+      return String(right.occurred_at || "").localeCompare(String(left.occurred_at || ""));
+    });
+    const preferredName = confirmedFacts.find((item) => {
+      return ["preferred_name", "profile:preferred_name"].includes(item.fact_key);
+    });
+
+    memoryPreferredNameEl.textContent = preferredName?.source_summary || "未记录";
+    memoryConfirmedFactCountEl.textContent = String(confirmedFacts.length);
+    memoryCandidateFactCountEl.textContent = String(candidateFacts.length);
+    memoryLastFactAtEl.textContent = profileFacts.length
+      ? formatDiagnosticTime(profileFacts[0].occurred_at)
+      : "尚无记录";
+    memoryProfileFactsEl.innerHTML = profileFacts.length
+      ? profileFacts.map((item) => `
+          <div class="memory-profile-fact">
+            <strong>${escapeHtml(memoryFactLabel(item))} · ${item.status === "active" ? "已确认" : "待确认"}</strong>
+            <span>${escapeHtml(item.source_summary || "无安全摘要")}</span>
+            <time datetime="${escapeHtml(item.occurred_at || "")}">${escapeHtml(formatDiagnosticTime(item.occurred_at))}</time>
+          </div>
+        `).join("")
+      : '<div class="empty">尚未形成可展示的用户事实。对话只有在说话人身份确认且记忆成功落库后才会出现在这里。</div>';
+  }
+
+  function renderMemoryReadiness(payload, selectedSubject, timeline) {
+    const readiness = state.subjectAdminDetail?.readiness || { code: "projection_unavailable" };
+    const isReady = readiness.code === "ready";
+    const confirmedFactCount = timeline.filter((item) => {
+      return item.fact_key && item.status === "active" && item.ownership_scope === "user";
+    }).length;
+    const alternativeSubjects = state.memorySubjects.filter((subject) => {
+      return subject.id !== selectedSubject.id
+        && !subject.merged_into_subject_id
+        && subject.kind !== "device_unknown";
+    });
+
+    memoryReadinessEl.dataset.state = isReady ? "ready" : "blocked";
+    memoryUsableContentEl.classList.toggle("hidden", !isReady);
+    if (isReady) {
+      memoryReadinessTitleEl.textContent = "个人记忆链路正常";
+      memoryReadinessMessageEl.textContent = confirmedFactCount
+        ? `当前主体可读取和写入个人记忆，已有 ${confirmedFactCount} 条已确认用户事实。`
+        : "当前主体可读取和写入个人记忆，尚未形成已确认用户事实。";
+      memoryReadinessActionsEl.innerHTML = "";
+      return;
+    }
+
+    memoryAdvancedDiagnosticsEl.open = false;
+    const blockedCopy = {
+      speaker_unconfirmed: ["说话人尚未确认", "未知说话人禁止形成和展示私人长期记忆。"],
+      device_unbound: ["设备尚未绑定", "该设备没有有效用户归属，不能建立个人记忆链路。"],
+      owner_missing: ["主体缺少有效归属", "该历史主体没有可用的 owner 账号。"],
+      pet_missing: ["陪伴实体不存在", "目标用户尚未建立个人小芯实体。"],
+      pet_pending: ["个人小芯尚未激活", "目标用户的个人小芯仍在等待首次设备绑定。"],
+      subject_merged: ["主体已经合并", "该主体只保留用于历史诊断，不能继续操作。"],
+      projection_unavailable: ["记忆投影暂不可用", "服务暂时无法生成安全投影，请按审计编号排查。"],
+    };
+    const copy = blockedCopy[readiness.code] || ["当前主体不能形成个人长期记忆", "身份链路尚未满足安全持久化条件。"];
+    memoryReadinessTitleEl.textContent = copy[0];
+    memoryReadinessMessageEl.textContent = copy[1];
+    memoryReadinessActionsEl.innerHTML = [
+      ...alternativeSubjects.slice(0, 3).map((subject) => `
+        <button type="button" data-switch-memory-subject="${escapeHtml(subject.id)}">
+          查看 ${escapeHtml(subject.display_name || subject.id)}
+        </button>
+      `),
+      '<button class="secondary" type="button" data-locate-memory-subjects>返回主体列表</button>',
+    ].join("");
+  }
+
+  function renderSubjectMemory() {
+    const detail = state.subjectMemory;
+    const selectedSubject = state.memorySubjects.find((subject) => subject.id === state.selectedSubjectId);
+    const hasDetail = Boolean(selectedSubject && detail);
+    subjectMemoryEmptyEl.classList.toggle("hidden", hasDetail);
+    subjectMemoryPanelEl.classList.toggle("hidden", !hasDetail);
+
+    if (!hasDetail) {
+      if (state.subjectMemoryError) {
+        subjectMemoryEmptyEl.textContent = `记忆可视化加载失败：${state.subjectMemoryError}`;
+      } else {
+        subjectMemoryEmptyEl.textContent = state.memorySubjects.length
+          ? "请选择一个记忆主体查看 V2 安全投影。"
+          : "暂无记忆主体。";
+      }
+      subjectMemoryListsEl.innerHTML = "";
+      memoryAgeEl.textContent = "-";
+      memoryStageEl.textContent = "-";
+      memoryEvidenceCountEl.textContent = "0";
+      memoryChapterCountEl.textContent = "0";
+      memoryEpochCountEl.textContent = "0";
+      memoryPendingJobsEl.textContent = "0";
+      memoryIdentityStripEl.innerHTML = "";
+      memoryReadinessEl.dataset.state = "blocked";
+      memoryReadinessTitleEl.textContent = "正在检查个人记忆链路";
+      memoryReadinessMessageEl.textContent = "等待主体详情加载。";
+      memoryReadinessActionsEl.innerHTML = "";
+      memoryUsableContentEl.classList.add("hidden");
+      memoryAdvancedDiagnosticsEl.open = false;
+      memoryControlForm.classList.add("hidden");
+      memoryPreferredNameEl.textContent = "未记录";
+      memoryConfirmedFactCountEl.textContent = "0";
+      memoryCandidateFactCountEl.textContent = "0";
+      memoryLastFactAtEl.textContent = "-";
+      memoryProfileFactsEl.innerHTML = "";
+      memoryTimelineEl.innerHTML = "";
+      memoryLineageEl.innerHTML = "";
+      memoryEpochsEl.innerHTML = "";
+      memoryHealthEl.innerHTML = "";
+      memoryPendingObservationsEl.innerHTML = "";
+      memoryRetrievalAuditsEl.innerHTML = "";
+      memoryRelationshipStageEventsEl.innerHTML = "";
+      return;
+    }
+
+    const payload = detail.payload || {};
+    const evidence = payload.evidence || [];
+    const adjustments = payload.active_adjustments || [];
+    const chapters = payload.chapters || [];
+    const jobs = payload.jobs || [];
+    const diagnostics = payload.diagnostics || {};
+    const timeline = diagnostics.evidence_timeline || [];
+    const lineage = diagnostics.lineage || {};
+    const epochs = diagnostics.epochs || [];
+    const health = diagnostics.health || {};
+    const pendingObservations = diagnostics.pending_observations || [];
+    const retrievalAudits = diagnostics.retrieval_audits || [];
+    const relationshipStageEvents = diagnostics.relationship_stage_events || [];
+    const pendingJobs = jobs.filter((item) => ["pending", "retry", "leased"].includes(item.status));
+    memoryControlForm.classList.toggle("hidden", state.subjectAdminDetail?.readiness?.code !== "ready");
+    renderMemoryReadiness(payload, selectedSubject, timeline);
+    renderMemoryProfile(timeline);
+    memoryAgeEl.textContent = detail.xiaoxin_age == null ? "未知" : `${detail.xiaoxin_age} 岁`;
+    memoryStageEl.textContent = detail.relationship_stage || "first_meeting";
+    memoryEvidenceCountEl.textContent = String(evidence.length);
+    memoryChapterCountEl.textContent = String(chapters.length);
+    memoryEpochCountEl.textContent = String(epochs.length);
+    memoryPendingJobsEl.textContent = String(pendingJobs.length);
+
+    const adminIdentity = state.subjectAdminDetail?.identity || selectedSubject;
+    memoryIdentityStripEl.innerHTML = [
+      ["用户", adminIdentity.owner?.display_name || adminIdentity.owner?.username],
+      ["设备", adminIdentity.device?.display_name || selectedSubject.device_id],
+      ["说话人", adminIdentity.speaker?.display_name],
+      ["陪伴实体", payload.pet_id],
+      ["记忆主体", payload.memory_subject_id],
+      ["当前关系时期", payload.relationship_epoch_id],
+    ].map(([label, value]) => `
+      <div class="memory-identity-token">
+        <span>${escapeHtml(label)}</span>
+        <code>${escapeHtml(value || "-")}</code>
+      </div>
+    `).join("");
+
+    const normalizedSearch = state.memorySearch.trim().toLowerCase();
+    const visibleTimeline = timeline.filter((item) => {
+      if (state.memoryStatusFilter && item.status !== state.memoryStatusFilter) return false;
+      if (!normalizedSearch) return true;
+      return [item.evidence_id, item.kind, item.source_summary, item.source_ref]
+        .some((value) => String(value || "").toLowerCase().includes(normalizedSearch));
+    });
+    memoryTimelineEl.innerHTML = visibleTimeline.length
+      ? visibleTimeline.map((item) => `
+          <article class="evidence-node" data-evidence-status="${escapeHtml(item.status)}">
+            <div class="evidence-node-head">
+              <span class="memory-status">${escapeHtml(item.status)}</span>
+              <strong>${escapeHtml(item.kind)}</strong>
+              <code class="diagnostic-id">${escapeHtml(item.evidence_id)}</code>
+            </div>
+            <div class="evidence-summary">${escapeHtml(item.source_summary)}</div>
+            <div class="evidence-meta">
+              <span>${escapeHtml(formatDiagnosticTime(item.occurred_at))}</span>
+              <span>${escapeHtml(item.ownership_scope)}</span>
+              <span>${escapeHtml(item.attribution)}</span>
+              <span>confidence ${escapeHtml(item.confidence)}</span>
+              <span>${item.prompt_eligible ? "prompt eligible" : "prompt blocked"}</span>
+              <span>${item.is_current_epoch ? "current epoch" : "historical epoch"}</span>
+            </div>
+            ${item.status === "active" || item.status === "candidate" ? `
+              <div class="evidence-actions">
+                <button class="secondary" type="button" data-memory-prefill-action="correct_evidence" data-memory-evidence-id="${escapeHtml(item.evidence_id)}">纠正</button>
+                <button class="secondary" type="button" data-memory-prefill-action="forget_evidence" data-memory-evidence-id="${escapeHtml(item.evidence_id)}">忘记</button>
+                ${item.status === "candidate" && item.source_kind === "conversation_candidate" ? `
+                  <button type="button" data-memory-prefill-action="confirm_candidate" data-memory-evidence-id="${escapeHtml(item.evidence_id)}">确认候选</button>
+                  <button class="secondary" type="button" data-memory-prefill-action="reject_candidate" data-memory-evidence-id="${escapeHtml(item.evidence_id)}">拒绝候选</button>
+                ` : ""}
+                ${item.kind === "explicit_boundary" ? `<button class="secondary" type="button" data-memory-prefill-action="revoke_boundary" data-memory-evidence-id="${escapeHtml(item.evidence_id)}">撤销边界</button>` : ""}
+              </div>
+            ` : ""}
+          </article>
+        `).join("")
+      : '<div class="empty">当前筛选条件下没有 Evidence。</div>';
+
+    const lineageGroups = [
+      ["Capsule", lineage.capsules || []],
+      ["Adjustment", lineage.adjustments || []],
+      ["Chapter", lineage.chapters || []],
+      ["Relation", lineage.relations || []],
+    ];
+    const lineageCards = lineageGroups.flatMap(([kind, items]) =>
+      items.map((item) => renderLineageCard(kind, item))
+    );
+    memoryLineageEl.innerHTML = lineageCards.length
+      ? lineageCards.join("")
+      : '<div class="empty">当前主体尚无可展示的派生血缘。</div>';
+
+    memoryPendingObservationsEl.innerHTML = pendingObservations.length
+      ? pendingObservations.map((item) => `
+          <article class="pending-observation-card">
+            <div class="pending-observation-head">
+              <span class="memory-status">${escapeHtml(item.status)}</span>
+              <strong>${escapeHtml(item.kind)}</strong>
+            </div>
+            <span>${escapeHtml(item.safe_summary)}</span>
+            <code class="diagnostic-id">${escapeHtml(item.observation_id)}</code>
+            <span>来源 ${escapeHtml(item.source_kind)} · ${escapeHtml(item.source_ref)}</span>
+            <span>发生 ${escapeHtml(formatDiagnosticTime(item.occurred_at))}</span>
+            <span>原因 ${escapeHtml(item.queued_reason)} · 尝试 ${escapeHtml(item.attempt_count)}</span>
+            <span>错误 ${escapeHtml(item.last_error_code || "-")}</span>
+            <span>保留至 ${escapeHtml(formatDiagnosticTime(item.expires_at))}</span>
+          </article>
+        `).join("")
+      : '<div class="empty">当前 personal pet 没有待处理 Observation。</div>';
+
+    memoryRetrievalAuditsEl.innerHTML = retrievalAudits.length
+      ? retrievalAudits.map((item) => `
+          <article class="pending-observation-card">
+            <div class="pending-observation-head">
+              <span class="memory-status">${escapeHtml(item.interaction_kind)}</span>
+              <strong>候选 ${escapeHtml(item.candidate_count)}</strong>
+            </div>
+            <code class="diagnostic-id">turn ${escapeHtml(item.turn_id)}</code>
+            <code class="diagnostic-id">query ${escapeHtml(item.query_digest)}</code>
+            <span>命中 ${escapeHtml((item.selected_evidence_ids || []).join(", ") || "-")}</span>
+            <span>耗时 ${escapeHtml(Number(item.duration_ms || 0).toFixed(2))} ms</span>
+            <span>${escapeHtml((item.score_details || []).map((score) => `${score.evidence_id}: ${score.total_score}`).join(" | ") || "无入选分数")}</span>
+            <span>保留至 ${escapeHtml(formatDiagnosticTime(item.expires_at))}</span>
+          </article>
+        `).join("")
+      : '<div class="empty">当前主体暂无短期召回审计。</div>';
+
+    memoryRelationshipStageEventsEl.innerHTML = relationshipStageEvents.length
+      ? relationshipStageEvents.map((item) => `
+          <article class="pending-observation-card">
+            <div class="pending-observation-head">
+              <span class="memory-status">${escapeHtml(item.previous_stage || "baseline")}</span>
+              <strong>→ ${escapeHtml(item.relationship_stage)}</strong>
+            </div>
+            <code class="diagnostic-id">epoch ${escapeHtml(item.relationship_epoch_id)}</code>
+            <span>连续性 ${escapeHtml(item.quality.continuity)} · 了解 ${escapeHtml(item.quality.knowledge)}</span>
+            <span>帮助 ${escapeHtml(item.quality.helpfulness)} · 契合 ${escapeHtml(item.quality.attunement)}</span>
+            <span>依据 ${escapeHtml((item.reason_codes || []).join(", ") || "baseline")}</span>
+            <span>策略 ${escapeHtml(item.policy_version)} · ${escapeHtml(formatDiagnosticTime(item.occurred_at))}</span>
+          </article>
+        `).join("")
+      : '<div class="empty">当前关系时期暂无阶段事件。</div>';
+
+    memoryEpochsEl.innerHTML = epochs.length
+      ? epochs.map((item) => `
+          <div class="epoch-card">
+            <strong>${item.is_current ? "当前" : "历史"} · ${escapeHtml(item.start_reason)}</strong>
+            <code class="diagnostic-id">${escapeHtml(item.epoch_id)}</code>
+            <span>${escapeHtml(formatDiagnosticTime(item.started_at))} → ${escapeHtml(formatDiagnosticTime(item.ended_at))}</span>
+            <span>Evidence ${escapeHtml(item.evidence_count)}${item.end_reason ? ` · ${escapeHtml(item.end_reason)}` : ""}</span>
+          </div>
+        `).join("")
+      : '<div class="empty">尚未建立关系 epoch。</div>';
+
+    const healthCells = [
+      renderDiagnosticCounts("Evidence", health.evidence_by_status),
+      renderDiagnosticCounts("Job", health.jobs_by_status),
+    ].join("");
+    memoryHealthEl.innerHTML = healthCells || '<div class="empty">暂无健康计数。</div>';
+
+    const groups = [
+      ["当前调整", adjustments.map((item) => `${item.dimension}: ${item.value}`)],
+      ["陪伴章节", chapters.map((item) => item.safe_narrative)],
+      ["后台任务", jobs.map((item) => `${item.job_kind} · ${item.status}${item.failure_reason ? ` · ${item.failure_reason}` : ""}`)],
+    ];
+    subjectMemoryListsEl.innerHTML = groups.map(([title, items]) => `
+      <div class="memory-list-block">
+        <h3>${escapeHtml(title)}</h3>
+        ${items.length
+          ? `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+          : '<div class="empty">暂无可安全展示的内容。</div>'}
+      </div>
+    `).join("");
+  }
+
+  async function loadSubjectMemoryDetail(subjectId = state.selectedSubjectId) {
+    state.selectedSubjectId = subjectId || null;
+    if (!state.selectedSubjectId) {
+      state.subjectMemory = null;
+      state.subjectMemoryError = "";
+      renderSubjectMemory();
+      return;
+    }
+
+    const response = await apiFetch(`/api/xiaoxin/admin/memory-subjects/${encodeURIComponent(state.selectedSubjectId)}`);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      state.subjectMemory = null;
+      state.subjectAdminDetail = null;
+      state.subjectMemoryError = data.message || "记忆详情加载失败";
+      renderSubjectMemory();
+      setStatus(state.subjectMemoryError);
+      return;
+    }
+
+    state.subjectAdminDetail = data;
+    state.subjectMemory = data.projection || null;
+    state.subjectMemoryError = "";
+    renderSubjectMemory();
+  }
+
+  async function loadSpeakers() {
+    const response = await apiFetch("/api/xiaoxin/admin/speakers");
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setStatus(data.message || "说话人列表加载失败");
+      return;
+    }
+
+    const data = await response.json();
+    state.speakers = data.speakers || [];
+    if (!state.speakers.length) {
+      speakersEl.innerHTML = '<div class="empty">暂无说话人</div>';
+      return;
+    }
+
+    speakersEl.innerHTML = state.speakers.map((speaker) => `
+      <div class="speaker-row">
+        <span class="device-meta">
+          <span>${speaker.display_name}</span>
+          <span class="device-subtitle">${speaker.id}</span>
+        </span>
+        <span>${speaker.device_id}</span>
+        <span class="badge ${speaker.status === "archived" ? "offline" : "connected"}">${speakerStatusLabel(speaker.status)}</span>
+        <div class="inline-actions">
+          <input class="compact-input" data-speaker-name="${speaker.id}" value="${speaker.display_name}" />
+          <button class="secondary" type="button" data-rename-speaker="${speaker.id}">保存</button>
+          <button class="secondary" type="button" data-archive-speaker="${speaker.id}" ${speaker.status === "archived" ? "disabled" : ""}>归档</button>
+        </div>
+      </div>
+    `).join("");
+
+    document.querySelectorAll("[data-rename-speaker]").forEach((button) => {
+      button.addEventListener("click", () => renameSpeaker(button.dataset.renameSpeaker));
+    });
+    document.querySelectorAll("[data-archive-speaker]").forEach((button) => {
+      button.addEventListener("click", () => archiveSpeaker(button.dataset.archiveSpeaker));
+    });
+  }
+
+  async function loadMemorySubjects() {
+    const response = await apiFetch("/api/xiaoxin/admin/memory-subjects");
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setStatus(data.message || "记忆主体列表加载失败");
+      return;
+    }
+
+    const data = await response.json();
+    state.memorySubjects = data.memory_subjects || [];
+    if (!state.memorySubjects.length) {
+      memorySubjectsEl.innerHTML = '<div class="empty">暂无记忆主体</div>';
+      state.selectedSubjectId = null;
+      state.subjectMemory = null;
+      state.subjectAdminDetail = null;
+      state.subjectMemoryError = "";
+      renderSubjectMemory();
+      return;
+    }
+
+    if (!state.memorySubjects.some((subject) => subject.id === state.selectedSubjectId)) {
+      state.selectedSubjectId = data.recommended_subject_id || state.memorySubjects[0].id;
+    }
+
+    const currentSubjects = state.memorySubjects.filter((subject) => {
+      return !isHistoricalEmptyMemorySubject(subject);
+    });
+    const historicalSubjects = state.memorySubjects.filter((subject) => {
+      return isHistoricalEmptyMemorySubject(subject);
+    });
+    const currentMarkup = currentSubjects.length
+      ? currentSubjects.map(renderMemorySubjectRow).join("")
+      : '<div class="empty">暂无当前记忆主体</div>';
+    const historyMarkup = historicalSubjects.length
+      ? `
+        <details class="subject-history">
+          <summary>历史空主体（${historicalSubjects.length}）</summary>
+          <div class="stack">
+            ${historicalSubjects.map(renderMemorySubjectRow).join("")}
+          </div>
+        </details>
+      `
+      : "";
+    memorySubjectsEl.innerHTML = currentMarkup + historyMarkup;
+
+    document.querySelectorAll("[data-merge-subject]").forEach((button) => {
+      button.addEventListener("click", () => mergeSubject(button.dataset.mergeSubject));
+    });
+    document.querySelectorAll("[data-open-memory]").forEach((button) => {
+      button.addEventListener("click", () => loadSubjectMemoryDetail(button.dataset.openMemory));
+    });
+    await loadSubjectMemoryDetail(state.selectedSubjectId);
+  }
+
+  function isHistoricalEmptyMemorySubject(subject) {
+    const counts = subject.counts || {};
+    return subject.readiness?.code !== "ready"
+      && counts.available === true
+      && Number(counts.evidence || 0) === 0
+      && Number(counts.candidate_facts || 0) === 0
+      && Number(counts.jobs || 0) === 0
+      && Number(counts.errors || 0) === 0;
+  }
+
+  function renderMemorySubjectRow(subject) {
+    const targets = knownMergeTargets(subject.id);
+    const inspectControl = `
+      <button
+        class="${state.selectedSubjectId === subject.id ? "active" : "secondary"}"
+        type="button"
+        data-open-memory="${escapeHtml(subject.id)}"
+      >查看记忆</button>
+    `;
+      const ownerLabel = subject.owner?.display_name || subject.owner?.username || "未知用户";
+      const deviceLabel = subject.device?.display_name || subject.device_id;
+      const speakerLabel = subject.speaker?.display_name || subject.display_name;
+      const readinessLabel = {
+        ready: "记忆可用",
+        speaker_unconfirmed: "说话人未确认",
+        device_unbound: "设备未绑定",
+        owner_missing: "缺少归属",
+        pet_missing: "缺少陪伴实体",
+        pet_pending: "陪伴实体待激活",
+        subject_merged: "主体已合并",
+        projection_unavailable: "投影不可用",
+      }[subject.readiness?.code] || subject.readiness?.code || "状态未知";
+      const mergeControl = !subject.merged_into_subject_id && targets.length
+        ? `
+          <select data-merge-target="${escapeHtml(subject.id)}">
+            <option value="">选择同用户合并目标</option>
+            ${targets.map((target) => `<option value="${escapeHtml(target.id)}">${escapeHtml(target.display_name)}（${escapeHtml(subjectKindLabel(target.kind))}）</option>`).join("")}
+          </select>
+          <button class="secondary" type="button" data-merge-subject="${escapeHtml(subject.id)}">合并</button>
+        `
+        : "";
+
+    return `
+      <div class="subject-row">
+        <span class="device-meta">
+          <span>${escapeHtml(ownerLabel)} · ${escapeHtml(speakerLabel)}</span>
+          <span class="device-subtitle">${escapeHtml(subject.id)}</span>
+        </span>
+        <span>${escapeHtml(deviceLabel)} · ${escapeHtml(subject.device_id)}</span>
+        <span>${escapeHtml(readinessLabel)}</span>
+        <div class="inline-actions">${inspectControl}${mergeControl}</div>
+      </div>
+    `;
+  }
+
+  function demoData() {
+    if (!state.demoData) {
+      state.demoData = {
+        overview: {
+          weather: { configured: true, available: true, summary: "", detail: "" },
+          course: { configured: true, available_today: true, title: "", detail: "" },
+          todo: { configured: true, count: 0, detail: "" },
+        },
+        notifications: [],
+      };
+    }
+    return state.demoData;
+  }
+
+  async function loadDemoData(force = false) {
+    if (state.demoDataDirty && !force) {
+      return;
+    }
+    const response = await apiFetch("/api/xiaoxin/demo-data");
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setStatus(data.message || "演示数据加载失败");
+      return;
+    }
+
+    state.demoData = await response.json();
+    state.demoDataLoaded = true;
+    state.demoDataDirty = false;
+    renderDemoData();
+  }
+
+  function renderDemoData() {
+    const data = demoData();
+    const overview = data.overview || {};
+    const weather = overview.weather || {};
+    const course = overview.course || {};
+    const todo = overview.todo || {};
+    demoOverviewForm.elements["weather.summary"].value = weather.summary || "";
+    demoOverviewForm.elements["weather.detail"].value = weather.detail || "";
+    demoOverviewForm.elements["course.title"].value = course.title || "";
+    demoOverviewForm.elements["course.detail"].value = course.detail || "";
+    demoOverviewForm.elements["todo.count"].value = Number(todo.count || 0);
+    demoOverviewForm.elements["todo.detail"].value = todo.detail || "";
+    renderDemoNotifications();
+  }
+
+  function renderDemoNotifications() {
+    const notifications = demoData().notifications || [];
+    if (!notifications.length) {
+      demoNotificationPreviewEl.innerHTML = '<div class="empty">暂无演示通知</div>';
+      return;
+    }
+
+    demoNotificationPreviewEl.innerHTML = notifications.map((notification, index) => `
+      <div class="demo-notification-row">
+        <span class="badge">${index + 1}/${notifications.length}</span>
+        <span class="badge">${eventLabel(notification.event)}</span>
+        <span class="demo-notification-title">
+          <strong>${escapeHtml(notification.title || notification.tag || "通知")}</strong>
+          <span>${escapeHtml(notification.tag || "通知")} · ${escapeHtml(notification.body || "")}</span>
+        </span>
+      </div>
+    `).join("");
+  }
+
+  function collectDemoData() {
+    const data = demoData();
+    data.overview = {
+      weather: {
+        configured: true,
+        available: true,
+        summary: demoOverviewForm.elements["weather.summary"].value,
+        detail: demoOverviewForm.elements["weather.detail"].value,
+      },
+      course: {
+        configured: true,
+        available_today: true,
+        title: demoOverviewForm.elements["course.title"].value,
+        detail: demoOverviewForm.elements["course.detail"].value,
+      },
+      todo: {
+        configured: true,
+        count: Number(demoOverviewForm.elements["todo.count"].value || 0),
+        detail: demoOverviewForm.elements["todo.detail"].value,
+      },
+    };
+    return data;
+  }
+
+  async function saveDemoData() {
+    const response = await apiFetch("/api/xiaoxin/demo-data", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(collectDemoData()),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setStatus(data.message || "演示数据保存失败");
+      return false;
+    }
+
+    state.demoData = { overview: data.overview, notifications: data.notifications };
+    state.demoDataDirty = false;
+    state.demoDataLoaded = true;
+    renderDemoData();
+    setStatus("演示数据已保存");
+    return true;
+  }
+
+  async function syncDemoOverview() {
+    if (state.demoDataDirty) {
+      const saved = await saveDemoData();
+      if (!saved) {
+        return;
+      }
+    }
+
+    const deviceId = deviceSelect.value;
+    if (!deviceId) {
+      setStatus("请选择目标设备");
+      return;
+    }
+
+    const response = await apiFetch("/api/xiaoxin/demo-data/overview/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ device_id: deviceId }),
+    });
+    const data = await response.json().catch(() => ({}));
+    setStatus(response.ok ? `已同步演示总览 ${deviceId}` : (data.message || "演示总览同步失败"));
+  }
+
+  function demoNotificationShowcase() {
+    return [
+      {
+        id: "course-reminder-demo",
+        event: "course_reminder",
+        title: "上课提醒",
+        body: "高等数学 10:10 3教204",
+        tag: "课程",
+        priority: 1,
+        ttl_ms: 0,
+        speak: true,
+        speak_text: "小新提醒你，10:10有高等数学课，地点在三教二零四。",
+        course_name: "高等数学",
+        classroom: "3教204",
+        starts_at: "2026-07-05T10:10:00+08:00",
+        remind_before_min: 15,
+      },
+      {
+        id: "todo-reminder-demo",
+        event: "todo_reminder",
+        title: "待办提醒",
+        body: "实验报告今晚 18:00 前提交",
+        tag: "待办",
+        priority: 2,
+        ttl_ms: 0,
+        speak: true,
+        speak_text: "小新提醒你，实验报告今晚六点前提交。",
+        todo_title: "提交实验报告",
+        due_at: "2026-07-05T18:00:00+08:00",
+      },
+      {
+        id: "network-demo",
+        event: "notification",
+        title: "校园网状态",
+        body: "宿舍区 Wi-Fi 已恢复，设备重新联网成功。",
+        tag: "网络",
+        priority: 2,
+        ttl_ms: 0,
+        speak: false,
+        speak_text: "",
+      },
+      {
+        id: "battery-demo",
+        event: "notification",
+        title: "电量提醒",
+        body: "小新电量剩余 18%，建议放回底座充电。",
+        tag: "电量",
+        priority: 3,
+        ttl_ms: 0,
+        speak: true,
+        speak_text: "小新电量剩余百分之十八，建议放回底座充电。",
+      },
+      {
+        id: "system-update-demo",
+        event: "notification",
+        title: "系统更新",
+        body: "新版通知中心已就绪，课程、待办、网络、电量统一收纳。",
+        tag: "系统",
+        priority: 1,
+        ttl_ms: 0,
+        speak: false,
+        speak_text: "",
+      },
+    ];
+  }
+
+  async function applyDemoNotificationShowcase() {
+    if (!state.demoDataLoaded) {
+      await loadDemoData(true);
+    }
+
+    demoData().notifications = demoNotificationShowcase();
+    renderDemoNotifications();
+    const notifications = demoData().notifications || [];
+    const saved = await saveDemoData();
+    if (saved) {
+      setStatus(`已填充 ${notifications.length} 条演示通知，正在同步到硬件端`);
+      await syncDemoOverview();
+    }
+  }
+
+  async function sendTextChat() {
+    const deviceId = deviceSelect.value;
+    const textChatInput = document.querySelector("#textChatInput");
+    const text = textChatInput.value.trim();
+    if (!deviceId) {
+      setStatus("请选择目标设备");
+      return;
+    }
+    const device = state.devices.find((item) => item.device_id === deviceId);
+    if (!device || device.state !== "connected") {
+      setStatus("请选择在线设备");
+      return;
+    }
+    if (!text) {
+      setStatus("文本不能为空");
+      return;
+    }
+    if (text.length > 500) {
+      setStatus("文本不能超过 500 个字符");
+      return;
+    }
+
+    try {
+      const response = await apiFetch(`/api/xiaoxin/devices/${encodeURIComponent(deviceId)}/text-chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setStatus(data.message || "发送失败");
+        return;
+      }
+
+      textChatInput.value = "";
+      setStatus("已发送到设备");
+    } catch (error) {
+      setStatus("发送失败");
+    }
+  }
+
+  async function loadDeliveries() {
+    const response = await apiFetch("/api/xiaoxin/deliveries");
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setStatus(data.message || "投递记录加载失败");
+      return;
+    }
+
+    const data = await response.json();
+    const deliveries = data.deliveries || [];
+
+    if (!deliveries.length) {
+      deliveriesEl.innerHTML = '<div class="empty">暂无记录</div>';
+      timelineEl.textContent = "";
+      return;
+    }
+
+    deliveriesEl.innerHTML = deliveries.map((delivery) => `
+      <button class="secondary delivery-row" type="button" data-delivery-id="${delivery.delivery_id}">
+        <span>${delivery.delivery_id}</span>
+        <span>${eventLabel(delivery.event)}</span>
+        <span class="badge ${delivery.state}">${deliveryStateLabel(delivery.state)}</span>
+        <span>${deliveryReasonLabel(delivery.reason)}</span>
+      </button>
+    `).join("");
+
+    document.querySelectorAll("[data-delivery-id]").forEach((button) => {
+      button.addEventListener("click", () => showDelivery(button.dataset.deliveryId));
+    });
+  }
+
+  async function showDelivery(deliveryId) {
+    const response = await apiFetch(`/api/xiaoxin/deliveries/${deliveryId}`);
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setStatus(data.message || "投递详情加载失败");
+      return;
+    }
+
+    const data = await response.json();
+    timelineEl.textContent = (data.timeline || [])
+      .map((entry) => {
+        const source = labelFromMap(entry.source, {
+          server: "服务端",
+          device: "设备",
+          tts: "播报",
+          dispatcher: "投递器",
+        });
+        const reason = deliveryReasonLabel(entry.reason);
+        return `${entry.at} ${source} ${deliveryStateLabel(entry.state)}${reason ? ` ${reason}` : ""}`;
+      })
+      .join("\n");
+  }
+
+  function applyTemplate(templateName) {
+    if (templateName === "course") {
+      state.event = "course_reminder";
+      form.title.value = "上课提醒";
+      form.body.value = "高等数学 10:10 3教204";
+      form.tag.value = "课程";
+      form.speak.value = "true";
+      form.speak_text.value = "小芯提醒你，10:10有高等数学课，地点在三教二零四。";
+    } else if (templateName === "todo") {
+      state.event = "todo_reminder";
+      form.title.value = "待办提醒";
+      form.body.value = "记得提交实验报告";
+      form.tag.value = "待办";
+      form.speak.value = "true";
+      form.speak_text.value = "小芯提醒你，今天傍晚前记得提交实验报告。";
+    } else {
+      state.event = "notification";
+      form.title.value = "普通提醒";
+      form.body.value = "记得喝水，休息一下眼睛。";
+      form.tag.value = "通知";
+      form.speak.value = "true";
+      form.speak_text.value = "小芯提醒你，记得喝水，休息一下眼睛。";
+    }
+
+    document.querySelectorAll("[data-event]").forEach((button) => {
+      const isActive = button.dataset.event === state.event;
+      button.classList.toggle("active", isActive);
+      button.classList.toggle("secondary", !isActive);
+    });
+    setSectionVisibility();
+  }
+
+  async function refresh(includeMemory = true) {
+    if (!state.authChecked) {
+      await ensureAuthState();
+    }
+    if (state.authEnabled && !state.user) {
+      setStatus("请先登录");
+      return;
+    }
+    if (state.user && state.user.role !== "admin") {
+      setStatus("当前账号没有管理员权限");
+      return;
+    }
+
+    await loadDevices();
+    await loadSpeakers();
+    if (includeMemory) {
+      await loadMemorySubjects();
+    }
+    await loadDemoData();
+    await loadDeliveries();
+    setStatus(`设备 ${state.devices.length} 台`);
+  }
+
+  async function submitAuthForm(path, formElement) {
+    const payload = Object.fromEntries(new FormData(formElement).entries());
+    const response = await apiFetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setAuthMessage(data.message || "认证失败");
+      return;
+    }
+
+    state.user = data.user || null;
+    state.authEnabled = true;
+    setAuthMessage("");
+    renderSessionState();
+    await refresh();
+  }
+
+  document.querySelectorAll("[data-event]").forEach((button) => {
+    button.addEventListener("click", () => {
+      applyTemplate(templateNameForEvent(button.dataset.event));
+    });
+  });
+
+  document.querySelectorAll("[data-template]").forEach((button) => {
+    button.addEventListener("click", () => applyTemplate(button.dataset.template));
+  });
+
+  document.querySelector("#refreshBtn").addEventListener("click", refresh);
+  document.querySelector("#refreshMemoryBtn").addEventListener("click", () => loadSubjectMemoryDetail());
+  memoryReadinessActionsEl.addEventListener("click", async (event) => {
+    const switchButton = event.target.closest("[data-switch-memory-subject]");
+    if (switchButton) {
+      await loadSubjectMemoryDetail(switchButton.dataset.switchMemorySubject);
+      return;
+    }
+    if (event.target.closest("[data-locate-memory-subjects]")) {
+      memorySubjectsEl.closest("section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  memoryControlActionEl.addEventListener("change", renderMemoryControlFields);
+  memoryControlForm.addEventListener("submit", submitMemoryControl);
+  memoryTimelineEl.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-memory-prefill-action]");
+    if (!button) return;
+    prefillMemoryControl(button.dataset.memoryPrefillAction, button.dataset.memoryEvidenceId);
+  });
+  memoryStatusFilterEl.addEventListener("change", () => {
+    state.memoryStatusFilter = memoryStatusFilterEl.value;
+    renderSubjectMemory();
+  });
+  memorySearchEl.addEventListener("input", () => {
+    state.memorySearch = memorySearchEl.value;
+    renderSubjectMemory();
+  });
+  wakeByIdForm.addEventListener("submit", wakeDeviceById);
+  document.querySelector("#saveDemoDataBtn").addEventListener("click", saveDemoData);
+  document.querySelector("#syncDemoOverviewBtn").addEventListener("click", syncDemoOverview);
+  document.querySelector("#showDemoNotificationsBtn").addEventListener("click", applyDemoNotificationShowcase);
+  document.querySelector("#textChatForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await sendTextChat();
+  });
+  demoOverviewForm.addEventListener("input", () => {
+    state.demoDataDirty = true;
+  });
+  document.querySelector("#logoutBtn").addEventListener("click", async () => {
+    await apiFetch("/api/xiaoxin/auth/logout", { method: "POST" });
+    state.user = null;
+    state.authEnabled = true;
+    renderSessionState();
+    setStatus("已退出登录");
+  });
+  document.querySelector("#loginForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await submitAuthForm("/api/xiaoxin/auth/login", event.currentTarget);
+  });
+  document.querySelector("#registerForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await submitAuthForm("/api/xiaoxin/auth/register", event.currentTarget);
+  });
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const payload = Object.fromEntries(new FormData(form).entries());
+    payload.event = state.event;
+    payload.priority = Number(payload.priority);
+    payload.ttl_ms = Number(payload.ttl_ms);
+    payload.speak = payload.speak === "true";
+    payload.starts_at = formatTimeForInput(payload.starts_at);
+    payload.due_at = normalizeLocalDateTimeToOffset(payload.due_at);
+    if (payload.remind_before_min) {
+      payload.remind_before_min = Number(payload.remind_before_min);
+    }
+
+    const response = await apiFetch("/api/xiaoxin/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json().catch(() => ({}));
+    setStatus(response.ok ? `已立即创建投递 ${data.delivery_id}` : (data.message || "发送失败"));
+    if (response.ok) {
+      await loadDeliveries();
+    }
+  });
+
+  setSectionVisibility();
+  applyTemplate("notification");
+  renderMemoryControlFields();
+
+  ensureAuthState()
+    .then(refresh)
+    .catch(() => {
+      setStatus("控制台初始化失败");
+    });
+
+  window.setInterval(() => {
+    refresh(false).catch(() => {
+      setStatus("刷新失败");
+    });
+  }, 3000);
+</script>
+</body>
+</html>

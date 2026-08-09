@@ -1,0 +1,10 @@
+.git
+__pycache__
+*.pyc
+.env
+Dockerfile
+tmp/
+data/
+main/xiaozhi-server/mysql/
+main/xiaozhi-server/redis/
+main/xiaozhi-server/tmp/

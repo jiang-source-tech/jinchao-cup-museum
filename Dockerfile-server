@@ -1,0 +1,66 @@
+# Self-contained production image. The base stage is built locally so a fresh
+# deployment does not require access to a private container registry.
+FROM python:3.10-slim AS server-base
+
+ARG DEBIAN_MIRROR=
+ARG DEBIAN_SECURITY_MIRROR=
+
+RUN sources="/etc/apt/sources.list /etc/apt/sources.list.d/debian.sources" && \
+    for source_file in $sources; do \
+      [ -f "$source_file" ] || continue; \
+      if [ -n "$DEBIAN_SECURITY_MIRROR" ]; then \
+        sed -i \
+          -e "s|http://security.debian.org/debian-security|$DEBIAN_SECURITY_MIRROR|g" \
+          -e "s|http://deb.debian.org/debian-security|$DEBIAN_SECURITY_MIRROR|g" \
+          "$source_file"; \
+      fi; \
+      if [ -n "$DEBIAN_MIRROR" ]; then \
+        sed -i "s|http://deb.debian.org/debian|$DEBIAN_MIRROR|g" "$source_file"; \
+      fi; \
+    done && \
+    apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update && \
+    apt-get install -y --no-install-recommends \
+      ca-certificates curl libopus0 ffmpeg locales && \
+    sed -i '/zh_CN.UTF-8/s/^# //g' /etc/locale.gen && \
+    locale-gen && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && \
+    pip config set global.trusted-host mirrors.aliyun.com && \
+    pip config set global.timeout 120 && \
+    pip config set install.retries 5
+
+ENV LANG=zh_CN.UTF-8 \
+    LC_ALL=zh_CN.UTF-8 \
+    LANGUAGE=zh_CN:zh \
+    PYTHONIOENCODING=utf-8
+
+WORKDIR /opt/xiaozhi-esp32-server
+
+COPY main/xiaozhi-server/requirements.txt .
+
+ARG TARGETARCH
+ARG PYTORCH_CPU_INDEX_URL=https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    arch="${TARGETARCH:-$(dpkg --print-architecture)}" && \
+    if [ "$arch" = "amd64" ]; then \
+      curl -fL --retry 5 --retry-all-errors --connect-timeout 15 --max-time 600 \
+        "$PYTORCH_CPU_INDEX_URL/torch-2.2.2%2Bcpu-cp310-cp310-linux_x86_64.whl" \
+        -o /tmp/torch-2.2.2+cpu-cp310-cp310-linux_x86_64.whl && \
+      curl -fL --retry 5 --retry-all-errors --connect-timeout 15 --max-time 600 \
+        "$PYTORCH_CPU_INDEX_URL/torchaudio-2.2.2%2Bcpu-cp310-cp310-linux_x86_64.whl" \
+        -o /tmp/torchaudio-2.2.2+cpu-cp310-cp310-linux_x86_64.whl && \
+      pip install --no-cache-dir \
+        /tmp/torch-2.2.2+cpu-cp310-cp310-linux_x86_64.whl \
+        /tmp/torchaudio-2.2.2+cpu-cp310-cp310-linux_x86_64.whl && \
+      rm -f /tmp/torch-2.2.2+cpu-cp310-cp310-linux_x86_64.whl \
+        /tmp/torchaudio-2.2.2+cpu-cp310-cp310-linux_x86_64.whl; \
+    fi && \
+    pip install --no-cache-dir -r requirements.txt --default-timeout=120 --retries 5
+
+FROM server-base AS server
+
+COPY main/xiaozhi-server .
+
+CMD ["python", "app.py"]

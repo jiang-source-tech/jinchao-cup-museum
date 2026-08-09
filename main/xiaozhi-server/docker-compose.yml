@@ -1,0 +1,42 @@
+# Docker安装Server
+services:
+  xiaozhi-esp32-server:
+    image: xiaoxin-esp32-server:local
+    build:
+      context: ../..
+      dockerfile: Dockerfile-server
+      args:
+        DEBIAN_MIRROR: ${DEBIAN_MIRROR:-https://mirrors.aliyun.com/debian}
+        DEBIAN_SECURITY_MIRROR: ${DEBIAN_SECURITY_MIRROR:-https://mirrors.aliyun.com/debian-security}
+    container_name: xiaozhi-esp32-server
+    restart: always
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      - TZ=Asia/Shanghai
+      - XIAOXIN_MINIPROGRAM_APPID=${XIAOXIN_MINIPROGRAM_APPID:-}
+      - XIAOXIN_MINIPROGRAM_SECRET=${XIAOXIN_MINIPROGRAM_SECRET:-}
+      - XIAOXIN_OVERVIEW_IP_HMAC_SECRET=${XIAOXIN_OVERVIEW_IP_HMAC_SECRET:-}
+      - XIAOXIN_AMAP_API_KEY=${XIAOXIN_AMAP_API_KEY:-}
+      - XIAOXIN_AMAP_API_HOST=${XIAOXIN_AMAP_API_HOST:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
+      - XIAOXIN_VOICEPRINT_URL=${XIAOXIN_VOICEPRINT_URL:-}
+      - XIAOXIN_EVALUATION_MODE=${XIAOXIN_EVALUATION_MODE:-0}
+    ports:
+      # ws服务端
+      - "8000:8000"
+      # http服务的端口，用于简单OTA接口(单服务部署)，以及视觉分析接口
+      - "8003:8003"
+    volumes:
+      # 配置文件目录
+      - ./data:/opt/xiaozhi-esp32-server/data
+
+  xiaoxin-doorbell-mqtt:
+    image: eclipse-mosquitto:2
+    container_name: xiaoxin-doorbell-mqtt
+    restart: always
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
