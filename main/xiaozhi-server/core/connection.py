@@ -37,6 +37,8 @@ from config.logger import setup_logging, build_module_string, create_connection_
 from core.utils.prompt_manager import PromptManager
 from core.utils.voiceprint_provider import VoiceprintProvider
 from core.utils.util import get_system_error_response
+from core.business_runtime_factory import create_conversation_runtime
+from core.conversation_runtime import TurnOutcome, TurnRequest
 from core.xiaoxin.runtime import normalize_xiaoxin_user_text
 from core.xiaoxin.companion import build_companion_subject_context
 from core.xiaoxin.compliance import Capability
@@ -142,6 +144,7 @@ class ConnectionHandler:
         self.llm = _llm
         self.memory = _memory
         self.intent = _intent
+        self.conversation_runtime = None
         self.xiaoxin_runtime = None
         self.companion_subject_context = None
 
@@ -585,6 +588,7 @@ class ConnectionHandler:
             """加载意图识别"""
             self._initialize_intent()
             self._init_xiaoxin_runtime()
+            self._init_conversation_runtime()
             """更新系统提示词"""
             self._init_prompt_enhancement()
             """注入工具调用few-shot示例（仅function_call模式）"""
@@ -635,6 +639,69 @@ class ConnectionHandler:
             cfg,
             companion_mind=companion_mind,
         )
+
+    def _init_conversation_runtime(self):
+        self.conversation_runtime = create_conversation_runtime(
+            self.config,
+            legacy_turn_handler=self._try_xiaoxin_turn,
+        )
+
+    def _try_business_turn(self, query: str, current_sentence_id: str) -> bool:
+        if not query:
+            return False
+        if self.conversation_runtime is None:
+            self._init_conversation_runtime()
+
+        history = self.dialogue.get_llm_dialogue()
+        if (
+            history
+            and history[-1].get("role") == "user"
+            and history[-1].get("content") == query
+        ):
+            history = history[:-1]
+
+        request = TurnRequest(
+            request_id=current_sentence_id,
+            transport_session_id=self.session_id,
+            visitor_session_id=None,
+            device_id=self.device_id,
+            user_text=query,
+            history=tuple(history[-8:]),
+            occurred_at=datetime.now().astimezone(),
+            llm=self.llm,
+            metadata={
+                "speaker": self.current_speaker,
+                "device_time_snapshot": self.device_time_snapshot,
+            },
+        )
+        try:
+            outcome = self.conversation_runtime.handle_turn(request)
+        except Exception as exc:
+            logging.getLogger(__name__).exception("Business runtime failed")
+            self.logger.bind(tag=TAG).error(f"Business runtime failed: {exc}")
+            outcome = TurnOutcome(
+                handled=True,
+                spoken_text=get_system_error_response(self.config),
+                error_code="runtime_failure",
+            )
+
+        if not outcome.handled:
+            return False
+        if outcome.output_committed:
+            return True
+
+        reply = outcome.spoken_text or get_system_error_response(self.config)
+        self.tts.store_tts_text(current_sentence_id, reply)
+        self.tts.tts_text_queue.put(
+            TTSMessageDTO(
+                sentence_id=current_sentence_id,
+                sentence_type=SentenceType.MIDDLE,
+                content_type=ContentType.TEXT,
+                content_detail=reply,
+            )
+        )
+        self.dialogue.put(Message(role="assistant", content=reply))
+        return True
 
     def _try_xiaoxin_turn(self, query: str, current_sentence_id: str) -> bool:
         if self.xiaoxin_runtime is None or not query:
@@ -1111,7 +1178,7 @@ class ConnectionHandler:
             # 递归调用时，使用当前的sentence_id
             current_sentence_id = self.sentence_id
 
-        if self._try_xiaoxin_turn(query, current_sentence_id):
+        if self._try_business_turn(query, current_sentence_id):
             if depth == 0:
                 self.tts.tts_text_queue.put(
                     TTSMessageDTO(

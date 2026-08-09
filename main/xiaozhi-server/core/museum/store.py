@@ -1,0 +1,733 @@
+from __future__ import annotations
+
+import json
+import re
+import sqlite3
+import uuid
+from contextlib import contextmanager
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Iterator
+
+from core.museum.contracts import (
+    EvidenceFact,
+    EvidenceSnapshot,
+    ExhibitContext,
+    VisitorSession,
+)
+
+
+DEMO_MUSEUM_ID = "hangzhou-museum-demo"
+DEMO_ZONE_ID = "hangzhou-history-demo-zone"
+DEMO_EXHIBIT_ID = "warring-states-crystal-cup"
+DEMO_REVISION_ID = "warring-states-crystal-cup-r1"
+
+_SCHEMA = """
+CREATE TABLE IF NOT EXISTS museum (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('active', 'archived'))
+);
+
+CREATE TABLE IF NOT EXISTS zone (
+    id TEXT PRIMARY KEY,
+    museum_id TEXT NOT NULL REFERENCES museum(id),
+    name TEXT NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS exhibit (
+    id TEXT PRIMARY KEY,
+    zone_id TEXT NOT NULL REFERENCES zone(id),
+    name TEXT NOT NULL,
+    aliases_json TEXT NOT NULL DEFAULT '[]',
+    image_uri TEXT,
+    status TEXT NOT NULL CHECK (status IN ('active', 'archived'))
+);
+
+CREATE TABLE IF NOT EXISTS source_document (
+    id TEXT PRIMARY KEY,
+    museum_id TEXT NOT NULL REFERENCES museum(id),
+    title TEXT NOT NULL,
+    source_type TEXT NOT NULL,
+    locator TEXT NOT NULL,
+    rights_note TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS content_revision (
+    id TEXT PRIMARY KEY,
+    exhibit_id TEXT NOT NULL REFERENCES exhibit(id),
+    revision_no INTEGER NOT NULL,
+    status TEXT NOT NULL CHECK (
+        status IN ('draft', 'reviewed', 'published', 'withdrawn')
+    ),
+    reviewed_by TEXT,
+    reviewed_at TEXT,
+    published_at TEXT,
+    UNIQUE (exhibit_id, revision_no)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS one_published_revision_per_exhibit
+ON content_revision(exhibit_id) WHERE status = 'published';
+
+CREATE TABLE IF NOT EXISTS exhibit_fact (
+    id TEXT PRIMARY KEY,
+    revision_id TEXT NOT NULL REFERENCES content_revision(id),
+    fact_type TEXT NOT NULL,
+    statement TEXT NOT NULL,
+    keywords_json TEXT NOT NULL DEFAULT '[]',
+    confidence TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS fact_source (
+    fact_id TEXT NOT NULL REFERENCES exhibit_fact(id),
+    source_id TEXT NOT NULL REFERENCES source_document(id),
+    PRIMARY KEY (fact_id, source_id)
+);
+
+CREATE TABLE IF NOT EXISTS device_placement (
+    device_id TEXT PRIMARY KEY,
+    museum_id TEXT NOT NULL REFERENCES museum(id),
+    zone_id TEXT NOT NULL REFERENCES zone(id),
+    default_exhibit_id TEXT NOT NULL REFERENCES exhibit(id),
+    updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS visitor_session (
+    id TEXT PRIMARY KEY,
+    device_id TEXT NOT NULL,
+    current_exhibit_id TEXT NOT NULL REFERENCES exhibit(id),
+    visitor_mode TEXT NOT NULL CHECK (visitor_mode IN ('general', 'family', 'deep')),
+    started_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    ended_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS active_session_by_device
+ON visitor_session(device_id, expires_at);
+
+CREATE TABLE IF NOT EXISTS interaction_trace (
+    id TEXT PRIMARY KEY,
+    request_id TEXT NOT NULL,
+    visitor_session_id TEXT,
+    device_id TEXT,
+    exhibit_id TEXT,
+    user_text TEXT NOT NULL,
+    grounding_status TEXT NOT NULL,
+    evidence_json TEXT NOT NULL,
+    answer_text TEXT NOT NULL,
+    unanswered_reason TEXT,
+    guard_result TEXT NOT NULL,
+    stage_latency_json TEXT NOT NULL,
+    duration_ms INTEGER NOT NULL,
+    created_at TEXT NOT NULL
+);
+"""
+
+_DEMO_SOURCES = (
+    (
+        "source-hangzhou-portal-2020",
+        "杭州出土的战国水晶杯，连现代工艺都难以复制",
+        "杭州市门户网站公开文章",
+        "https://z.hangzhou.com.cn/2020/rwwhql/content/content_7734423.htm",
+        "仅用于演示事实核对；未取得图片或展陈素材授权。",
+    ),
+    (
+        "source-people-daily-2026",
+        "两千多年前的水晶杯",
+        "人民日报公开报道",
+        "https://paper.people.com.cn/rmrb/pad/content/202602/19/content_30141292.html",
+        "仅用于演示事实核对；未取得图片或展陈素材授权。",
+    ),
+)
+
+_DEMO_FACTS = (
+    (
+        "fact-crystal-cup-era",
+        "era",
+        "这件水晶杯经鉴定为战国中晚期遗物，已有两千多年历史。",
+        ["年代", "时期", "战国", "多久", "历史"],
+        ("source-people-daily-2026",),
+    ),
+    (
+        "fact-crystal-cup-material",
+        "material",
+        "它由一整块天然水晶琢制而成。",
+        ["材质", "材料", "水晶", "天然", "做成"],
+        ("source-hangzhou-portal-2020", "source-people-daily-2026"),
+    ),
+    (
+        "fact-crystal-cup-excavation",
+        "excavation",
+        "它于1990年在杭州半山镇石塘村的战国墓葬中出土。",
+        ["出土", "发现", "哪里", "地点", "1990", "半山", "石塘"],
+        ("source-hangzhou-portal-2020", "source-people-daily-2026"),
+    ),
+    (
+        "fact-crystal-cup-dimensions",
+        "dimensions",
+        "它高15.4厘米，口径7.8厘米，底径5.4厘米。",
+        ["尺寸", "多高", "多大", "口径", "底径", "厘米"],
+        ("source-hangzhou-portal-2020", "source-people-daily-2026"),
+    ),
+    (
+        "fact-crystal-cup-appearance",
+        "appearance",
+        "它器口微敞、杯壁斜直、圈足外撇，外形很像现代常见的玻璃杯。",
+        ["外形", "样子", "玻璃杯", "现代", "长什么", "为什么像"],
+        ("source-hangzhou-portal-2020", "source-people-daily-2026"),
+    ),
+    (
+        "fact-crystal-cup-craft-limit",
+        "research_limit",
+        "水晶硬度高、脆性大，开料、掏膛和抛光难度很高；它的具体原料来源及部分制作细节目前仍有未解之处。",
+        ["工艺", "制作", "怎么做", "掏膛", "抛光", "原料来源", "未解"],
+        ("source-hangzhou-portal-2020", "source-people-daily-2026"),
+    ),
+)
+
+_TYPE_TERMS = {
+    "era": ("年代", "时期", "什么时候", "多久", "历史"),
+    "material": ("材质", "材料", "什么做", "是水晶吗", "天然水晶"),
+    "excavation": ("出土", "发现", "哪里", "地点", "哪儿"),
+    "dimensions": ("尺寸", "多高", "多大", "口径", "底径"),
+    "appearance": ("外形", "样子", "玻璃杯", "现代", "长什么", "为什么像"),
+    "research_limit": ("工艺", "制作", "怎么做", "掏膛", "抛光", "原料来源"),
+}
+
+_INTRO_TERMS = ("介绍", "讲讲", "看看", "了解")
+_INTRO_TYPES = {"era": 30, "material": 29, "appearance": 28, "excavation": 20}
+
+
+class MuseumStore:
+    def __init__(self, database_path: str | Path):
+        self.database_path = Path(database_path)
+        self.database_path.parent.mkdir(parents=True, exist_ok=True)
+        self._initialize()
+
+    @contextmanager
+    def connection(self) -> Iterator[sqlite3.Connection]:
+        connection = sqlite3.connect(self.database_path, timeout=5.0)
+        connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA foreign_keys = ON")
+        try:
+            yield connection
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()
+
+    def _initialize(self) -> None:
+        with self.connection() as connection:
+            connection.executescript(_SCHEMA)
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "guard_result",
+                "TEXT NOT NULL DEFAULT 'not_evaluated'",
+            )
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "stage_latency_json",
+                "TEXT NOT NULL DEFAULT '{}'",
+            )
+            fts_columns = {
+                row["name"]
+                for row in connection.execute(
+                    "PRAGMA table_info(exhibit_fact_fts)"
+                ).fetchall()
+            }
+            expected_fts_columns = {
+                "fact_id",
+                "exhibit_name",
+                "aliases",
+                "fact_type",
+                "statement",
+                "keywords",
+            }
+            if fts_columns and not expected_fts_columns.issubset(fts_columns):
+                connection.execute("DROP TABLE exhibit_fact_fts")
+            connection.execute(
+                """
+                CREATE VIRTUAL TABLE IF NOT EXISTS exhibit_fact_fts USING fts5(
+                    fact_id UNINDEXED,
+                    exhibit_name,
+                    aliases,
+                    fact_type,
+                    statement,
+                    keywords,
+                    tokenize = 'unicode61'
+                )
+                """
+            )
+
+    def seed_demo_content(self) -> None:
+        published_at = "2026-08-09T00:00:00+00:00"
+        with self.connection() as connection:
+            connection.execute(
+                "INSERT OR IGNORE INTO museum(id, name, status) VALUES (?, ?, 'active')",
+                (DEMO_MUSEUM_ID, "杭州博物馆（演示数据）"),
+            )
+            connection.execute(
+                """
+                INSERT OR IGNORE INTO zone(id, museum_id, name, sort_order)
+                VALUES (?, ?, ?, 1)
+                """,
+                (DEMO_ZONE_ID, DEMO_MUSEUM_ID, "杭州历史展区（演示点位）"),
+            )
+            connection.execute(
+                """
+                INSERT OR IGNORE INTO exhibit(
+                    id, zone_id, name, aliases_json, image_uri, status
+                ) VALUES (?, ?, ?, ?, NULL, 'active')
+                """,
+                (
+                    DEMO_EXHIBIT_ID,
+                    DEMO_ZONE_ID,
+                    "战国水晶杯",
+                    json.dumps(["水晶杯", "战国时期水晶杯"], ensure_ascii=False),
+                ),
+            )
+            for source_id, title, source_type, locator, rights_note in _DEMO_SOURCES:
+                connection.execute(
+                    """
+                    INSERT OR IGNORE INTO source_document(
+                        id, museum_id, title, source_type, locator, rights_note
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        source_id,
+                        DEMO_MUSEUM_ID,
+                        title,
+                        source_type,
+                        locator,
+                        rights_note,
+                    ),
+                )
+            connection.execute(
+                """
+                INSERT OR IGNORE INTO content_revision(
+                    id, exhibit_id, revision_no, status,
+                    reviewed_by, reviewed_at, published_at
+                ) VALUES (?, ?, 1, 'published', ?, ?, ?)
+                """,
+                (
+                    DEMO_REVISION_ID,
+                    DEMO_EXHIBIT_ID,
+                    "competition-demo-review",
+                    published_at,
+                    published_at,
+                ),
+            )
+            for fact_id, fact_type, statement, keywords, source_ids in _DEMO_FACTS:
+                keywords_json = json.dumps(keywords, ensure_ascii=False)
+                connection.execute(
+                    """
+                    INSERT OR IGNORE INTO exhibit_fact(
+                        id, revision_id, fact_type, statement,
+                        keywords_json, confidence
+                    ) VALUES (?, ?, ?, ?, ?, 'reviewed-demo')
+                    """,
+                    (
+                        fact_id,
+                        DEMO_REVISION_ID,
+                        fact_type,
+                        statement,
+                        keywords_json,
+                    ),
+                )
+                for source_id in source_ids:
+                    connection.execute(
+                        "INSERT OR IGNORE INTO fact_source(fact_id, source_id) VALUES (?, ?)",
+                        (fact_id, source_id),
+                    )
+                connection.execute(
+                    "DELETE FROM exhibit_fact_fts WHERE fact_id = ?",
+                    (fact_id,),
+                )
+                connection.execute(
+                    """
+                    INSERT INTO exhibit_fact_fts(
+                        fact_id, exhibit_name, aliases, fact_type, statement, keywords
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        fact_id,
+                        "战国水晶杯",
+                        "水晶杯 战国时期水晶杯",
+                        fact_type,
+                        statement,
+                        " ".join(keywords),
+                    ),
+                )
+
+    def ensure_demo_placement(self, device_id: str, occurred_at: datetime) -> None:
+        with self.connection() as connection:
+            connection.execute(
+                """
+                INSERT OR IGNORE INTO device_placement(
+                    device_id, museum_id, zone_id, default_exhibit_id, updated_at
+                ) VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    device_id,
+                    DEMO_MUSEUM_ID,
+                    DEMO_ZONE_ID,
+                    DEMO_EXHIBIT_ID,
+                    _iso(occurred_at),
+                ),
+            )
+
+    def resolve_or_create_session(
+        self,
+        *,
+        device_id: str,
+        occurred_at: datetime,
+        requested_session_id: str | None = None,
+        explicit_exhibit_id: str | None = None,
+        route_exhibit_id: str | None = None,
+    ) -> tuple[VisitorSession, ExhibitContext] | None:
+        now = _as_utc(occurred_at)
+        now_iso = _iso(now)
+        with self.connection() as connection:
+            context_source = "visitor_session"
+            if requested_session_id:
+                row = connection.execute(
+                    """
+                    SELECT * FROM visitor_session
+                    WHERE id = ? AND device_id = ? AND ended_at IS NULL AND expires_at > ?
+                    """,
+                    (requested_session_id, device_id, now_iso),
+                ).fetchone()
+            else:
+                row = connection.execute(
+                    """
+                    SELECT * FROM visitor_session
+                    WHERE device_id = ? AND ended_at IS NULL AND expires_at > ?
+                    ORDER BY started_at DESC LIMIT 1
+                    """,
+                    (device_id, now_iso),
+                ).fetchone()
+
+            authoritative_exhibit_id = explicit_exhibit_id or route_exhibit_id
+            if authoritative_exhibit_id:
+                exhibit_exists = connection.execute(
+                    "SELECT 1 FROM exhibit WHERE id = ? AND status = 'active'",
+                    (authoritative_exhibit_id,),
+                ).fetchone()
+                if exhibit_exists is None:
+                    return None
+                context_source = (
+                    "explicit_selection" if explicit_exhibit_id else "route_stop"
+                )
+                if row is not None:
+                    connection.execute(
+                        "UPDATE visitor_session SET current_exhibit_id = ? WHERE id = ?",
+                        (authoritative_exhibit_id, row["id"]),
+                    )
+                    row = connection.execute(
+                        "SELECT * FROM visitor_session WHERE id = ?",
+                        (row["id"],),
+                    ).fetchone()
+
+            if row is None and authoritative_exhibit_id is None:
+                placement = connection.execute(
+                    "SELECT * FROM device_placement WHERE device_id = ?",
+                    (device_id,),
+                ).fetchone()
+                if placement is None:
+                    return None
+                authoritative_exhibit_id = placement["default_exhibit_id"]
+                context_source = "device_placement"
+
+            if row is None:
+                session_id = uuid.uuid4().hex
+                expires_at = now + timedelta(minutes=30)
+                connection.execute(
+                    """
+                    INSERT INTO visitor_session(
+                        id, device_id, current_exhibit_id, visitor_mode,
+                        started_at, expires_at, ended_at
+                    ) VALUES (?, ?, ?, 'general', ?, ?, NULL)
+                    """,
+                    (
+                        session_id,
+                        device_id,
+                        authoritative_exhibit_id,
+                        now_iso,
+                        _iso(expires_at),
+                    ),
+                )
+                row = connection.execute(
+                    "SELECT * FROM visitor_session WHERE id = ?",
+                    (session_id,),
+                ).fetchone()
+
+            context_row = connection.execute(
+                """
+                SELECT
+                    m.id AS museum_id, m.name AS museum_name,
+                    z.id AS zone_id, z.name AS zone_name,
+                    e.id AS exhibit_id, e.name AS exhibit_name
+                FROM exhibit e
+                JOIN zone z ON z.id = e.zone_id
+                JOIN museum m ON m.id = z.museum_id
+                WHERE e.id = ? AND e.status = 'active' AND m.status = 'active'
+                """,
+                (row["current_exhibit_id"],),
+            ).fetchone()
+            if context_row is None:
+                return None
+
+        session = VisitorSession(
+            id=row["id"],
+            device_id=row["device_id"],
+            current_exhibit_id=row["current_exhibit_id"],
+            visitor_mode=row["visitor_mode"],
+            started_at=_parse_datetime(row["started_at"]),
+            expires_at=_parse_datetime(row["expires_at"]),
+        )
+        context = ExhibitContext(
+            museum_id=context_row["museum_id"],
+            museum_name=context_row["museum_name"],
+            zone_id=context_row["zone_id"],
+            zone_name=context_row["zone_name"],
+            exhibit_id=context_row["exhibit_id"],
+            exhibit_name=context_row["exhibit_name"],
+            context_source=context_source,
+        )
+        return session, context
+
+    def retrieve_evidence(
+        self,
+        *,
+        exhibit_id: str,
+        question: str,
+        limit: int = 3,
+    ) -> EvidenceSnapshot | None:
+        with self.connection() as connection:
+            revision = connection.execute(
+                """
+                SELECT id, revision_no
+                FROM content_revision
+                WHERE exhibit_id = ? AND status = 'published'
+                """,
+                (exhibit_id,),
+            ).fetchone()
+            if revision is None:
+                return None
+            rows = connection.execute(
+                """
+                SELECT f.id, f.fact_type, f.statement, f.keywords_json,
+                       e.name AS exhibit_name, e.aliases_json,
+                       GROUP_CONCAT(fs.source_id) AS source_ids
+                FROM exhibit_fact f
+                JOIN content_revision cr ON cr.id = f.revision_id
+                JOIN exhibit e ON e.id = cr.exhibit_id
+                JOIN fact_source fs ON fs.fact_id = f.id
+                WHERE f.revision_id = ?
+                GROUP BY f.id, f.fact_type, f.statement, f.keywords_json,
+                         e.name, e.aliases_json
+                """,
+                (revision["id"],),
+            ).fetchall()
+            if not rows:
+                return None
+            fts_ids = self._fts_candidate_ids(connection, rows, question)
+
+        normalized = _normalize_text(question)
+        matched_types = {
+            fact_type
+            for fact_type, terms in _TYPE_TERMS.items()
+            if any(term in normalized for term in terms)
+        }
+        aliases = {
+            rows[0]["exhibit_name"],
+            *json.loads(rows[0]["aliases_json"]),
+        }
+        mentions_exhibit = any(
+            _normalize_text(alias) in normalized for alias in aliases
+        )
+        general_exhibit_question = mentions_exhibit and any(
+            term in normalized
+            for term in ("特点", "特别", "看点", "介绍", "讲讲", "是什么", "怎么样")
+        )
+        intro = general_exhibit_question or any(
+            term in normalized for term in _INTRO_TERMS
+        ) or normalized in {
+            "这是什么",
+            "它是什么",
+            "这个是什么",
+        }
+        scored: list[tuple[int, sqlite3.Row]] = []
+        for row in rows:
+            if matched_types and row["fact_type"] not in matched_types:
+                continue
+            if not matched_types and not intro:
+                continue
+            score = 6 if row["id"] in fts_ids else 0
+            keywords = json.loads(row["keywords_json"])
+            score += sum(8 for keyword in keywords if keyword in normalized)
+            score += sum(
+                20
+                for term in _TYPE_TERMS.get(row["fact_type"], ())
+                if term in normalized
+            )
+            if intro:
+                score += _INTRO_TYPES.get(row["fact_type"], 0)
+            if score > 0:
+                scored.append((score, row))
+
+        if not scored:
+            return None
+        scored.sort(key=lambda item: (-item[0], item[1]["id"]))
+        facts = tuple(
+            EvidenceFact(
+                id=row["id"],
+                fact_type=row["fact_type"],
+                statement=row["statement"],
+                source_ids=tuple(sorted(row["source_ids"].split(","))),
+            )
+            for _, row in scored[:limit]
+        )
+        return EvidenceSnapshot(
+            exhibit_id=exhibit_id,
+            content_revision_id=revision["id"],
+            content_version=revision["revision_no"],
+            facts=facts,
+        )
+
+    @staticmethod
+    def _fts_candidate_ids(
+        connection: sqlite3.Connection,
+        rows: list[sqlite3.Row],
+        question: str,
+    ) -> set[str]:
+        normalized = _normalize_text(question)
+        terms: list[str] = []
+        for row in rows:
+            names = [row["exhibit_name"], *json.loads(row["aliases_json"])]
+            for name in names:
+                if _normalize_text(name) in normalized and name not in terms:
+                    terms.append(name)
+            for keyword in json.loads(row["keywords_json"]):
+                if keyword in normalized and keyword not in terms:
+                    terms.append(keyword)
+        terms.extend(
+            token
+            for token in re.findall(r"[a-zA-Z0-9]+", question)
+            if token not in terms
+        )
+        if not terms:
+            return set()
+        query = " OR ".join(f'"{term.replace(chr(34), chr(34) * 2)}"' for term in terms)
+        try:
+            matches = connection.execute(
+                "SELECT fact_id FROM exhibit_fact_fts WHERE exhibit_fact_fts MATCH ?",
+                (query,),
+            ).fetchall()
+        except sqlite3.OperationalError:
+            return set()
+        return {row["fact_id"] for row in matches}
+
+    def record_interaction(
+        self,
+        *,
+        request_id: str,
+        visitor_session_id: str | None,
+        device_id: str | None,
+        exhibit_id: str | None,
+        user_text: str,
+        grounding_status: str,
+        evidence: EvidenceSnapshot | None,
+        answer_text: str,
+        unanswered_reason: str | None,
+        guard_result: str,
+        stage_latency: dict[str, int],
+        duration_ms: int,
+        occurred_at: datetime,
+    ) -> str:
+        trace_id = uuid.uuid4().hex
+        evidence_json = json.dumps(
+            {
+                "content_revision_id": (
+                    evidence.content_revision_id if evidence else None
+                ),
+                "content_version": evidence.content_version if evidence else None,
+                "fact_ids": list(evidence.fact_ids) if evidence else [],
+                "source_ids": list(evidence.source_ids) if evidence else [],
+            },
+            ensure_ascii=False,
+        )
+        with self.connection() as connection:
+            connection.execute(
+                """
+                INSERT INTO interaction_trace(
+                    id, request_id, visitor_session_id, device_id, exhibit_id,
+                    user_text, grounding_status, evidence_json, answer_text,
+                    unanswered_reason, guard_result, stage_latency_json,
+                    duration_ms, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    trace_id,
+                    request_id,
+                    visitor_session_id,
+                    device_id,
+                    exhibit_id,
+                    user_text,
+                    grounding_status,
+                    evidence_json,
+                    answer_text,
+                    unanswered_reason,
+                    guard_result,
+                    json.dumps(stage_latency, ensure_ascii=False),
+                    duration_ms,
+                    _iso(occurred_at),
+                ),
+            )
+        return trace_id
+
+    def get_interaction_trace(self, trace_id: str) -> sqlite3.Row | None:
+        with self.connection() as connection:
+            return connection.execute(
+                "SELECT * FROM interaction_trace WHERE id = ?",
+                (trace_id,),
+            ).fetchone()
+
+
+def _as_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def _iso(value: datetime) -> str:
+    return _as_utc(value).isoformat(timespec="seconds")
+
+
+def _parse_datetime(value: str) -> datetime:
+    return datetime.fromisoformat(value)
+
+
+def _normalize_text(value: str) -> str:
+    return re.sub(r"[\s，。！？、；：,.!?;:]", "", value).lower()
+
+
+def _ensure_column(
+    connection: sqlite3.Connection,
+    table_name: str,
+    column_name: str,
+    declaration: str,
+) -> None:
+    columns = {
+        row["name"]
+        for row in connection.execute(f"PRAGMA table_info({table_name})").fetchall()
+    }
+    if column_name not in columns:
+        connection.execute(
+            f"ALTER TABLE {table_name} ADD COLUMN {column_name} {declaration}"
+        )
