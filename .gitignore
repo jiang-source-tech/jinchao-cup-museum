@@ -196,3 +196,9 @@ sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
 /.pytest-tmp/
 /output/
 **/.pytest-tmp/
+
+# Local deployment credentials: keep these files available on the machine but out of Git.
+/main/xiaozhi-server/config.yaml
+/main/xiaozhi-server/data/.config.yaml
+/main/xiaozhi-server/data/.mcp_server_settings.json
+/main/xiaozhi-server/mcp_server_settings.json
