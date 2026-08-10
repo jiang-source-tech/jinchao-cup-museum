@@ -5,8 +5,7 @@ from aiohttp import web
 from config.logger import setup_logging
 from core.api.ota_handler import OTAHandler
 from core.api.vision_handler import VisionHandler
-from core.api.xiaoxin_control_handler import XiaoxinControlHandler
-from core.xiaoxin.firmware_release import FirmwareReleaseCatalog
+from core.firmware_release import FirmwareReleaseCatalog
 
 TAG = __name__
 
@@ -15,28 +14,18 @@ class SimpleHttpServer:
     def __init__(
         self,
         config: dict,
-        xiaoxin_runtime=None,
         firmware_release_catalog: FirmwareReleaseCatalog | None = None,
     ):
         self.config = config
-        self.xiaoxin_runtime = xiaoxin_runtime
         self.logger = setup_logging()
         if firmware_release_catalog is None:
-            # Preserve the long-standing two-argument construction contract for
-            # integrations that provide their own compatible OTA handler.
-            self.ota_handler = OTAHandler(config, xiaoxin_runtime)
+            self.ota_handler = OTAHandler(config)
         else:
             self.ota_handler = OTAHandler(
                 config,
-                xiaoxin_runtime,
                 firmware_release_catalog,
             )
         self.vision_handler = VisionHandler(config)
-        self.xiaoxin_control_handler = (
-            XiaoxinControlHandler(config, xiaoxin_runtime)
-            if xiaoxin_runtime is not None
-            else None
-        )
 
     def _get_websocket_url(self, local_ip: str, port: int) -> str:
         server_config = self.config["server"]
@@ -44,43 +33,54 @@ class SimpleHttpServer:
 
         if websocket_config and "://" in websocket_config:
             return websocket_config
-        return f"ws://{local_ip}:{port}/xiaoxin/v1/"
+        return f"ws://{local_ip}:{port}/museum/v1/"
 
     def build_app(self) -> web.Application:
         app = web.Application()
-        ota_routes = [
-            web.get("/xiaoxin/ota/", self.ota_handler.handle_get),
-            web.post("/xiaoxin/ota/", self.ota_handler.handle_post),
-            web.post("/xiaoxin/ota/activate", self.ota_handler.handle_activate),
-            web.post("/xiaozhi/ota/activate", self.ota_handler.handle_activate),
-            web.options("/xiaoxin/ota/", self.ota_handler.handle_options),
-            web.get(
-                "/xiaoxin/ota/download/{filename}",
-                self.ota_handler.handle_download,
-            ),
-            web.options(
-                "/xiaoxin/ota/download/{filename}",
-                self.ota_handler.handle_options,
-            ),
-        ]
+        ota_routes = []
+        for prefix in ("/museum/ota", "/xiaoxin/ota"):
+            ota_routes.extend(
+                [
+                    web.get(f"{prefix}/", self.ota_handler.handle_get),
+                    web.post(f"{prefix}/", self.ota_handler.handle_post),
+                    web.post(
+                        f"{prefix}/activate", self.ota_handler.handle_activate
+                    ),
+                    web.options(f"{prefix}/", self.ota_handler.handle_options),
+                    web.get(
+                        f"{prefix}/download/{{filename}}",
+                        self.ota_handler.handle_download,
+                    ),
+                    web.options(
+                        f"{prefix}/download/{{filename}}",
+                        self.ota_handler.handle_options,
+                    ),
+                ]
+            )
+        # Keep the old activation-only alias readable for devices that have not
+        # yet received the museum OTA contract.
+        ota_routes.append(
+            web.post("/xiaozhi/ota/activate", self.ota_handler.handle_activate)
+        )
         artifact_download = getattr(
             self.ota_handler,
             "handle_artifact_download",
             None,
         )
         if callable(artifact_download):
-            ota_routes.extend(
-                [
-                    web.get(
-                        "/xiaoxin/ota/artifacts/{sha256}.bin",
-                        artifact_download,
-                    ),
-                    web.options(
-                        "/xiaoxin/ota/artifacts/{sha256}.bin",
-                        self.ota_handler.handle_options,
-                    ),
-                ]
-            )
+            for prefix in ("/museum/ota", "/xiaoxin/ota"):
+                ota_routes.extend(
+                    [
+                        web.get(
+                            f"{prefix}/artifacts/{{sha256}}.bin",
+                            artifact_download,
+                        ),
+                        web.options(
+                            f"{prefix}/artifacts/{{sha256}}.bin",
+                            self.ota_handler.handle_options,
+                        ),
+                    ]
+                )
         app.add_routes(ota_routes)
 
         app.add_routes(
@@ -90,9 +90,6 @@ class SimpleHttpServer:
                 web.options("/mcp/vision/explain", self.vision_handler.handle_options),
             ]
         )
-
-        if self.xiaoxin_control_handler is not None:
-            self.xiaoxin_control_handler.add_routes(app)
 
         return app
 

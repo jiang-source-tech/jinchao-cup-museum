@@ -39,8 +39,8 @@ PRESET_TEXTS = {
         "0123456789", "零一二三四五六七八九", strict=True
     )},
     Path("bind_not_found.wav"): "没有找到该设备的版本信息，请正确配置OTA地址，然后重新编译固件。",
-    Path("max_output_size.wav"): "不好意思，我现在有点事情要忙，明天这个时候我们再聊，约好了哦！明天不见不散，拜拜！",
-    Path("wakeup_words_short.wav"): "我在这里哦！",
+    Path("max_output_size.wav"): "当前讲解内容较长，请换个更具体的问题。",
+    Path("wakeup_words_short.wav"): "欢迎来到金潮杯博物馆，请问您想了解哪件展品？",
 }
 
 
@@ -228,7 +228,7 @@ async def generate_all(config: dict, staging_dir: Path) -> list[tuple[Path, floa
 
 def replace_assets(staging_dir: Path) -> None:
     backup_dir = Path(
-        tempfile.mkdtemp(prefix=".xiaoxin-preset-backup-", dir=ASSETS_DIR.parent)
+        tempfile.mkdtemp(prefix=".museum-preset-backup-", dir=ASSETS_DIR.parent)
     )
     replaced: list[Path] = []
     try:
@@ -270,7 +270,7 @@ async def main() -> int:
     # Keep staging on the same volume as the destination so os.replace remains
     # atomic on Windows as well as POSIX systems.
     with tempfile.TemporaryDirectory(
-        prefix=".xiaoxin-preset-audio-", dir=ASSETS_DIR.parent
+        prefix=".museum-preset-audio-", dir=ASSETS_DIR.parent
     ) as temp:
         staging_dir = Path(temp)
         await generate_all(config, staging_dir)

@@ -2,6 +2,7 @@ import hmac
 import base64
 import hashlib
 import time
+from collections.abc import Mapping
 
 
 class AuthenticationError(Exception):
@@ -70,3 +71,21 @@ class AuthManager:
             return True
         except Exception:
             return False
+
+
+def create_auth_manager(server_config: Mapping) -> AuthManager | None:
+    """Create authentication only when the server explicitly enables it."""
+    auth_config = server_config.get("auth", {})
+    if not auth_config.get("enabled", False):
+        return None
+
+    secret_key = server_config.get("auth_key")
+    if not isinstance(secret_key, str) or not secret_key.strip():
+        raise ValueError(
+            "server.auth_key must be configured when server.auth.enabled is true"
+        )
+
+    return AuthManager(
+        secret_key=secret_key,
+        expire_seconds=auth_config.get("expire_seconds"),
+    )

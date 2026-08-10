@@ -38,8 +38,6 @@ class TtsTextMessageHandler(TextMessageHandler):
             if not isinstance(reason, str) or not reason:
                 reason = "unknown_device_error"
             resolved = conn.resolve_tts_error(sentence_id, reason)
-            if resolved and hasattr(conn, "mark_xiaoxin_control_tts_failed"):
-                conn.mark_xiaoxin_control_tts_failed(sentence_id, reason)
         else:
             resolved = conn.resolve_tts_ack(state, sentence_id)
 

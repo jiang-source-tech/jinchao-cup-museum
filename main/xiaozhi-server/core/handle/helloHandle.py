@@ -20,15 +20,11 @@ TAG = __name__
 WAKEUP_CONFIG = {
     "refresh_time": 10,
     "responses": [
-        "我一直都在呢，您请说。",
-        "在的呢，请随时吩咐我。",
-        "来啦来啦，请告诉我吧。",
-        "您请说，我正听着。",
-        "请您讲话，我准备好了。",
-        "请您说出指令吧。",
-        "我认真听着呢，请讲。",
-        "请问您需要什么帮助？",
-        "我在这里，等候您的指令。",
+        "欢迎来到金潮杯博物馆，请问您想了解哪件展品？",
+        "讲解员已准备好，请告诉我您面前的展品。",
+        "您好，请说说您想观察或了解的展品。",
+        "我可以为您讲解当前展品，请继续提问。",
+        "欢迎参观，请问您想从哪里开始了解？",
     ],
 }
 
@@ -74,20 +70,7 @@ async def handleHelloMessage(conn: "ConnectionHandler", msg_json):
     hello_event = getattr(conn, "client_hello_event", None)
     if hello_event is not None:
         hello_event.set()
-    runtime = getattr(conn, "xiaoxin_control_runtime", None)
-    note_device_boot = getattr(runtime, "note_device_boot", None)
-    device_id = getattr(conn, "device_id", None)
-    if device_id and boot_id and reset_reason and callable(note_device_boot):
-        try:
-            note_device_boot(
-                device_id,
-                boot_id=boot_id,
-                reset_reason=reset_reason,
-            )
-        except Exception:
-            conn.logger.bind(tag=TAG).exception(
-                "Failed to record Xiaoxin boot checkin"
-            )
+    await conn.send_initial_museum_state()
 
 
 def _store_device_status(
@@ -109,19 +92,6 @@ def _store_device_status(
     else:
         reset_reason = None
 
-    runtime = getattr(conn, "xiaoxin_control_runtime", None)
-    registry = getattr(runtime, "registry", None)
-    update_telemetry = getattr(registry, "update_device_telemetry", None)
-    device_id = getattr(conn, "device_id", None)
-    if not device_id or not callable(update_telemetry):
-        return boot_id, reset_reason
-
-    update_telemetry(
-        device_id,
-        battery_level=device_status.get("battery_level"),
-        battery_percent=device_status.get("battery_percent"),
-        firmware_version=device_status.get("firmware_version"),
-    )
     return boot_id, reset_reason
 
 
@@ -187,7 +157,7 @@ async def checkWakeupWords(conn: "ConnectionHandler", text):
             "voice": "default",
             "file_path": "config/assets/wakeup_words_short.wav",
             "time": 0,
-            "text": "我在这里哦！",
+            "text": "欢迎来到金潮杯博物馆，请问您想了解哪件展品？",
         }
 
     # 获取音频数据

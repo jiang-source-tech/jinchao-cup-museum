@@ -600,6 +600,58 @@ class MuseumStore:
             facts=facts,
         )
 
+    def published_evidence(self, exhibit_id: str) -> EvidenceSnapshot | None:
+        with self.connection() as connection:
+            revision = connection.execute(
+                """
+                SELECT id, revision_no
+                FROM content_revision
+                WHERE exhibit_id = ? AND status = 'published'
+                """,
+                (exhibit_id,),
+            ).fetchone()
+            if revision is None:
+                return None
+            rows = connection.execute(
+                """
+                SELECT f.id, f.fact_type, f.statement,
+                       GROUP_CONCAT(fs.source_id) AS source_ids
+                FROM exhibit_fact f
+                JOIN fact_source fs ON fs.fact_id = f.id
+                WHERE f.revision_id = ?
+                GROUP BY f.id, f.fact_type, f.statement
+                ORDER BY f.id
+                """,
+                (revision["id"],),
+            ).fetchall()
+        if not rows:
+            return None
+        return EvidenceSnapshot(
+            exhibit_id=exhibit_id,
+            content_revision_id=revision["id"],
+            content_version=revision["revision_no"],
+            facts=tuple(
+                EvidenceFact(
+                    id=row["id"],
+                    fact_type=row["fact_type"],
+                    statement=row["statement"],
+                    source_ids=tuple(sorted(row["source_ids"].split(","))),
+                )
+                for row in rows
+            ),
+        )
+
+    def published_content_version(self, exhibit_id: str) -> int | None:
+        with self.connection() as connection:
+            row = connection.execute(
+                """
+                SELECT revision_no FROM content_revision
+                WHERE exhibit_id = ? AND status = 'published'
+                """,
+                (exhibit_id,),
+            ).fetchone()
+        return int(row["revision_no"]) if row is not None else None
+
     @staticmethod
     def _fts_candidate_ids(
         connection: sqlite3.Connection,

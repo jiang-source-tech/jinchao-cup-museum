@@ -11,7 +11,7 @@ SERVER_ROOT = Path(__file__).resolve().parents[1]
 if str(SERVER_ROOT) not in sys.path:
     sys.path.insert(0, str(SERVER_ROOT))
 
-from core.xiaoxin.firmware_release import (  # noqa: E402
+from core.firmware_release import (  # noqa: E402
     FirmwareReleaseCatalog,
     FirmwareReleaseError,
 )
@@ -43,7 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--public-ota-url",
         default="",
-        help="public https://host/xiaoxin/ota/ URL; required for --publish",
+        help="public https://host/museum/ota/ URL; required for --publish",
     )
     parser.add_argument("--model", help="target device model")
     parser.add_argument("--version", help="target firmware version")

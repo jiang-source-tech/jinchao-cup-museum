@@ -6,22 +6,14 @@ import hmac
 import os
 import re
 import glob
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 from aiohttp import web
 
-from core.auth import AuthManager
-from core.xiaoxin.doorbell_ota import build_doorbell_mqtt_ota
-from core.xiaoxin.firmware_release import (
+from core.auth import create_auth_manager
+from core.firmware_release import (
     FirmwareCheck,
     FirmwareReleaseCatalog,
     FirmwareReleaseError,
-)
-from core.xiaoxin.tenant_config import load_tenant_config, validate_mqtt_topic_segment
-from core.xiaoxin.network_observation import (
-    ip_in_networks,
-    is_public_global_unicast,
-    observed_public_ip,
-    trusted_proxy_networks,
 )
 from config.config_loader import get_project_dir
 from core.utils.util import get_local_ip, get_vision_url
@@ -64,14 +56,10 @@ class OTAHandler(BaseHandler):
     def __init__(
         self,
         config: dict,
-        xiaoxin_runtime: Any | None = None,
         firmware_release_catalog: FirmwareReleaseCatalog | None = None,
     ):
         super().__init__(config)
-        self.xiaoxin_runtime = xiaoxin_runtime
-        release_config = (config.get("xiaoxin_control", {}) or {}).get(
-            "ota_release"
-        )
+        release_config = config.get("ota_release")
         self.firmware_release_catalog = firmware_release_catalog
         if self.firmware_release_catalog is None and isinstance(release_config, dict):
             self.firmware_release_catalog = FirmwareReleaseCatalog.from_config(
@@ -86,9 +74,7 @@ class OTAHandler(BaseHandler):
         self.auth_enable = auth_config.get("enabled", False)
         # 设备白名单
         self.allowed_devices = set(auth_config.get("allowed_devices", []))
-        secret_key = config["server"]["auth_key"]
-        expire_seconds = auth_config.get("expire_seconds")
-        self.auth = AuthManager(secret_key=secret_key, expire_seconds=expire_seconds)
+        self.auth = create_auth_manager(config["server"])
 
         # firmware storage
         self.bin_dir = os.path.join(os.getcwd(), "data", "bin")
@@ -99,131 +85,10 @@ class OTAHandler(BaseHandler):
             "files_by_model": {},
         }
 
-    def _activation_ttl_ms(self) -> int:
-        control = self.config.get("xiaoxin_control", {}) or {}
-        return int(control.get("activation_timeout_ms", 600000))
-
-    def _trusted_proxy_networks(self) -> tuple[Any, ...]:
-        return trusted_proxy_networks(
-            self.config,
-            warn_invalid=lambda: self.logger.bind(tag="xiaoxin.network").warning(
-                "invalid trusted proxy CIDR ignored"
-            ),
-        )
-
-    @staticmethod
-    def _ip_in_networks(
-        address: Any,
-        networks: tuple[Any, ...],
-    ) -> bool:
-        return ip_in_networks(address, networks)
-
-    @staticmethod
-    def _is_public_observation_ip(address: Any) -> bool:
-        return is_public_global_unicast(address)
-
-    def _observed_public_ip(self, request: web.Request) -> str | None:
-        return observed_public_ip(
-            request,
-            self.config,
-            warn_invalid=lambda: self.logger.bind(tag="xiaoxin.network").warning(
-                "invalid trusted proxy CIDR ignored"
-            ),
-        )
-
-    async def _observe_device_request_ip(
-        self,
-        request: web.Request,
-        device_id: str,
-        reason: str,
-    ) -> None:
-        runtime = self.xiaoxin_runtime
-        credential_store = getattr(runtime, "doorbell_credential_store", None)
-        verify = getattr(credential_store, "verify_password", None)
-        username = str(request.headers.get("Device-Username") or "").strip()
-        authorization = str(request.headers.get("Authorization") or "")
-        password = ""
-        if authorization.lower().startswith("bearer "):
-            password = authorization.split(" ", 1)[1].strip()
-        if (
-            not username
-            or not password
-            or not callable(verify)
-            or not verify(username, device_id, password)
-        ):
-            return
-        service = getattr(runtime, "overview_service", None)
-        observe = getattr(service, "observe_device_ip", None)
-        if not callable(observe):
-            return
-        public_ip = self._observed_public_ip(request)
-        if public_ip is None:
-            return
-        try:
-            await observe(device_id, public_ip, reason)
-        except Exception:
-            self.logger.bind(tag="xiaoxin.overview").exception(
-                f"device IP observation failed reason={reason}"
-            )
-
-    def _maybe_attach_activation(self, return_json: dict, device_id: str) -> None:
-        runtime = self.xiaoxin_runtime
-        if runtime is None:
-            return
-        if not hasattr(runtime, "identity_store") or not hasattr(runtime, "activation_store"):
-            return
-        if not device_id:
-            return
-        device = runtime.identity_store.upsert_seen_device(device_id)
-        if device.owner_user_id is not None:
-            return
-        ttl_ms = self._activation_ttl_ms()
-        session = runtime.activation_store.create_or_refresh_activation(
-            device_id,
-            ttl_seconds=max(1, ttl_ms // 1000),
-        )
-        return_json["activation"] = {
-            "code": session.code,
-            "message": session.message,
-            "challenge": session.challenge,
-            "timeout_ms": ttl_ms,
-        }
-
     async def handle_activate(self, request):
-        response = None
-        try:
-            device_id = request.headers.get("device-id") or request.headers.get("Device-Id") or ""
-            device_id = device_id.strip()
-            try:
-                device_id = validate_mqtt_topic_segment(device_id, "device_id")
-            except ValueError:
-                response = web.Response(status=404, text="")
-                return response
-            runtime = self.xiaoxin_runtime
-            if not device_id or runtime is None:
-                response = web.Response(status=404, text="")
-                return response
-            if not hasattr(runtime, "identity_store") or not hasattr(runtime, "activation_store"):
-                response = web.Response(status=404, text="")
-                return response
-            device = runtime.identity_store.get_device_by_device_id(device_id)
-            if device is not None and device.owner_user_id is not None:
-                response = web.Response(status=200, text="")
-                return response
-            session = runtime.activation_store.get_latest_activation_by_device_id(
-                device_id
-            )
-            if session is None:
-                response = web.Response(status=404, text="")
-                return response
-            if runtime.activation_store.is_expired(session):
-                response = web.Response(status=410, text="")
-                return response
-            response = web.Response(status=202, text="")
-            return response
-        finally:
-            if response is not None:
-                self._add_cors_headers(response)
+        response = web.Response(status=404, text="")
+        self._add_cors_headers(response)
+        return response
 
     def _refresh_bin_cache_if_needed(self):
         now = int(time.time())
@@ -301,12 +166,11 @@ class OTAHandler(BaseHandler):
             str: websocket地址
         """
         server_config = self.config["server"]
-        websocket_config = server_config.get("websocket", "")
+        websocket_config = str(server_config.get("websocket", "")).strip()
 
-        if "你的" not in websocket_config:
+        if websocket_config and "你的" not in websocket_config:
             return websocket_config
-        else:
-            return f"ws://{local_ip}:{port}/xiaoxin/v1/"
+        return f"ws://{local_ip}:{port}/museum/v1/"
 
     async def handle_post(self, request):
         """处理 OTA POST 请求
@@ -325,21 +189,12 @@ class OTAHandler(BaseHandler):
 
             device_id = request.headers.get("device-id", "")
             if device_id:
-                try:
-                    device_id = validate_mqtt_topic_segment(
-                        device_id.strip(),
-                        "device_id",
-                    )
-                except ValueError:
-                    response = web.Response(
-                        text=json.dumps(
-                            {"success": False, "message": "invalid device_id"},
-                            separators=(",", ":"),
-                        ),
+                device_id = device_id.strip()
+                if not re.fullmatch(r"[A-Za-z0-9:_-]{1,128}", device_id):
+                    return web.json_response(
+                        {"success": False, "message": "invalid device_id"},
                         status=400,
-                        content_type="application/json",
                     )
-                    return response
                 self.logger.bind(tag=TAG).info(f"OTA请求设备ID: {device_id}")
             else:
                 raise Exception("OTA请求设备ID为空")
@@ -349,8 +204,6 @@ class OTAHandler(BaseHandler):
                 self.logger.bind(tag=TAG).info(f"OTA请求ClientID: {client_id}")
             else:
                 raise Exception("OTA请求ClientID为空")
-
-            await self._observe_device_request_ip(request, device_id, "ota")
 
             data_json = {}
             try:
@@ -469,24 +322,6 @@ class OTAHandler(BaseHandler):
                     "url": "",
                 },
             }
-            self._maybe_attach_activation(return_json, device_id)
-
-            runtime = self.xiaoxin_runtime
-            if runtime is not None and hasattr(runtime, "identity_store"):
-                if hasattr(runtime, "doorbell_credential_store"):
-                    tenant = load_tenant_config(self.config)
-                    runtime.identity_store.upsert_seen_device(
-                        device_id,
-                        tenant_id=tenant.tenant_id,
-                    )
-                    return_json["doorbell_mqtt"] = build_doorbell_mqtt_ota(
-                        tenant,
-                        runtime.doorbell_credential_store,
-                        device_id,
-                    )
-                else:
-                    runtime.identity_store.upsert_seen_device(device_id)
-
             # existing mqtt/websocket logic (unchanged)
             mqtt_gateway_endpoint = server_config.get("mqtt_gateway")
 
@@ -790,7 +625,7 @@ class OTAHandler(BaseHandler):
             vision_url = get_vision_url(self.config)
             url = vision_url.replace(
                 "/mcp/vision/explain",
-                f"/xiaoxin/ota/download/{filename}",
+                f"/museum/ota/download/{filename}",
             )
             return_json["firmware"]["version"] = version
             return_json["firmware"]["url"] = url
@@ -822,7 +657,7 @@ class OTAHandler(BaseHandler):
     async def handle_download(self, request):
         """
         下载固件接口
-        URL: /xiaoxin/ota/download/{filename}
+        URL: /museum/ota/download/{filename}
         - 只允许下载 data/bin 目录下的 .bin 文件
         - filename 必须是 basename 且匹配安全的模式
         """

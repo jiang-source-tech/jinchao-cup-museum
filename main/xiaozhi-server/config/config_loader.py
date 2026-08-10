@@ -1,5 +1,7 @@
 import os
+import sys
 from collections.abc import Mapping
+from pathlib import Path
 
 import yaml
 
@@ -11,38 +13,70 @@ def get_project_dir():
 
 def read_config(config_path):
     with open(config_path, "r", encoding="utf-8") as file:
-        config = yaml.safe_load(file)
-    return config
+        config = yaml.safe_load(file) or {}
+    if not isinstance(config, Mapping):
+        raise ValueError(f"配置文件必须是 YAML 对象: {config_path}")
+    return dict(config)
 
 
 def load_config():
     """加载配置文件"""
     from core.utils.cache.manager import cache_manager, CacheType
 
+    warn_if_legacy_data_present()
+
     # 检查缓存
     cached_config = cache_manager.get(CacheType.CONFIG, "main_config")
     if cached_config is not None:
         return cached_config
 
-    default_config_path = get_project_dir() + "config.yaml"
-    custom_config_path = get_project_dir() + "data/.config.yaml"
+    project_dir = Path(get_project_dir())
+    local_default_path = project_dir / "config.yaml"
+    tracked_default_path = project_dir / "config.example.yaml"
+    custom_config_path = project_dir / "data/.config.yaml"
 
-    # 加载默认配置
+    # 本地 config.yaml 优先；干净检出使用无密钥的受版本控制模板。
+    default_config_path = (
+        local_default_path if local_default_path.exists() else tracked_default_path
+    )
+    if not default_config_path.exists():
+        raise FileNotFoundError(
+            "找不到 config.yaml 或 config.example.yaml，无法加载服务配置"
+        )
     default_config = read_config(default_config_path)
-    custom_config = read_config(custom_config_path)
+    custom_config = (
+        read_config(custom_config_path) if custom_config_path.exists() else {}
+    )
 
     config = merge_configs(default_config, custom_config)
-    voiceprint_url = os.getenv("XIAOXIN_VOICEPRINT_URL", "").strip()
-    if voiceprint_url:
-        voiceprint = config.setdefault("voiceprint", {})
-        if isinstance(voiceprint, dict):
-            voiceprint["url"] = voiceprint_url
     # 初始化目录
     ensure_directories(config)
 
     # 缓存配置
     cache_manager.set(CacheType.CONFIG, "main_config", config)
     return config
+
+
+def find_legacy_xiaoxin_databases(data_dir):
+    """Return legacy databases that must not remain in the active data mount."""
+    return tuple(sorted(Path(data_dir).glob("xiaoxin_*.db")))
+
+
+def warn_if_legacy_data_present(project_dir=None):
+    """Emit a startup-visible warning when an old project database is mounted."""
+    root = Path(project_dir) if project_dir is not None else Path(get_project_dir())
+    legacy_databases = find_legacy_xiaoxin_databases(root / "data")
+    if not legacy_databases:
+        return ()
+
+    names = ", ".join(path.name for path in legacy_databases)
+    print(
+        "CRITICAL: 活动 data 目录检测到旧项目数据库："
+        f"{names}。当前博物馆运行时不会读取这些数据库；"
+        "部署前必须确认数据挂载并完成隔离或归档。",
+        file=sys.stderr,
+    )
+    return legacy_databases
 
 def ensure_directories(config):
     """确保所有配置路径存在"""
@@ -67,7 +101,7 @@ def ensure_directories(config):
         selected_provider = selected_modules.get(module_type)
         if not selected_provider:
             continue
-        if config.get(module) is None:
+        if config.get(module_type) is None:
             continue
         if config.get(selected_provider) is None:
             continue

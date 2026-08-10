@@ -2,175 +2,110 @@
 
 ## 状态
 
-- 审计日期：2026 年 8 月 9 日
+- 审计日期：2026 年 8 月 10 日
 - 服务端仓库：`D:\AI_Pet\jinchao-cup-museum`
-- 服务端提交：`d71f7b50a3c68fa0a123f7a403143bc59b189fe8`
+- 服务端工作基线：`17a6180`，包含尚未提交的博物馆重建修改
 - 固件仓库：`D:\AI_Pet\museum-firmwire`
-- 固件提交：`2802b325058cccf851c7226e996d8d93d850f74e`
-- 目标板：`CONFIG_BOARD_TYPE_WAVESHARE_ESP32_S3_TOUCH_LCD_1_46=y`
+- 固件工作基线：`2802b32`，包含尚未提交的 Phase C 修改
+- 目标板：微雪 `ESP32-S3-Touch-LCD-1.46`
+- 计划验收设备：待现场确认
 
-本文只描述审计时实际存在的代码。产品范围以 [`../product/PRD.md`](../product/PRD.md) 为准，目标架构以 [`business-rebuild.md`](business-rebuild.md) 为准。
+本文描述当前工作区的实际比赛运行链路，不再描述旧学生陪伴业务的迁移前结构。
 
 ## 1. 审计结论
 
-当前仓库不能通过更换提示词直接变成博物馆产品。设备连接、ASR、LLM、TTS、可靠播放、OTA 与旧学生陪伴业务已经交织在同一个连接对象中。
+当前仓库已经从“旧陪伴运行时旁路接入博物馆能力”切换为“博物馆运行时直接接管比赛对话”。服务端保留设备传输、音频和模型基座，旧学生陪伴业务已经从启动路径和代码库移除。固件保留目标板驱动、音频、屏幕、OTA 和 WebSocket，新增严格的博物馆状态模型。
 
-可以保留的底层能力：
+当前代码设计的最小路径是：
 
-- WebSocket 设备连接与稳定 `device_id`；
-- VAD 与 ASR 音频接收；
-- LLM 提供商适配；
-- TTS 文本队列和音频发送；
-- `ready`、`done` ACK 与预缓冲可靠播放；
-- OTA、设备固件版本和电量遥测；
-- 目标板触摸、LVGL 页面和动画能力。
-
-必须从比赛运行路径移出的业务：
-
-- 用户绑定和说话人身份解析；
-- 声纹和学生档案；
-- 合规中心对陪伴聊天的账号门槛；
-- 长期陪伴记忆和关系成长；
-- 课程、待办、天气 Overview；
-- 主动提醒、门铃投递和小程序控制流程；
-- 通用工具或自由聊天作为博物馆问答的自动回退。
-
-总体判断：保留传输和媒体基座，在 `ConnectionHandler` 与具体业务之间建立高层 `ConversationRuntime`，由新的 `MuseumRuntime` 接管比赛链路。置信度：高。
-
-## 2. 当前服务端真实链路
-
-```mermaid
-flowchart TD
-    FW["固件 WebSocket"] --> CH["ConnectionHandler"]
-    CH --> VAD["VAD / ASR"]
-    VAD --> STC["startToChat"]
-    STC --> INTENT["旧通用意图处理"]
-    INTENT --> CHAT["ConnectionHandler.chat"]
-    CHAT --> TRY["_try_xiaoxin_turn"]
-    TRY --> ID["身份 / 声纹 / 学生档案"]
-    TRY --> COMPLY["陪伴合规能力检查"]
-    TRY --> XR["XiaoxinRuntime"]
-    XR --> MEMORY["陪伴记忆 / 知识 / 守卫"]
-    XR --> LLM["LLM provider"]
-    TRY --> TTSQ["TTS 文本队列"]
-    TTSQ --> AUDIO["可靠 TTS 音频发送"]
-    AUDIO --> FW
+```text
+ESP32 麦克风
+  -> 唤醒词
+  -> WebSocket / Opus
+  -> VAD / ASR
+  -> MuseumRuntime
+  -> 当前展品与发布事实检索
+  -> 受事实约束的 LLM 表达
+  -> museum_state
+  -> TTS 音频
+  -> ESP32 扬声器
+  -> tts ready / done ACK
 ```
 
-### 2.1 进程启动
+代码路径置信水平：高。依据为当前服务端与固件源码、协议实现和自动化测试。真机链路置信水平：未知；本轮没有可复核的设备验收记录，不能把代码可达性表述为麦克风、ASR、扬声器、屏幕、触摸或 OTA 已通过。
 
-[`../../main/xiaozhi-server/app.py`](../../main/xiaozhi-server/app.py) 无条件创建并启动 `XiaoxinControlRuntime`，再把同一个实例传给 WebSocket 和 HTTP 服务。旧身份库、提醒调度、设备注册、Overview、MQTT 门铃和陪伴后台目前共享一个总运行时。
+## 2. 当前服务端链路
 
-### 2.2 连接与会话
+### 2.1 启动与连接
 
-[`../../main/xiaozhi-server/core/connection.py`](../../main/xiaozhi-server/core/connection.py) 每次 WebSocket 连接创建一个新的 `session_id`，固件通过请求头发送 MAC 地址作为稳定 `device_id`。
+`app.py` 启动 WebSocket 和 HTTP/OTA 服务，不再创建旧控制运行时。`ConnectionHandler` 使用设备请求头中的 `device-id` 作为稳定设备标识，并在 Hello 后创建或恢复临时游客会话、下发初始 `museum_state`。
 
-这里必须区分：
+当前正式路径为 `/museum/v1/` 和 `/museum/ota/`。历史 `/xiaoxin/v1/`、`/xiaoxin/ota/` 及旧 activation 别名仅承担设备传输兼容；旧小程序控制接口不再属于比赛运行面。
 
-- `ConnectionHandler.session_id` 是传输连接会话，断线重连后变化；
-- PRD 中的游客会话是一次参观会话，不能直接等同于 WebSocket 会话。
+### 2.2 语音与业务运行时
 
-新的 `visitor_session_id` 必须由博物馆业务层管理。短暂断线只能按明确规则恢复，结束参观后不可恢复。
+音频帧经过 Opus 解码、VAD 和 ASR 后进入 `ConnectionHandler.chat()`。连接层构造 `TurnRequest` 并调用 `MuseumRuntime`，不再执行旧意图工具、身份解析、声纹、陪伴合规或长期记忆。
 
-### 2.3 语音入口
+`MuseumRuntime` 负责：
 
-音频经过 ASR 后由 [`../../main/xiaozhi-server/core/handle/receiveAudioHandle.py`](../../main/xiaozhi-server/core/handle/receiveAudioHandle.py) 的 `startToChat()` 处理。当前顺序是：
+- 根据设备点位解析当前展品；
+- 创建或恢复 30 分钟临时游客会话；
+- 只检索当前发布版本且绑定来源的事实；
+- 对命中问题返回 `grounded`；
+- 对资料外问题返回 `unsupported`，不回退到通用聊天；
+- 保存问题、依据、回答、守卫结果和延迟；
+- 生成完整 `museum_state`。
 
-1. 解析声纹增强文本；
-2. 检查设备绑定和每日输出上限；
-3. 运行旧通用意图处理；
-4. 发送 STT 与 TTS start；
-5. 在线程池调用 `ConnectionHandler.chat()`。
+### 2.3 回答与可靠播放
 
-博物馆运行时不能放在旧通用意图之后作为普通回退，否则路线指令、结束会话和展品选择可能被旧工具抢先处理。比赛模式只保留中断、音量等设备级命令，其余文本先交给博物馆运行时。
+`GroundedAnswerService` 先形成确定性事实答案，再允许 LLM 在给定事实范围内改写。模型异常、空回答或数字越界时回退到确定性答案。回答文本仍进入原有流式 TTS 链路，设备通过 `tts ready` 和 `tts done` 确认真实播放阶段。
 
-### 2.4 旧业务耦合点
+### 2.4 已移除的旧业务
 
-`ConnectionHandler._try_xiaoxin_turn()` 当前直接完成：
+比赛服务端已删除或断开以下运行时：
 
-- 从控制运行时获取身份解析器；
-- 根据声纹查找用户、宠物和学生档案；
-- 检查陪伴聊天与记忆权限；
-- 调用 `XiaoxinRuntime.handle_turn()`；
-- 把回复直接写入 TTS 队列和对话历史。
+- 学生身份、设备绑定和声纹；
+- 陪伴记忆、关系成长、主动陪伴和合规中心；
+- 课程、待办、天气、新闻和提醒；
+- 门铃、Overview、旧控制台和小程序业务；
+- 通用工具调用作为博物馆问答回退。
 
-这是需要替换的主要边界。新的连接层不能认识 `student_profile`、`CompanionMind`、`Capability.COMPANION_CHAT` 或个人记忆主体。
+残留的 `xiaoxin`、`xiaozhi` 名称仅在传输路径、上游基座目录或兼容标识中按调用关系保留。
 
-### 2.5 LLM 与 TTS
+## 3. 当前固件链路
 
-现有 `LLMChatAdapter` 能把不同 LLM provider 统一成同步完整回答，适合第一版 `MuseumRuntime` 复用。P0 不应先重写新的流式 LLM 框架。
+固件 Hello 继续上报版本、设备状态、音频参数和可靠 TTS 能力。`Application` 接收服务端下发的 `museum_state`，由独立 `MuseumState` 模块执行版本、字段和枚举校验；非法状态整条拒绝，不应用半份数据。
 
-现有 TTS 链路已经具备句子 ID、文本队列、`ready` ACK、预缓冲、`done` ACK，以及完成、超时和错误区分。博物馆业务只输出可播报文本和设备状态，不复制 TTS 实现。
+目标板当前能够显示和记录以下知识状态：
 
-### 2.6 HTTP 管理入口
+- `ready`：已经绑定展品，等待提问；
+- `retrieving`：正在查阅发布资料；
+- `grounded`：回答有已发布事实和来源支持；
+- `unsupported`：当前资料不足；
+- `missing_context`：没有可用展品上下文。
 
-[`../../main/xiaozhi-server/core/http_server.py`](../../main/xiaozhi-server/core/http_server.py) 当前挂载 OTA、视觉接口和旧小芯控制台。新的馆方接口应单独使用 `/api/museum/*`，不能继续向旧 `XiaoxinControlHandler` 增加博物馆字段。
+固件已移除旧 Doorbell MQTT、位置心跳、旧 Overview 消息入口和旧 `xiaoxin_ack`，保留 OTA、WebSocket、音频、屏幕、触摸基座和 TTS ACK。
 
-## 3. 当前固件真实链路
+## 4. Phase C 现场验收待办
 
-### 3.1 连接合同
+本轮未执行真机验收。后续必须基于当时的目标设备、固件提交和服务端提交，逐项记录：
 
-目标板通过 `/xiaoxin/v1/` 建立 WebSocket。Hello 已发送设备 MAC、设备 UUID、麦克风参数、设备时间、固件状态，以及 `tts_ready_ack`、`tts_done_ack` 和 `tts_preroll_buffer`。博物馆协议可以复用该连接，不需要第二条 WebSocket。
+1. OTA 请求、WebSocket、Hello 和初始 `ready`；
+2. 麦克风输入、唤醒和 ASR 实际文本；
+3. 展品问答的审计记录、依据快照和回答状态；
+4. TTS 音频下发、扬声器实际播放以及 `tts ready` / `tts done`；
+5. `ready`、`retrieving`、`grounded`、`unsupported` 和 `missing_context` 的屏幕表现；
+6. 普通问候和“你是谁”不依赖展品绑定即可正常回答；
+7. 异常日志、弱网恢复和连续运行结果。
 
-### 3.2 入站与出站 JSON
+## 5. 剩余风险
 
-`D:\AI_Pet\museum-firmwire\main\application.cc` 已集中分发 `tts`、`stt`、`llm`、`notification`、`xiaoxin_event` 和 `xiaoxin_overview_update`。增加 `museum_state` 与 `museum_action_result` 不需要修改底层 WebSocket 解析器。
+1. 麦克风、ASR、扬声器、屏幕、触摸、TTS ACK 和 OTA 均缺少本轮真机证据。
+2. 当前没有多设备并发证据。
+3. `museum_action`、触摸原子提交、路线推进和三种游客模式尚未实现。
+4. 尚未完成 30 分钟连续演示、弱网恢复和生产服务器部署验收。
+5. 当前提交号仍是工作基线；创建最终中文提交后必须回填真实提交号。
 
-`Protocol::SendText()` 当前是受保护方法，固件没有博物馆操作发送接口。应新增结构化 `SendMuseumAction()`，由 `Application` 生成请求 ID、发送动作并管理待提交状态。目标板显示类不能自行拼 JSON，也不能提前宣布路线推进成功。
+## 6. 下一切入点
 
-### 3.3 当前目标板 UI
-
-目标板当前三页是：
-
-1. 宠物主页；
-2. 通知页；
-3. 天气、课程、待办和陪伴成长 Overview。
-
-页面切换、触摸按下、拖动、释放、弹性动画和系统设置已经存在。比赛固件保留触摸驱动和动画基座，把页面业务替换为：
-
-1. 展品页：角色、当前展品、模式和知识状态；
-2. 路线页：路线站点、观察任务和前后站操作；
-3. 回顾页：已完成站点、探索主题和结束会话操作。
-
-低电量、Wi-Fi、OTA 等系统通知继续作为覆盖层保留，不再作为课程或待办业务页面。
-
-## 4. 保留与替换矩阵
-
-| 模块 | 决策 | 原因 |
-| --- | --- | --- |
-| WebSocket 与设备认证 | 保留 | 已有稳定设备标识和音频通道 |
-| VAD、ASR、LLM、TTS provider | 保留 | 与博物馆领域无关 |
-| TTS 可靠 ACK | 保留 | 已完成真机可靠播放 |
-| OTA 与固件遥测 | 保留 | 比赛部署仍然需要 |
-| 设备连接注册表 | 保留并收窄 | 只负责在线连接和发送 |
-| `ConnectionHandler.chat()` 通用工具链 | 比赛模式旁路 | 可能产生资料外回答 |
-| `XiaoxinRuntime` | 从比赛路径断开 | 业务实体和规则不匹配 |
-| `XiaoxinControlRuntime` | 暂时保留底层部分 | OTA、注册表仍被依赖，后续拆分 |
-| 身份、声纹、学生档案 | 禁用后删除 | PRD 明确排除 |
-| 课程、待办、主动提醒 | 禁用后删除 | PRD 明确排除 |
-| 固件触摸与动画基座 | 保留 | 可承接新页面 |
-| 固件 Overview 数据模型 | 替换 | 字段全部属于旧业务 |
-
-## 5. 必须防止的迁移风险
-
-1. 传输会话冒充游客会话，导致断线后错误创建或恢复参观。
-2. 旧意图抢答博物馆指令。
-3. `MuseumRuntime` 未处理后落入通用 LLM，自由生成资料外事实。
-4. 固件接受半份状态，新展品与旧路线同时存在。
-5. 触摸下一站后 UI 提前切换，提交失败无法回滚。
-6. 弱网重试导致路线重复推进。
-7. 比赛部署仍暴露学生身份、声纹和长期记忆入口。
-8. 对话已切换但旧调度器仍主动投递课程或待办。
-
-## 6. 推荐切入点
-
-第一刀不是删除 `core/xiaoxin`，而是增加统一入口：
-
-```python
-class ConversationRuntime(Protocol):
-    def handle_turn(self, request: TurnRequest) -> TurnOutcome: ...
-```
-
-`ConnectionHandler` 只负责接收 ASR 文本、构造请求、调用业务运行时、原子发送设备状态、把 `spoken_text` 交给现有 TTS，并记录传输失败。
-
-比赛配置选用 `MuseumRuntime`。旧运行时只作为迁移期间的可回退适配器保留，真机验收通过后再从启动路径和代码库删除。
+下一阶段只实现一条可验证的触摸动作闭环：固件发送带唯一 `request_id` 的 `museum_action`，服务端按游客会话实现幂等提交，再用 `museum_action_result` 和新的完整 `museum_state` 确认结果。不要同时展开路线后台、多展品内容和复杂页面。

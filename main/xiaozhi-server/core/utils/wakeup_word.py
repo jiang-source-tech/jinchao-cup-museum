@@ -7,6 +7,9 @@ import portalocker
 from typing import Dict
 
 
+WAKEUP_CACHE_NAMESPACE = "jinchao-cup-museum:wakeup:v1"
+
+
 class FileLock:
     def __init__(self, file, timeout=5):
         self.file = file
@@ -85,20 +88,25 @@ class WakeupWordsConfig:
             print(f"保存配置文件时发生未知错误: {e}")
             raise
 
+    @staticmethod
+    def _cache_key(voice: str) -> str:
+        payload = f"{WAKEUP_CACHE_NAMESPACE}\0{voice}".encode("utf-8")
+        return hashlib.sha256(payload).hexdigest()
+
     def get_wakeup_response(self, voice: str) -> Dict:
-        voice = hashlib.md5(voice.encode()).hexdigest()
         """获取唤醒词回复配置"""
+        cache_key = self._cache_key(voice)
         config = self._load_config()
 
-        if not config or voice not in config:
+        if not config or cache_key not in config:
             return None
 
         # 检查文件大小
-        file_path = config[voice]["file_path"]
+        file_path = config[cache_key]["file_path"]
         if not os.path.exists(file_path) or os.stat(file_path).st_size < (15 * 1024):
             return None
 
-        return config[voice]
+        return config[cache_key]
 
     def update_wakeup_response(self, voice: str, file_path: str, text: str):
         """更新唤醒词回复配置"""
@@ -107,8 +115,8 @@ class WakeupWordsConfig:
             filtered_text = re.sub(r'[\U0001F600-\U0001F64F\U0001F900-\U0001F9FF]', '', text)
             
             config = self._load_config()
-            voice_hash = hashlib.md5(voice.encode()).hexdigest()
-            config[voice_hash] = {
+            cache_key = self._cache_key(voice)
+            config[cache_key] = {
                 "voice": voice,
                 "file_path": file_path,
                 "time": time.time(),
@@ -120,11 +128,10 @@ class WakeupWordsConfig:
             raise
 
     def generate_file_path(self, voice: str) -> str:
-        """生成音频文件路径，使用voice的哈希值作为文件名"""
+        """生成带产品命名空间的音频缓存路径。"""
         try:
-            # 生成voice的哈希值
-            voice_hash = hashlib.md5(voice.encode()).hexdigest()
-            file_path = os.path.join(self.assets_dir, f"{voice_hash}.wav")
+            cache_key = self._cache_key(voice)
+            file_path = os.path.join(self.assets_dir, f"{cache_key}.wav")
 
             # 如果文件已存在，先删除
             if os.path.exists(file_path):

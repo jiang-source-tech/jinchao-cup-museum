@@ -32,7 +32,7 @@ _setup_websockets_logger()
 
 
 from core.connection import ConnectionHandler
-from core.auth import AuthManager, AuthenticationError
+from core.auth import AuthenticationError, create_auth_manager
 from core.utils.modules_initialize import initialize_modules
 from core.utils.cache.config import CacheType
 from core.utils.cache.manager import cache_manager
@@ -42,9 +42,8 @@ TAG = __name__
 
 
 class WebSocketServer:
-    def __init__(self, config: dict, xiaoxin_runtime=None):
+    def __init__(self, config: dict):
         self.config = config
-        self.xiaoxin_runtime = xiaoxin_runtime
         self.logger = setup_logging()
         self.config_lock = asyncio.Lock()
         modules = initialize_modules(
@@ -54,22 +53,21 @@ class WebSocketServer:
             "ASR" in self.config["selected_module"],
             "LLM" in self.config["selected_module"],
             False,
-            "Memory" in self.config["selected_module"],
-            "Intent" in self.config["selected_module"],
+            False,
+            False,
         )
         self._vad = modules["vad"] if "vad" in modules else None
         self._asr = modules["asr"] if "asr" in modules else None
         self._llm = modules["llm"] if "llm" in modules else None
-        self._intent = modules["intent"] if "intent" in modules else None
-        self._memory = modules["memory"] if "memory" in modules else None
 
-        auth_config = self.config["server"].get("auth", {})
+        self._configure_auth(self.config)
+
+    def _configure_auth(self, config: dict) -> None:
+        server_config = config["server"]
+        auth_config = server_config.get("auth", {})
         self.auth_enable = auth_config.get("enabled", False)
-        # 设备白名单
         self.allowed_devices = set(auth_config.get("allowed_devices", []))
-        secret_key = self.config["server"]["auth_key"]
-        expire_seconds = auth_config.get("expire_seconds", None)
-        self.auth = AuthManager(secret_key=secret_key, expire_seconds=expire_seconds)
+        self.auth = create_auth_manager(server_config)
 
     async def start(self):
         server_config = self.config["server"]
@@ -96,7 +94,9 @@ class WebSocketServer:
             parsed_url = urlparse(request_path)
             query_params = parse_qs(parsed_url.query)
             if "device-id" not in query_params:
-                await websocket.send("端口正常，如需测试连接，请启动digital-human测试")
+                await websocket.send(
+                    "端口正常，如需测试连接，请启动 museum-web-test 测试"
+                )
                 await websocket.close()
                 return
             else:
@@ -122,8 +122,6 @@ class WebSocketServer:
             self._vad,
             self._asr,
             self._llm,
-            self._memory,
-            self._intent,
             self,  # 传入server实例
         )
         try:
@@ -169,7 +167,11 @@ class WebSocketServer:
                 if new_config is None:
                     self.logger.bind(tag=TAG).error("获取新配置失败")
                     return False
-                new_config.setdefault("server", {})["auth_key"] = self.config["server"]["auth_key"]
+                new_server_config = new_config.setdefault("server", {})
+                current_auth_key = self.config.get("server", {}).get("auth_key")
+                if current_auth_key and not new_server_config.get("auth_key"):
+                    new_server_config["auth_key"] = current_auth_key
+                create_auth_manager(new_server_config)
                 self.logger.bind(tag=TAG).info(f"获取新配置成功")
                 # 检查 VAD 和 ASR 类型是否需要更新
                 update_vad = check_vad_update(self.config, new_config)
@@ -179,6 +181,7 @@ class WebSocketServer:
                 )
                 # 更新配置
                 self.config = new_config
+                self._configure_auth(new_config)
                 # 重新初始化组件
                 modules = initialize_modules(
                     self.logger,
@@ -187,8 +190,8 @@ class WebSocketServer:
                     update_asr,
                     "LLM" in new_config["selected_module"],
                     False,
-                    "Memory" in new_config["selected_module"],
-                    "Intent" in new_config["selected_module"],
+                    False,
+                    False,
                 )
 
                 # 更新组件实例
@@ -198,10 +201,6 @@ class WebSocketServer:
                     self._asr = modules["asr"]
                 if "llm" in modules:
                     self._llm = modules["llm"]
-                if "intent" in modules:
-                    self._intent = modules["intent"]
-                if "memory" in modules:
-                    self._memory = modules["memory"]
                 self.logger.bind(tag=TAG).info(f"更新配置任务执行完毕")
                 return True
         except Exception as e:

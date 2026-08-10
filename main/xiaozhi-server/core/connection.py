@@ -1,8 +1,5 @@
-import os
-import sys
 import copy
 import json
-import re
 import logging
 import uuid
 import time
@@ -10,12 +7,9 @@ import queue
 import asyncio
 import threading
 import traceback
-import subprocess
 import websockets
-from dataclasses import dataclass, replace
 from datetime import datetime
 
-from core.utils.util import extract_json_from_string
 from typing import Dict, Any
 from collections import deque
 from core.utils.modules_initialize import (
@@ -28,23 +22,14 @@ from core.utils.dialogue import Message, Dialogue
 from core.providers.asr.dto.dto import InterfaceType
 from core.handle.textHandle import handleTextMessage
 from core.handle.sendAudioHandle import send_tts_message
-from core.providers.tools.unified_tool_handler import UnifiedToolHandler
-from plugins_func.loadplugins import auto_import_modules
-from plugins_func.register import Action, ActionResponse
 from core.auth import AuthenticationError
 from core.providers.tts.dto.dto import ContentType, TTSMessageDTO, SentenceType
 from config.logger import setup_logging, build_module_string, create_connection_logger
 from core.utils.prompt_manager import PromptManager
-from core.utils.voiceprint_provider import VoiceprintProvider
 from core.utils.util import get_system_error_response
 from core.business_runtime_factory import create_conversation_runtime
 from core.conversation_runtime import TurnOutcome, TurnRequest
-from core.xiaoxin.runtime import normalize_xiaoxin_user_text
-from core.xiaoxin.companion import build_companion_subject_context
-from core.xiaoxin.compliance import Capability
-from core.xiaoxin.semantic_router import is_existing_tool_turn
-from core.xiaoxin.tts_delivery import TtsAckResult, TtsAttemptError
-from core.utils import textUtils
+from core.reliable_tts import TtsAckResult, TtsAttemptError
 
 
 TAG = __name__
@@ -54,42 +39,8 @@ TTS_PHASE_STREAMING = "STREAMING"
 TTS_PHASE_DONE_WAIT = "DONE_WAIT"
 TTS_PHASE_TERMINAL = "TERMINAL"
 
-auto_import_modules("plugins_func.functions")
-
-
 class TTSException(RuntimeError):
     pass
-
-
-@dataclass(frozen=True)
-class ControlTextChatResult:
-    event_id: str
-    sentence_id: str
-    submitted_at: str
-    assistant_text: str | None
-    tts_outcome: str
-    tts_reason: str | None = None
-
-
-# direct_answer 虚拟工具定义
-# 不是真实工具，是路由机制：将"调不调工具"的二选一变为"调哪个"的多选，防止小模型误触发真实工具
-DIRECT_ANSWER_TOOL = {
-    "type": "function",
-    "function": {
-        "name": "direct_answer",
-        "description": "当用户的请求不匹配其他任何工具时，可用此选项直接回复。将回复内容写在response参数里。",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "response": {
-                    "type": "string",
-                    "description": "你回复用户的完整内容",
-                },
-            },
-            "required": ["response"],
-        },
-    },
-}
 
 
 class ConnectionHandler:
@@ -99,23 +50,12 @@ class ConnectionHandler:
         _vad,
         _asr,
         _llm,
-        _memory,
-        _intent,
         server=None,
     ):
         self.config = copy.deepcopy(config)
         self.session_id = str(uuid.uuid4())
         self.logger = setup_logging()
         self.server = server  # 保存server实例的引用
-        self.xiaoxin_control_runtime = getattr(server, "xiaoxin_runtime", None)
-        self.xiaoxin_control_tts_deliveries = {}
-        self.need_bind = False  # 是否需要绑定设备
-        self.bind_completed_event = asyncio.Event()
-        self.bind_code = None  # 绑定设备的验证码
-        self.last_bind_prompt_time = 0  # 上次播放绑定提示的时间戳(秒)
-        self.bind_prompt_interval = 60  # 绑定提示播放间隔(秒)
-
-
         self.websocket: websockets.ServerConnection | None = None
         self.headers = None
         self.device_id = None
@@ -142,14 +82,9 @@ class ConnectionHandler:
         self._asr = _asr
         self._vad = _vad
         self.llm = _llm
-        self.memory = _memory
-        self.intent = _intent
         self.conversation_runtime = None
-        self.xiaoxin_runtime = None
-        self.companion_subject_context = None
-
-        # 为每个连接单独管理声纹识别
-        self.voiceprint_provider = None
+        self.visitor_session_id = None
+        self.last_museum_state = None
 
         # vad相关变量
         self.client_audio_buffer = bytearray()
@@ -169,7 +104,6 @@ class ConnectionHandler:
         self.audio_frames_received = 0
         self.audio_frames_queued = 0
         self.audio_frames_dropped_before_asr_ready = 0
-        self.current_speaker = None  # 存储当前说话人
 
         # llm相关变量
         self.dialogue = Dialogue()
@@ -192,14 +126,11 @@ class ConnectionHandler:
 
         # iot相关变量
         self.iot_descriptors = {}
-        self.func_handler = None
 
         self.cmd_exit = self.config["exit_commands"]
 
         # 是否在聊天结束后关闭连接
         self.close_after_chat = False
-        self.load_function_plugin = False
-        self.intent_type = "nointent"
 
         self.timeout_seconds = (
             int(self.config.get("close_connection_no_voice_time", 120)) + 60
@@ -210,19 +141,12 @@ class ConnectionHandler:
         self.features = None
         self.client_hello_event = asyncio.Event()
         self.device_time_snapshot = None
-        self.control_text_chat_busy = False
-        self.control_text_chat_sentence_id = None
 
         # 标记连接是否来自MQTT
         self.conn_from_mqtt_gateway = False
 
         # 初始化提示词管理器
         self.prompt_manager = PromptManager(self.config, self.logger)
-
-        # 初始化通话状态
-        self.calling = False
-        # 标记当前是否为来电接听模式
-        self.incoming_call = None
 
     async def handle_connection(self, ws: websockets.ServerConnection):
         try:
@@ -252,18 +176,6 @@ class ConnectionHandler:
             self.conn_from_mqtt_gateway = request_path.endswith("?from=mqtt_gateway")
             if self.conn_from_mqtt_gateway:
                 self.logger.bind(tag=TAG).info("连接来自:MQTT网关")
-            if self.xiaoxin_control_runtime and self.device_id:
-                note_device_seen = getattr(
-                    self.xiaoxin_control_runtime, "note_device_seen", None
-                )
-                if callable(note_device_seen):
-                    note_device_seen(self.device_id)
-                transport = (
-                    "mqtt_gateway" if self.conn_from_mqtt_gateway else "websocket"
-                )
-                self.xiaoxin_control_runtime.registry.register_connection(
-                    self.device_id, self, transport
-                )
 
             # 初始化活动时间戳
             self.first_activity_time = time.time() * 1000
@@ -299,23 +211,14 @@ class ConnectionHandler:
             return
         finally:
             try:
-                active_sentence_ids = [
+                sentence_ids = [
                     sentence_id
                     for sentence_id, phase in self._tts_attempt_phases.items()
                     if phase != TTS_PHASE_TERMINAL
-                    and sentence_id not in self.xiaoxin_control_tts_deliveries
-                ]
-                sentence_ids = [
-                    *self.xiaoxin_control_tts_deliveries,
-                    *active_sentence_ids,
                 ]
                 for sentence_id in sentence_ids:
-                    self.mark_xiaoxin_control_tts_failed(
+                    self._terminalize_tts_attempt_failure(
                         sentence_id, "connection_closed_before_done"
-                    )
-                if self.xiaoxin_control_runtime and self.device_id:
-                    self.xiaoxin_control_runtime.registry.unregister_connection(
-                        self.device_id, self
                     )
                 await self._save_and_close(ws)
             except Exception as final_error:
@@ -329,74 +232,14 @@ class ConnectionHandler:
                     )
 
     async def _save_and_close(self, ws):
-        """保存记忆并关闭连接"""
+        """Close transport resources for the temporary museum session."""
         try:
-            if self.memory and self._device_capability_allowed(
-                Capability.COMPANION_MEMORY_WRITE
-            ):
-                # 使用线程池异步保存记忆
-                def save_memory_task():
-                    try:
-                        # 创建新事件循环（避免与主循环冲突）
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
-                        loop.run_until_complete(
-                            self.memory.save_memory(
-                                self.dialogue.dialogue, self.session_id
-                            )
-                        )
-                    except Exception as e:
-                        self.logger.bind(tag=TAG).error(f"保存记忆失败: {e}")
-                    finally:
-                        try:
-                            loop.close()
-                        except Exception:
-                            pass
-
-                # 启动线程保存记忆，不等待完成
-                threading.Thread(target=save_memory_task, daemon=True).start()
-        except Exception as e:
-            self.logger.bind(tag=TAG).error(f"保存记忆失败: {e}")
-        finally:
-            # 立即关闭连接，不等待记忆保存完成
-            try:
-                await self.close(ws)
-            except Exception as close_error:
-                self.logger.bind(tag=TAG).error(
-                    f"保存记忆后关闭连接失败: {close_error}"
-                )
-
-    async def _discard_message_with_bind_prompt(self):
-        """丢弃消息并检查是否需要播放绑定提示"""
-        current_time = time.time()
-        # 检查是否需要播放绑定提示
-        if current_time - self.last_bind_prompt_time >= self.bind_prompt_interval:
-            self.last_bind_prompt_time = current_time
-            # 复用现有的绑定提示逻辑
-            from core.handle.receiveAudioHandle import check_bind_device
-
-            asyncio.create_task(check_bind_device(self))
+            await self.close(ws)
+        except Exception as close_error:
+            self.logger.bind(tag=TAG).error(f"关闭连接失败: {close_error}")
 
     async def _route_message(self, message):
         """消息路由"""
-        # 检查是否已经获取到真实的绑定状态
-        if not self.bind_completed_event.is_set():
-            # 还没有获取到真实状态，等待直到获取到真实状态或超时
-            try:
-                await asyncio.wait_for(self.bind_completed_event.wait(), timeout=1)
-            except asyncio.TimeoutError:
-                # 超时仍未获取到真实状态，丢弃消息
-                await self._discard_message_with_bind_prompt()
-                return
-
-        # 已经获取到真实状态，检查是否需要绑定
-        if self.need_bind:
-            # 需要绑定，丢弃消息
-            await self._discard_message_with_bind_prompt()
-            return
-
-        # 不需要绑定，继续处理消息
-
         if isinstance(message, str):
             await handleTextMessage(self, message)
         elif isinstance(message, bytes):
@@ -552,9 +395,6 @@ class ConnectionHandler:
             asyncio.run_coroutine_threadsafe(
                 self.tts.open_audio_channels(self), self.loop
             )
-            if self.need_bind:
-                self.bind_completed_event.set()
-                return
             self.selected_module_str = build_module_string(
                 self.config.get("selected_module", {})
             )
@@ -576,23 +416,14 @@ class ConnectionHandler:
             if self.asr is None:
                 self.asr = self._initialize_asr()
 
-            # 初始化声纹识别
-            self._initialize_voiceprint()
             # 打开语音识别通道
             asyncio.run_coroutine_threadsafe(
                 self.asr.open_audio_channels(self), self.loop
             )
 
-            """加载记忆"""
-            self._initialize_memory()
-            """加载意图识别"""
-            self._initialize_intent()
-            self._init_xiaoxin_runtime()
             self._init_conversation_runtime()
             """更新系统提示词"""
             self._init_prompt_enhancement()
-            """注入工具调用few-shot示例（仅function_call模式）"""
-            self._inject_tool_call_fewshot()
 
         except Exception as e:
             self.logger.bind(tag=TAG).error(f"实例化组件失败: {e}")
@@ -611,40 +442,8 @@ class ConnectionHandler:
             self.change_system_prompt(enhanced_prompt)
             self.logger.bind(tag=TAG).debug("系统提示词已增强更新")
 
-    def _init_xiaoxin_runtime(self):
-        runtime_cfg = self.config.get("xiaoxin_runtime", {})
-        if not runtime_cfg.get("enabled", False):
-            self.xiaoxin_runtime = None
-            return
-
-        from config.config_loader import get_project_dir
-        from core.xiaoxin.runtime import XiaoxinRuntime
-        from core.xiaoxin.types import XiaoxinConfig
-
-        cfg = XiaoxinConfig.from_dict(runtime_cfg, get_project_dir())
-        companion_mind = getattr(
-            self.xiaoxin_control_runtime,
-            "companion_mind",
-            None,
-        )
-        if companion_mind is None:
-            from core.xiaoxin.companion import CompanionMind
-
-            companion_mind = CompanionMind()
-            self.logger.bind(tag=TAG).warning(
-                "Xiaoxin control runtime has no CompanionMind; "
-                "private companion persistence is disabled for this connection"
-            )
-        self.xiaoxin_runtime = XiaoxinRuntime(
-            cfg,
-            companion_mind=companion_mind,
-        )
-
     def _init_conversation_runtime(self):
-        self.conversation_runtime = create_conversation_runtime(
-            self.config,
-            legacy_turn_handler=self._try_xiaoxin_turn,
-        )
+        self.conversation_runtime = create_conversation_runtime(self.config)
 
     def _try_business_turn(self, query: str, current_sentence_id: str) -> bool:
         if not query:
@@ -663,18 +462,18 @@ class ConnectionHandler:
         request = TurnRequest(
             request_id=current_sentence_id,
             transport_session_id=self.session_id,
-            visitor_session_id=None,
+            visitor_session_id=self.visitor_session_id,
             device_id=self.device_id,
             user_text=query,
             history=tuple(history[-8:]),
             occurred_at=datetime.now().astimezone(),
             llm=self.llm,
             metadata={
-                "speaker": self.current_speaker,
                 "device_time_snapshot": self.device_time_snapshot,
             },
         )
         try:
+            self._publish_retrieving_state(current_sentence_id)
             outcome = self.conversation_runtime.handle_turn(request)
         except Exception as exc:
             logging.getLogger(__name__).exception("Business runtime failed")
@@ -687,6 +486,12 @@ class ConnectionHandler:
 
         if not outcome.handled:
             return False
+        visitor_session_id = outcome.audit_record.get("visitor_session_id")
+        if visitor_session_id:
+            self.visitor_session_id = str(visitor_session_id)
+        if outcome.museum_state:
+            self.last_museum_state = dict(outcome.museum_state)
+            self._publish_museum_state(outcome.museum_state)
         if outcome.output_committed:
             return True
 
@@ -703,292 +508,62 @@ class ConnectionHandler:
         self.dialogue.put(Message(role="assistant", content=reply))
         return True
 
-    def _try_xiaoxin_turn(self, query: str, current_sentence_id: str) -> bool:
-        if self.xiaoxin_runtime is None or not query:
-            return False
-        if is_existing_tool_turn(query):
-            return False
-
-        history = self.dialogue.get_llm_dialogue()
-        if (
-            history
-            and history[-1].get("role") == "user"
-            and history[-1].get("content") == query
-        ):
-            history = history[:-1]
-        history = history[-8:]
-        self.companion_subject_context = None
-        trusted_student_profile = None
-        owner_user_id = None
-        if (
-            self.xiaoxin_control_runtime is not None
-            and getattr(self.xiaoxin_control_runtime, "identity_resolver", None)
-            is not None
-        ):
-            try:
-                identity = (
-                    self.xiaoxin_control_runtime.identity_resolver.resolve_turn_subject(
-                        self.device_id or self.session_id,
-                        self.current_speaker,
-                        self.session_id,
-                    )
-                )
-                personal_memory_allowed = (
-                    identity.subject_kind == "user_speaker"
-                    and identity.owner_user_id is not None
-                )
-                owner_user_id = identity.owner_user_id
-                identity_store = getattr(
-                    self.xiaoxin_control_runtime,
-                    "identity_store",
-                    None,
-                )
-                if identity_store is not None and personal_memory_allowed:
-                    pet = identity_store.get_personal_pet_for_user(
-                        identity.owner_user_id
-                    )
-                    profile = identity_store.get_student_profile_for_user(
-                        identity.owner_user_id
-                    )
-                    if isinstance(profile, dict):
-                        trusted_student_profile = profile
-                    if pet is not None:
-                        self.companion_subject_context = (
-                            build_companion_subject_context(
-                                owner_user_id=identity.owner_user_id,
-                                pet_id=pet.id,
-                                memory_subject_id=identity.memory_subject_id,
-                                subject_kind=identity.subject_kind,
-                                raw_grade=(profile or {}).get("grade"),
-                            )
-                        )
-            except Exception as exc:
-                logging.getLogger(__name__).exception(
-                    "Xiaoxin identity resolution failed"
-                )
-                self.logger.bind(tag=TAG).error(
-                    f"Xiaoxin identity resolution failed: {exc}"
-                )
-        compliance_service = getattr(
-            self.xiaoxin_control_runtime,
-            "compliance_service",
-            None,
+    async def send_initial_museum_state(self) -> None:
+        if self.conversation_runtime is None:
+            self._init_conversation_runtime()
+        open_session = getattr(self.conversation_runtime, "open_session", None)
+        if not callable(open_session):
+            return
+        request = TurnRequest(
+            request_id=f"hello-{uuid.uuid4().hex}",
+            transport_session_id=self.session_id,
+            visitor_session_id=self.visitor_session_id,
+            device_id=self.device_id,
+            user_text="",
+            history=(),
+            occurred_at=datetime.now().astimezone(),
+            llm=self.llm,
+            metadata={"device_time_snapshot": self.device_time_snapshot},
         )
-        if compliance_service is not None:
-            if not owner_user_id:
-                return self._complete_compliance_denied_turn(current_sentence_id)
-            chat_decision = compliance_service.require_capability(
-                owner_user_id,
-                Capability.COMPANION_CHAT,
-            )
-            if not chat_decision.allowed:
-                return self._complete_compliance_denied_turn(
-                    current_sentence_id,
-                    decision=chat_decision,
-                )
-            memory_decision = compliance_service.require_capability(
-                owner_user_id,
-                Capability.COMPANION_MEMORY_READ,
-            )
-            if (
-                self.companion_subject_context is not None
-                and not memory_decision.allowed
-            ):
-                self.companion_subject_context = replace(
-                    self.companion_subject_context,
-                    persistence_allowed=False,
-                )
+        outcome = await asyncio.to_thread(open_session, request)
+        visitor_session_id = outcome.audit_record.get("visitor_session_id")
+        if visitor_session_id:
+            self.visitor_session_id = str(visitor_session_id)
+        if outcome.museum_state:
+            self.last_museum_state = dict(outcome.museum_state)
+            await self.send_business_event(outcome.museum_state)
+
+    async def send_business_event(self, payload: Dict[str, Any]) -> None:
+        if self.websocket is None:
+            raise RuntimeError("websocket is not connected")
+        await self.websocket.send(json.dumps(payload, ensure_ascii=False))
+
+    def _publish_museum_state(self, state) -> None:
+        if not state or self.loop is None or self.websocket is None:
+            return
+        future = asyncio.run_coroutine_threadsafe(
+            self.send_business_event(dict(state)),
+            self.loop,
+        )
         try:
-            result = self.xiaoxin_runtime.handle_turn(
-                user_id=self.device_id or self.session_id,
-                user_text=query,
-                history=history,
-                llm=self.llm,
-                session_id=self.session_id,
-                speaker=self.current_speaker,
-                device_time_snapshot=self.device_time_snapshot,
-                turn_id=current_sentence_id,
-                companion_subject_context=self.companion_subject_context,
-                trusted_student_profile=trusted_student_profile,
-            )
+            future.result(timeout=3)
         except Exception as exc:
-            logging.getLogger(__name__).exception("Xiaoxin runtime failed")
-            self.logger.bind(tag=TAG).error(f"Xiaoxin runtime failed: {exc}")
-            reply = get_system_error_response(self.config)
-            self.tts.store_tts_text(current_sentence_id, reply)
-            self.tts.tts_text_queue.put(
-                TTSMessageDTO(
-                    sentence_id=current_sentence_id,
-                    sentence_type=SentenceType.MIDDLE,
-                    content_type=ContentType.TEXT,
-                    content_detail=reply,
-                )
-            )
-            self.dialogue.put(Message(role="assistant", content=reply))
-            return True
-        if not result.handled:
-            return False
+            self.logger.bind(tag=TAG).warning(f"museum_state send failed: {exc}")
 
-        reply = result.reply or get_system_error_response(self.config)
-        self.tts.store_tts_text(current_sentence_id, reply)
-        self.tts.tts_text_queue.put(
-            TTSMessageDTO(
-                sentence_id=current_sentence_id,
-                sentence_type=SentenceType.MIDDLE,
-                content_type=ContentType.TEXT,
-                content_detail=reply,
-            )
-        )
-        self.dialogue.put(Message(role="assistant", content=reply))
-        return True
-
-    def _complete_compliance_denied_turn(
-        self,
-        current_sentence_id: str,
-        *,
-        decision=None,
-    ) -> bool:
-        if decision is not None and decision.reason == "service_tool_only":
-            reply = (
-                "陪伴服务当前暂未开放。我仍可以帮你查询天气、课程和待办，"
-                "或执行设备控制。"
-            )
-        elif decision is not None and not decision.status.required_actions:
-            reply = (
-                "当前账号只开放工具能力。我仍可以帮你查询天气、课程和待办，"
-                "或执行设备控制。"
-            )
-        else:
-            reply = (
-                "当前账号尚未完成陪伴服务设置。我仍可以帮你查询天气、课程和待办，"
-                "或执行设备控制；请先在小程序合规中心完成设置。"
-            )
-        self.tts.store_tts_text(current_sentence_id, reply)
-        self.tts.tts_text_queue.put(
-            TTSMessageDTO(
-                sentence_id=current_sentence_id,
-                sentence_type=SentenceType.MIDDLE,
-                content_type=ContentType.TEXT,
-                content_detail=reply,
-            )
-        )
-        self.dialogue.put(Message(role="assistant", content=reply))
-        return True
-
-    def _device_capability_allowed(self, capability: Capability) -> bool:
-        control_runtime = self.xiaoxin_control_runtime
-        compliance_service = getattr(control_runtime, "compliance_service", None)
-        if compliance_service is None:
-            return True
-        identity_store = getattr(control_runtime, "identity_store", None)
-        device = (
-            identity_store.get_device_by_device_id(self.device_id)
-            if identity_store is not None and self.device_id
-            else None
-        )
-        owner_user_id = getattr(device, "owner_user_id", None)
-        if not owner_user_id:
-            return False
-        return compliance_service.require_capability(
-            owner_user_id,
-            capability,
-        ).allowed
-
-    def _inject_tool_call_fewshot(self):
-        """注入工具调用 few-shot 示例到对话历史。
-        结构：正样本（工具调用示例）放在动态 system 之前，可命中前缀缓存；
-        负样本（直接回答示例）放在动态 system 之后、紧挨真实用户消息，
-        确保模型在处理用户消息前最后看到的是"不调工具"的行为模式。
-        """
-        if self.intent_type != "function_call":
+    def _publish_retrieving_state(self, request_id: str) -> None:
+        if not self.last_museum_state:
             return
-        if not hasattr(self, "func_handler") or self.func_handler is None:
-            return
-
-        tools = self.func_handler.get_functions()
-        if not tools:
-            return
-
-        tool_names = {t.get("function", {}).get("name") for t in tools}
-
-        # === few-shot 示例（is_temporary）===
-        # 展示 direct_answer 携带 response 参数的用法，一次调用完成回复
-
-        # 示例1：direct_answer（回复内容写在 response 参数里，无需递归）
-        da_tc_id = "fewshot_da_001"
-        self.dialogue.put(
-            Message(role="user", content="给我讲个故事吧", is_temporary=True)
-        )
-        self.dialogue.put(
-            Message(
-                role="assistant",
-                tool_calls=[
-                    {
-                        "id": da_tc_id,
-                        "function": {
-                            "arguments": '{"response": "好呀，你想听什么类型的呀？童话、冒险还是搞笑的？选一个我给你开讲~"}',
-                            "name": "direct_answer",
-                        },
-                        "type": "function",
-                        "index": 0,
-                    }
-                ],
-                is_temporary=True,
-            )
-        )
-        self.dialogue.put(
-            Message(
-                role="tool",
-                tool_call_id=da_tc_id,
-                content="已直接回复",
-                is_temporary=True,
-            )
-        )
-
-        # 示例2：真实工具调用（handle_exit_intent）
-        if "handle_exit_intent" in tool_names:
-            tc_id = "fewshot_exit_001"
-            self.dialogue.put(Message(role="user", content="拜拜", is_temporary=True))
-            self.dialogue.put(
-                Message(
-                    role="assistant",
-                    tool_calls=[
-                        {
-                            "id": tc_id,
-                            "function": {
-                                "arguments": '{"say_goodbye": "再见，下次再聊~"}',
-                                "name": "handle_exit_intent",
-                            },
-                            "type": "function",
-                            "index": 0,
-                        }
-                    ],
-                    is_temporary=True,
-                )
-            )
-            self.dialogue.put(
-                Message(
-                    role="tool",
-                    tool_call_id=tc_id,
-                    content="退出意图已处理",
-                    is_temporary=True,
-                )
-            )
-            self.dialogue.put(
-                Message(
-                    role="assistant",
-                    content="再见，下次再聊~",
-                    is_temporary=True,
-                )
-            )
-
-        self.logger.bind(tag=TAG).debug("已注入工具调用 few-shot 示例")
+        state = copy.deepcopy(self.last_museum_state)
+        state["request_id"] = request_id
+        grounding = state.setdefault("grounding", {})
+        grounding["status"] = "retrieving"
+        grounding["source_count"] = 0
+        self._publish_museum_state(state)
 
     def _initialize_tts(self):
         """初始化TTS"""
         tts = None
-        if not self.need_bind:
-            tts = initialize_tts(self.config)
+        tts = initialize_tts(self.config)
 
         if tts is None:
             tts = DefaultTTS(self.config, delete_audio_file=True)
@@ -1012,140 +587,12 @@ class ConnectionHandler:
 
         return asr
 
-    def _initialize_voiceprint(self):
-        """为当前连接初始化声纹识别"""
-        try:
-            voiceprint_config = self.config.get("voiceprint", {})
-            if voiceprint_config:
-                identity_store = getattr(self.xiaoxin_control_runtime, "identity_store", None)
-
-                def speaker_resolver(device_id):
-                    if identity_store is None or not device_id:
-                        return []
-                    device = identity_store.get_device_by_device_id(device_id)
-                    if device is None or not device.owner_user_id:
-                        return []
-                    return [
-                        (speaker.speaker_key, speaker.display_name)
-                        for speaker in identity_store.list_speakers_for_device(
-                            device.owner_user_id, device_id
-                        )
-                        if speaker.status != "archived"
-                        and speaker.speaker_key.startswith("xiaoxin_")
-                    ]
-
-                voiceprint_provider = VoiceprintProvider(
-                    voiceprint_config,
-                    speaker_resolver=speaker_resolver,
-                )
-                if voiceprint_provider is not None and voiceprint_provider.enabled:
-                    self.voiceprint_provider = voiceprint_provider
-                    self.logger.bind(tag=TAG).info("声纹识别功能已在连接时动态启用")
-                else:
-                    self.logger.bind(tag=TAG).warning("声纹识别功能启用但配置不完整")
-            else:
-                self.logger.bind(tag=TAG).info("声纹识别功能未启用")
-        except Exception as e:
-            self.logger.bind(tag=TAG).warning(f"声纹识别初始化失败: {str(e)}")
-
     async def _background_initialize(self):
         """Initialize local connection components without blocking the event loop."""
         try:
-            self.bind_completed_event.set()
             self.executor.submit(self._initialize_components)
         except Exception as e:
             self.logger.bind(tag=TAG).error(f"Background initialization failed: {e}")
-
-    def _initialize_memory(self):
-        if self.memory is None:
-            return
-        """初始化记忆模块"""
-        self.memory.init_memory(
-            role_id=self.device_id,
-            llm=self.llm,
-            summary_memory=self.config.get("summaryMemory", None),
-            save_to_file=True,
-        )
-
-        # 获取记忆总结配置
-        memory_config = self.config["Memory"]
-        memory_type = self.config["Memory"][self.config["selected_module"]["Memory"]][
-            "type"
-        ]
-        # 如果使用 nomen 或 mem_report_only，直接返回
-        if memory_type == "nomem" or memory_type == "mem_report_only":
-            return
-        # 使用 mem_local_short 模式
-        elif memory_type == "mem_local_short":
-            memory_llm_name = memory_config[self.config["selected_module"]["Memory"]][
-                "llm"
-            ]
-            if memory_llm_name and memory_llm_name in self.config["LLM"]:
-                # 如果配置了专用LLM，则创建独立的LLM实例
-                from core.utils import llm as llm_utils
-
-                memory_llm_config = self.config["LLM"][memory_llm_name]
-                memory_llm_type = memory_llm_config.get("type", memory_llm_name)
-                memory_llm = llm_utils.create_instance(
-                    memory_llm_type, memory_llm_config
-                )
-                self.logger.bind(tag=TAG).info(
-                    f"为记忆总结创建了专用LLM: {memory_llm_name}, 类型: {memory_llm_type}"
-                )
-                self.memory.set_llm(memory_llm)
-            else:
-                # 否则使用主LLM
-                self.memory.set_llm(self.llm)
-                self.logger.bind(tag=TAG).info("使用主LLM作为意图识别模型")
-
-    def _initialize_intent(self):
-        if self.intent is None:
-            return
-        self.intent_type = self.config["Intent"][
-            self.config["selected_module"]["Intent"]
-        ]["type"]
-        if self.intent_type == "function_call" or self.intent_type == "intent_llm":
-            self.load_function_plugin = True
-        """初始化意图识别模块"""
-        # 获取意图识别配置
-        intent_config = self.config["Intent"]
-        intent_type = self.config["Intent"][self.config["selected_module"]["Intent"]][
-            "type"
-        ]
-
-        # 如果使用 nointent，直接返回
-        if intent_type == "nointent":
-            return
-        # 使用 intent_llm 模式
-        elif intent_type == "intent_llm":
-            intent_llm_name = intent_config[self.config["selected_module"]["Intent"]][
-                "llm"
-            ]
-
-            if intent_llm_name and intent_llm_name in self.config["LLM"]:
-                # 如果配置了专用LLM，则创建独立的LLM实例
-                from core.utils import llm as llm_utils
-
-                intent_llm_config = self.config["LLM"][intent_llm_name]
-                intent_llm_type = intent_llm_config.get("type", intent_llm_name)
-                intent_llm = llm_utils.create_instance(
-                    intent_llm_type, intent_llm_config
-                )
-                self.logger.bind(tag=TAG).info(
-                    f"为意图识别创建了专用LLM: {intent_llm_name}, 类型: {intent_llm_type}"
-                )
-                self.intent.set_llm(intent_llm)
-            else:
-                # 否则使用主LLM
-                self.intent.set_llm(self.llm)
-                self.logger.bind(tag=TAG).info("使用主LLM作为意图识别模型")
-
-        """加载统一工具处理器"""
-        self.func_handler = UnifiedToolHandler(self)
-
-        # 异步初始化工具处理器
-        if hasattr(self, "loop") and self.loop:
-            asyncio.run_coroutine_threadsafe(self.func_handler._initialize(), self.loop)
 
     def change_system_prompt(self, prompt):
         self.prompt = prompt
@@ -1153,479 +600,28 @@ class ConnectionHandler:
         self.dialogue.update_system_message(self.prompt)
 
     def chat(self, query, depth=0, sentence_id=None):
-        # 保存当前任务的sentence_id到局部变量，避免被新任务覆盖
-        current_sentence_id = None
-
-        if query is not None and self.xiaoxin_runtime is not None:
-            query = normalize_xiaoxin_user_text(query)
-
-        if query is not None:
-            self.logger.bind(tag=TAG).info(f"大模型收到用户消息: {query}")
-
-        # 为最顶层时新建会话ID和发送FIRST请求
-        if depth == 0:
-            current_sentence_id = sentence_id or str(uuid.uuid4().hex)
-            self.sentence_id = current_sentence_id  # 更新共享属性
-            self.dialogue.put(Message(role="user", content=query))
-            self.tts.tts_text_queue.put(
-                TTSMessageDTO(
-                    sentence_id=current_sentence_id,
-                    sentence_type=SentenceType.FIRST,
-                    content_type=ContentType.ACTION,
-                )
+        if not query:
+            return False
+        current_sentence_id = sentence_id or str(uuid.uuid4().hex)
+        self.sentence_id = current_sentence_id
+        self.logger.bind(tag=TAG).info(f"博物馆运行时收到用户消息: {query}")
+        self.dialogue.put(Message(role="user", content=query))
+        self.tts.tts_text_queue.put(
+            TTSMessageDTO(
+                sentence_id=current_sentence_id,
+                sentence_type=SentenceType.FIRST,
+                content_type=ContentType.ACTION,
             )
-        else:
-            # 递归调用时，使用当前的sentence_id
-            current_sentence_id = self.sentence_id
-
-        if self._try_business_turn(query, current_sentence_id):
-            if depth == 0:
-                self.tts.tts_text_queue.put(
-                    TTSMessageDTO(
-                        sentence_id=current_sentence_id,
-                        sentence_type=SentenceType.LAST,
-                        content_type=ContentType.ACTION,
-                    )
-                )
-            return True
-
-        # 设置最大递归深度，避免无限循环，可根据实际需求调整
-        MAX_DEPTH = 5
-        force_final_answer = False  # 标记是否强制最终回答
-
-        if depth >= MAX_DEPTH:
-            self.logger.bind(tag=TAG).debug(
-                f"已达到最大工具调用深度 {MAX_DEPTH}，将强制基于现有信息回答"
+        )
+        handled = self._try_business_turn(query, current_sentence_id)
+        self.tts.tts_text_queue.put(
+            TTSMessageDTO(
+                sentence_id=current_sentence_id,
+                sentence_type=SentenceType.LAST,
+                content_type=ContentType.ACTION,
             )
-            force_final_answer = True
-            # 添加系统指令，要求 LLM 基于现有信息回答
-            self.dialogue.put(
-                Message(
-                    role="user",
-                    content="[系统提示] 已达到最大工具调用次数限制，请你基于目前已经获取的所有信息，直接给出最终答案。不要再尝试调用任何工具。",
-                )
-            )
-
-        # Define intent functions
-        functions = None
-        # 达到最大深度时，禁用工具调用，强制 LLM 直接回答
-        if (
-            self.intent_type == "function_call"
-            and hasattr(self, "func_handler")
-            and not force_final_answer
-        ):
-            functions = list(self.func_handler.get_functions())
-            # 仅在第一层调用时注入 direct_answer 虚拟工具
-            # 递归调用（depth>0）不注入，避免模型在生成文本回复时再次调 direct_answer 导致循环
-            if functions is not None and depth == 0:
-                functions.append(DIRECT_ANSWER_TOOL)
-
-        response_message = []
-
-        try:
-            # 使用带记忆的对话
-            memory_str = None
-            # 仅当query非空（代表用户询问）时查询记忆
-            if (
-                self.memory is not None
-                and query
-                and not is_existing_tool_turn(query)
-                and self._device_capability_allowed(
-                    Capability.COMPANION_MEMORY_READ
-                )
-            ):
-                future = asyncio.run_coroutine_threadsafe(
-                    self.memory.query_memory(query), self.loop
-                )
-                memory_str = future.result()
-
-            if self.intent_type == "function_call" and functions is not None:
-                # 使用支持functions的streaming接口
-                llm_responses = self.llm.response_with_functions(
-                    self.session_id,
-                    self.dialogue.get_llm_dialogue_with_memory(
-                        memory_str, self.config.get("voiceprint", {})
-                    ),
-                    functions=functions,
-                )
-            else:
-                llm_responses = self.llm.response(
-                    self.session_id,
-                    self.dialogue.get_llm_dialogue_with_memory(
-                        memory_str, self.config.get("voiceprint", {})
-                    ),
-                )
-        except Exception as e:
-            self.logger.bind(tag=TAG).error(f"LLM 处理出错 {query}: {e}")
-            return None
-
-        # 处理流式响应
-        tool_call_flag = False
-        # 支持多个并行工具调用 - 使用列表存储
-        tool_calls_list = []  # 格式: [{"id": "", "name": "", "arguments": ""}]
-        content_arguments = ""
-        emotion_flag = True
-        try:
-            for response in llm_responses:
-                if self.client_abort:
-                    break
-                if self.intent_type == "function_call" and functions is not None:
-                    content, tools_call = response
-                    if "content" in response:
-                        content = response["content"]
-                        tools_call = None
-                    if content is not None and len(content) > 0:
-                        content_arguments += content
-
-                    if not tool_call_flag and content_arguments.startswith(
-                        "<tool_call>"
-                    ):
-                        # print("content_arguments", content_arguments)
-                        tool_call_flag = True
-
-                    if tools_call is not None and len(tools_call) > 0:
-                        tool_call_flag = True
-                        self._merge_tool_calls(tool_calls_list, tools_call)
-
-                    # 流式提取 direct_answer 的 response 参数，实时送 TTS
-                    # 使用安全缓冲区，防止 JSON 闭合符号泄漏到 TTS
-                    _DA_STREAM_BUFFER = 5
-                    for tc in tool_calls_list:
-                        if tc["name"] == "direct_answer" and tc.get("arguments"):
-                            da_text = self._extract_direct_answer_response(
-                                tc["arguments"]
-                            )
-                            sent_len = tc.get("_da_sent", 0)
-                            if da_text and len(da_text) > sent_len:
-                                safe_end = max(
-                                    sent_len, len(da_text) - _DA_STREAM_BUFFER
-                                )
-                                if safe_end > sent_len:
-                                    new_part = da_text[sent_len:safe_end]
-                                    # 清理 delta 中可能泄漏的 JSON 闭合垃圾
-                                    new_part = self._clean_response_garbage(new_part)
-                                    if new_part:
-                                        tc["_da_sent"] = safe_end
-                                        self.tts.tts_text_queue.put(
-                                            TTSMessageDTO(
-                                                sentence_id=current_sentence_id,
-                                                sentence_type=SentenceType.MIDDLE,
-                                                content_type=ContentType.TEXT,
-                                                content_detail=new_part,
-                                            )
-                                        )
-                else:
-                    content = response
-
-                # 在llm回复中获取情绪表情，一轮对话只在开头获取一次
-                if emotion_flag and content is not None and content.strip():
-                    if (self.features or {}).get("emoji", True):
-                        asyncio.run_coroutine_threadsafe(
-                            textUtils.get_emotion(self, content),
-                            self.loop,
-                        )
-                    emotion_flag = False
-
-                if content is not None and len(content) > 0:
-                    if not tool_call_flag:
-                        response_message.append(content)
-                        self.tts.tts_text_queue.put(
-                            TTSMessageDTO(
-                                sentence_id=current_sentence_id,
-                                sentence_type=SentenceType.MIDDLE,
-                                content_type=ContentType.TEXT,
-                                content_detail=content,
-                            )
-                        )
-        except Exception as e:
-            self.logger.bind(tag=TAG).error(f"LLM stream processing error: {e}")
-            self.tts.tts_text_queue.put(
-                TTSMessageDTO(
-                    sentence_id=current_sentence_id,
-                    sentence_type=SentenceType.MIDDLE,
-                    content_type=ContentType.TEXT,
-                    content_detail=get_system_error_response(self.config),
-                )
-            )
-            if depth == 0:
-                self.tts.tts_text_queue.put(
-                    TTSMessageDTO(
-                        sentence_id=current_sentence_id,
-                        sentence_type=SentenceType.LAST,
-                        content_type=ContentType.ACTION,
-                    )
-                )
-            return
-        # 处理function call
-        if tool_call_flag:
-            bHasError = False
-            # 处理基于文本的工具调用格式
-            if len(tool_calls_list) == 0 and content_arguments:
-                a = extract_json_from_string(content_arguments)
-                if a is not None:
-                    try:
-                        content_arguments_json = json.loads(a)
-                        tool_calls_list.append(
-                            {
-                                "id": str(uuid.uuid4().hex),
-                                "name": content_arguments_json["name"],
-                                "arguments": json.dumps(
-                                    content_arguments_json["arguments"],
-                                    ensure_ascii=False,
-                                ),
-                            }
-                        )
-                    except Exception as e:
-                        bHasError = True
-                        response_message.append(a)
-                else:
-                    bHasError = True
-                    response_message.append(content_arguments)
-                if bHasError:
-                    self.logger.bind(tag=TAG).error(
-                        f"function call error: {content_arguments}"
-                    )
-
-            if not bHasError and len(tool_calls_list) > 0:
-                # 处理 direct_answer 虚拟工具
-                direct_answer_calls = [
-                    tc for tc in tool_calls_list if tc["name"] == "direct_answer"
-                ]
-                real_tool_calls = [
-                    tc for tc in tool_calls_list if tc["name"] != "direct_answer"
-                ]
-
-                if direct_answer_calls:
-                    self.logger.bind(tag=TAG).debug(
-                        f"模型选择 direct_answer，流式已播报，写入对话历史"
-                    )
-                    for tc in direct_answer_calls:
-                        da_response = self._extract_direct_answer_response(
-                            tc.get("arguments", "{}")
-                        )
-                        if da_response:
-                            # 刷新流式缓冲区中未发送的部分
-                            sent_len = tc.get("_da_sent", 0)
-                            remaining = da_response[sent_len:]
-                            if remaining:
-                                remaining = self._clean_response_garbage(remaining)
-                                if remaining:
-                                    self.tts.tts_text_queue.put(
-                                        TTSMessageDTO(
-                                            sentence_id=current_sentence_id,
-                                            sentence_type=SentenceType.MIDDLE,
-                                            content_type=ContentType.TEXT,
-                                            content_detail=remaining,
-                                        )
-                                    )
-                            # 写入对话历史
-                            da_response = self._clean_response_garbage(da_response)
-                            self.tts.store_tts_text(current_sentence_id, da_response)
-                            self.dialogue.put(
-                                Message(role="assistant", content=da_response)
-                            )
-
-                    if not real_tool_calls:
-                        if depth == 0:
-                            self.tts.tts_text_queue.put(
-                                TTSMessageDTO(
-                                    sentence_id=current_sentence_id,
-                                    sentence_type=SentenceType.LAST,
-                                    content_type=ContentType.ACTION,
-                                )
-                            )
-                        return
-
-                    tool_calls_list = real_tool_calls
-
-            if not bHasError and len(tool_calls_list) > 0:
-                self.logger.bind(tag=TAG).debug(
-                    f"检测到 {len(tool_calls_list)} 个工具调用"
-                )
-
-                # LLM 流式阶段已播报过的文本
-                streamed_text = ""
-                if len(response_message) > 0:
-                    streamed_text = "".join(response_message)
-                    self.tts.store_tts_text(current_sentence_id, streamed_text)
-                    self.dialogue.put(Message(role="assistant", content=streamed_text))
-                response_message.clear()
-
-                # 收集所有工具调用的 Future
-                futures_with_data = []
-                for tool_call_data in tool_calls_list:
-                    self.logger.bind(tag=TAG).debug(
-                        f"function_name={tool_call_data['name']}, function_id={tool_call_data['id']}, function_arguments={tool_call_data['arguments']}"
-                    )
-
-                    future = asyncio.run_coroutine_threadsafe(
-                        self.func_handler.handle_llm_function_call(
-                            self, tool_call_data
-                        ),
-                        self.loop,
-                    )
-                    futures_with_data.append((future, tool_call_data))
-
-                tool_call_timeout = int(self.config.get("tool_call_timeout", 30))
-                tool_results = []
-
-                for future, tool_call_data in futures_with_data:
-                    try:
-                        result = future.result(timeout=tool_call_timeout)
-                        tool_results.append((result, tool_call_data))
-                    except Exception as e:
-                        self.logger.bind(tag=TAG).error(
-                            f"Tool call timed out or failed: {tool_call_data['name']}, error: {e}"
-                        )
-                        tool_results.append(
-                            (
-                                ActionResponse(
-                                    action=Action.ERROR,
-                                    result="哎呀，网络遇到点问题，请稍后再试一下！",
-                                ),
-                                tool_call_data,
-                            )
-                        )
-
-                if tool_results:
-                    self._handle_function_result(
-                        tool_results, depth=depth, streamed_text=streamed_text
-                    )
-
-        # 存储对话内容
-        if len(response_message) > 0:
-            text_buff = "".join(response_message)
-            self.tts.store_tts_text(current_sentence_id, text_buff)
-            self.dialogue.put(Message(role="assistant", content=text_buff))
-
-        if depth == 0:
-            self.tts.tts_text_queue.put(
-                TTSMessageDTO(
-                    sentence_id=current_sentence_id,
-                    sentence_type=SentenceType.LAST,
-                    content_type=ContentType.ACTION,
-                )
-            )
-            # 使用lambda延迟计算，只有在DEBUG级别时才执行get_llm_dialogue()
-            self.logger.bind(tag=TAG).debug(
-                lambda: json.dumps(
-                    self.dialogue.get_llm_dialogue(), indent=4, ensure_ascii=False
-                )
-            )
-
-        return True
-
-    def _handle_function_result(self, tool_results, depth, streamed_text=""):
-        need_llm_tools = []
-        record_tools = []
-
-        for result, tool_call_data in tool_results:
-            if result.action in [
-                Action.RESPONSE,
-                Action.NOTFOUND,
-                Action.ERROR,
-            ]:
-                text = result.response if result.response else result.result
-                if streamed_text and text in streamed_text:
-                    self.logger.bind(tag=TAG).debug(
-                        f"Skipping duplicate TTS for tool {tool_call_data['name']}, already streamed"
-                    )
-                else:
-                    self.tts.tts_one_sentence(
-                        self, ContentType.TEXT, content_detail=text
-                    )
-                    self.tts.store_tts_text(self.sentence_id, text)
-                self.dialogue.put(Message(role="assistant", content=text))
-            elif result.action == Action.REQLLM:
-                need_llm_tools.append((result, tool_call_data))
-            elif result.action == Action.RECORD:
-                record_tools.append((result, tool_call_data))
-            else:
-                pass
-
-        # Action.RECORD：写入完整工具调用链（assistant(tool_calls) → tool(result) → assistant(response)）
-        # 模型从历史中学到工具调用模式，不额外调用LLM
-        if record_tools:
-            # 构造 assistant 消息（含 tool_calls），记录"模型调用了哪些工具"
-            all_tool_calls = [
-                {
-                    "id": tool_call_data["id"],
-                    "function": {
-                        "arguments": (
-                            "{}"
-                            if tool_call_data["arguments"] == ""
-                            else tool_call_data["arguments"]
-                        ),
-                        "name": tool_call_data["name"],
-                    },
-                    "type": "function",
-                    "index": idx,
-                }
-                for idx, (_, tool_call_data) in enumerate(record_tools)
-            ]
-            self.dialogue.put(Message(role="assistant", tool_calls=all_tool_calls))
-
-            # 写入每条工具的执行结果，记录"工具返回了什么"
-            for result, tool_call_data in record_tools:
-                text = result.result or ""
-                self.dialogue.put(
-                    Message(
-                        role="tool",
-                        tool_call_id=(
-                            str(uuid.uuid4())
-                            if tool_call_data["id"] is None
-                            else tool_call_data["id"]
-                        ),
-                        content=text,
-                    )
-                )
-
-            # 用固定文本作为最终回复，补全标准三段式，保证下一条消息是 user 而非接 tool
-            response_parts = []
-            for result, _ in record_tools:
-                resp = result.response or result.result
-                if resp:
-                    response_parts.append(resp)
-            if response_parts:
-                self.dialogue.put(
-                    Message(role="assistant", content="，".join(response_parts))
-                )
-
-        if need_llm_tools:
-            all_tool_calls = [
-                {
-                    "id": tool_call_data["id"],
-                    "function": {
-                        "arguments": (
-                            "{}"
-                            if tool_call_data["arguments"] == ""
-                            else tool_call_data["arguments"]
-                        ),
-                        "name": tool_call_data["name"],
-                    },
-                    "type": "function",
-                    "index": idx,
-                }
-                for idx, (_, tool_call_data) in enumerate(need_llm_tools)
-            ]
-            self.dialogue.put(Message(role="assistant", tool_calls=all_tool_calls))
-
-            for result, tool_call_data in need_llm_tools:
-                text = result.result
-                if text is not None and len(text) > 0:
-                    self.dialogue.put(
-                        Message(
-                            role="tool",
-                            tool_call_id=(
-                                str(uuid.uuid4())
-                                if tool_call_data["id"] is None
-                                else tool_call_data["id"]
-                            ),
-                            content=text,
-                        )
-                    )
-
-            self.chat(None, depth=depth + 1)
+        )
+        return handled
 
     def clearSpeakStatus(self):
         self.client_is_speaking = False
@@ -1639,13 +635,6 @@ class ConnectionHandler:
 
     def supports_tts_preroll_buffer(self) -> bool:
         return (self.features or {}).get("tts_preroll_buffer") is True
-
-    def supports_reliable_notification_tts(self) -> bool:
-        return (
-            self.supports_tts_ready_ack()
-            and self.supports_tts_done_ack()
-            and self.supports_tts_preroll_buffer()
-        )
 
     def _tts_ack_key(self, state: str, sentence_id: str):
         return (state, sentence_id)
@@ -1909,15 +898,6 @@ class ConnectionHandler:
                     pass
                 self.timeout_task = None
 
-            # 清理工具处理器资源
-            if hasattr(self, "func_handler") and self.func_handler:
-                try:
-                    await self.func_handler.cleanup()
-                except Exception as cleanup_error:
-                    self.logger.bind(tag=TAG).error(
-                        f"清理工具处理器时出错: {cleanup_error}"
-                    )
-
             # 触发停止事件
             if self.stop_event:
                 self.stop_event.set()
@@ -2029,370 +1009,11 @@ class ConnectionHandler:
 
         self.logger.bind(tag=TAG).debug("All audio states reset.")
 
-    def chat_and_close(self, text):
-        """Chat with the user and then close the connection"""
-        try:
-            # Use the existing chat method
-            self.chat(text)
-
-            # After chat is complete, close the connection
-            self.close_after_chat = True
-        except Exception as e:
-            self.logger.bind(tag=TAG).error(f"Chat and close error: {str(e)}")
-
-    async def submit_control_text_chat(
-        self,
-        text: str,
-        *,
-        speaker: str | None = None,
-        simulated_as_of: datetime | None = None,
-        await_tts_terminal: bool = False,
-        evaluation_run_id: str | None = None,
-        evaluation_case_id: str | None = None,
-    ) -> ControlTextChatResult:
-        clean_text = str(text or "").strip()
-        if not clean_text:
-            raise ValueError("text is empty")
-        if len(clean_text) > 500:
-            raise ValueError("text is too long")
-        if self.control_text_chat_busy:
-            raise RuntimeError("text chat busy")
-
-        self.control_text_chat_busy = True
-        sentence_id = uuid.uuid4().hex
-        submitted_at = datetime.now().astimezone().isoformat()
-        original_time_provider = None
-        try:
-            if simulated_as_of is not None:
-                if self.xiaoxin_runtime is None:
-                    raise RuntimeError("xiaoxin runtime is not available")
-                original_time_provider = self.xiaoxin_runtime.time_provider
-                self.xiaoxin_runtime.time_provider = lambda: simulated_as_of
-            if speaker is not None:
-                self.current_speaker = speaker
-            try:
-                await asyncio.wait_for(self.client_hello_event.wait(), timeout=8)
-            except asyncio.TimeoutError as exc:
-                self.logger.bind(tag=TAG).warning(
-                    "client hello was not ready before control text chat"
-                )
-                raise RuntimeError("client hello is not ready") from exc
-            reliable_mode = self.supports_reliable_notification_tts()
-            if isinstance(self.features, dict) and self.features.get("mcp"):
-                mcp_client = getattr(self, "mcp_client", None)
-                if mcp_client is None:
-                    raise RuntimeError("device MCP client is not initialized")
-                try:
-                    await mcp_client.wait_until_ready(timeout_seconds=8)
-                except asyncio.TimeoutError as exc:
-                    self.logger.bind(tag=TAG).warning(
-                        "device MCP tools were not ready before control text chat"
-                    )
-                    raise RuntimeError("device MCP tools are not ready") from exc
-            if reliable_mode:
-                await self._wait_until_tts_ready(timeout_seconds=5)
-                await self._quiesce_audio_for_reliable_tts()
-            self.reset_audio_states()
-            self.client_abort = False
-            self.control_text_chat_sentence_id = sentence_id
-            if reliable_mode:
-                await self._start_reliable_tts(sentence_id)
-            await asyncio.to_thread(
-                self.chat,
-                clean_text,
-                sentence_id=sentence_id,
-            )
-            tts_outcome = "not_waited"
-            tts_reason = None
-            if await_tts_terminal:
-                if not reliable_mode:
-                    tts_outcome = "unsupported"
-                    tts_reason = "device_does_not_support_reliable_tts"
-                else:
-                    terminal = await self.wait_for_tts_terminal(sentence_id)
-                    if (
-                        terminal.state == "error"
-                        and terminal.reason == "done_timeout"
-                    ):
-                        tts_outcome = "timeout"
-                        tts_reason = "done_timeout"
-                    else:
-                        tts_outcome = terminal.state
-                        tts_reason = terminal.reason
-            get_tts_text = getattr(self.tts, "get_tts_text", None)
-            assistant_text = (
-                get_tts_text(sentence_id) if callable(get_tts_text) else None
-            )
-            result = ControlTextChatResult(
-                event_id=sentence_id,
-                sentence_id=sentence_id,
-                submitted_at=submitted_at,
-                assistant_text=assistant_text,
-                tts_outcome=tts_outcome,
-                tts_reason=tts_reason,
-            )
-            if evaluation_run_id is not None and evaluation_case_id is not None:
-                self.logger.bind(tag="xiaoxin.evaluation").info(
-                    json.dumps(
-                        {
-                            "event": "xiaoxin_evaluation_chat",
-                            "evaluation_run_id": evaluation_run_id,
-                            "case_id": evaluation_case_id,
-                            "event_id": result.event_id,
-                            "sentence_id": result.sentence_id,
-                            "device_id": self.device_id,
-                            "pet_id": getattr(
-                                self.companion_subject_context, "pet_id", None
-                            ),
-                            "memory_subject_id": getattr(
-                                self.companion_subject_context,
-                                "memory_subject_id",
-                                None,
-                            ),
-                            "tts_outcome": result.tts_outcome,
-                        },
-                        ensure_ascii=False,
-                        sort_keys=True,
-                        separators=(",", ":"),
-                    )
-                )
-            return result
-        except BaseException:
-            if self.control_text_chat_sentence_id == sentence_id:
-                self.control_text_chat_sentence_id = None
-            raise
-        finally:
-            if original_time_provider is not None:
-                self.xiaoxin_runtime.time_provider = original_time_provider
-            self.control_text_chat_busy = False
-
-    async def send_xiaoxin_event(self, payload: Dict[str, Any]) -> None:
-        if self.websocket is None:
-            raise RuntimeError("websocket is not connected")
-        self.logger.bind(tag="xiaoxin.overview_sync").info(
-            "websocket send_xiaoxin_event "
-            f"type={payload.get('type')} device_id={payload.get('device_id')}"
-        )
-        await self.websocket.send(json.dumps(payload, ensure_ascii=False))
-
-    async def speak_from_control_console(
-        self, text: str, delivery_id: str, sentence_id: str
-    ) -> None:
-        if not text:
-            raise TTSException("control console TTS text is empty")
-        if not sentence_id:
-            raise TTSException("control console TTS sentence_id is empty")
-
-        await self._wait_until_tts_ready(timeout_seconds=5)
-
-        reliable_mode = self.supports_reliable_notification_tts()
-        if reliable_mode:
-            await self._quiesce_audio_for_reliable_tts()
-
-        self.sentence_id = sentence_id
-        self.xiaoxin_control_tts_deliveries[sentence_id] = delivery_id
-        failure_reason = "attempt_failed"
-        try:
-            if reliable_mode:
-                failure_reason = "ready_handshake_failed"
-                await self._start_reliable_tts(
-                    sentence_id,
-                    delivery_id=delivery_id,
-                )
-            else:
-                failure_reason = "start_send_failed"
-                await send_tts_message(self, "start", sentence_id=sentence_id)
-                self.client_is_speaking = True
-                delay_ms = int(self.config.get("wakeup_response_start_delay_ms", 300))
-                if delay_ms > 0:
-                    failure_reason = "start_delay_failed"
-                    await asyncio.sleep(delay_ms / 1000)
-
-            first = TTSMessageDTO(
-                sentence_id=sentence_id,
-                sentence_type=SentenceType.FIRST,
-                content_type=ContentType.ACTION,
-            )
-            middle = TTSMessageDTO(
-                sentence_id=sentence_id,
-                sentence_type=SentenceType.MIDDLE,
-                content_type=ContentType.TEXT,
-                content_detail=text,
-            )
-            last = TTSMessageDTO(
-                sentence_id=sentence_id,
-                sentence_type=SentenceType.LAST,
-                content_type=ContentType.ACTION,
-            )
-            terminal_result = self._tts_terminal_results.get(sentence_id)
-            if terminal_result is not None:
-                raise TtsAttemptError(
-                    sentence_id,
-                    terminal_result.reason or "device_error",
-                )
-            failure_reason = "store_tts_text_failed"
-            self.tts.store_tts_text(sentence_id, text)
-            failure_reason = "tts_queue_publish_failed"
-            self.tts.tts_text_queue.put(first)
-            self.tts.tts_text_queue.put(middle)
-            self.tts.tts_text_queue.put(last)
-        except BaseException as exc:
-            if isinstance(exc, asyncio.CancelledError):
-                outcome_reason = "attempt_cancelled"
-            elif isinstance(exc, TtsAttemptError):
-                outcome_reason = exc.reason
-            else:
-                outcome_reason = failure_reason
-            self.mark_xiaoxin_control_tts_failed(sentence_id, outcome_reason)
-            if self._tts_ack_active_phases.get(sentence_id) == "ready":
-                self._retire_tts_ack_phase(sentence_id, "ready")
-            if self.sentence_id == sentence_id:
-                self.client_is_speaking = False
-            raise
-
-    async def _start_reliable_tts(
-        self,
-        sentence_id: str,
-        *,
-        delivery_id: str | None = None,
-    ) -> None:
-        timeout_ms = int(self.config.get("tts_ready_ack_timeout_ms", 700))
-        retry_delays_ms = list(
-            self.config.get("tts_ready_start_retry_delays_ms", [300, 600, 1200])
-        )[:3]
-        ready_started_at = time.monotonic()
-        for send_index in range(len(retry_delays_ms) + 1):
-            self.begin_tts_ack_wait("ready", sentence_id)
-            await send_tts_message(self, "start", sentence_id=sentence_id)
-            self.client_is_speaking = True
-            result = await self.wait_for_tts_ack("ready", sentence_id, timeout_ms)
-            if (
-                result is not None
-                and result.successful
-                and result.state == "ready"
-                and result.sentence_id == sentence_id
-            ):
-                if not self.mark_tts_streaming(sentence_id):
-                    raise TtsAttemptError(sentence_id, "invalid_ready_phase")
-                self.logger.bind(tag="xiaoxin.tts").info(
-                    "delivery_id={} sentence_id={} tts_state=streaming "
-                    "start_to_ready_ms={}".format(
-                        delivery_id,
-                        sentence_id,
-                        int((time.monotonic() - ready_started_at) * 1000),
-                    )
-                )
-                return
-            if (
-                result is not None
-                and result.state == "error"
-                and result.sentence_id == sentence_id
-            ):
-                raise TtsAttemptError(sentence_id, result.reason or "device_error")
-            if send_index < len(retry_delays_ms):
-                self.logger.bind(tag="xiaoxin.tts").warning(
-                    "tts_state=preparing sentence_id={} ready_retry={} "
-                    "failure_reason=ready_timeout".format(
-                        sentence_id,
-                        send_index + 1,
-                    )
-                )
-                await asyncio.sleep(retry_delays_ms[send_index] / 1000)
-        raise TtsAttemptError(sentence_id, "ready_timeout")
-
-    async def _quiesce_audio_for_reliable_tts(self) -> None:
-        old_sentence_id = self.sentence_id
-        self.client_abort = True
-
-        rate_controller = getattr(self, "audio_rate_controller", None)
-        if rate_controller is not None:
-            pending_task = getattr(rate_controller, "pending_send_task", None)
-            rate_controller.stop_sending()
-            if pending_task is not None and not pending_task.done():
-                try:
-                    await pending_task
-                except asyncio.CancelledError:
-                    pass
-            rate_controller.reset()
-
-        for queue_name in ("tts_text_queue", "tts_audio_queue"):
-            pending_queue = getattr(self.tts, queue_name, None)
-            if pending_queue is None:
-                continue
-            while True:
-                try:
-                    pending_queue.get_nowait()
-                except queue.Empty:
-                    break
-
-        if old_sentence_id:
-            clear_tts_text = getattr(self.tts, "clear_tts_text", None)
-            if callable(clear_tts_text):
-                clear_tts_text(old_sentence_id)
-        reset_stream_state = getattr(self.tts, "reset_stream_state", None)
-        if callable(reset_stream_state):
-            reset_stream_state()
-        if hasattr(self.tts, "tts_audio_first_sentence"):
-            self.tts.tts_audio_first_sentence = True
-        self.audio_flow_control = {}
-        self.client_abort = False
-
-    async def _wait_until_tts_ready(self, timeout_seconds: float) -> None:
-        deadline = time.time() + timeout_seconds
-        while self.tts is None and time.time() < deadline:
-            await asyncio.sleep(0.05)
-        if self.tts is None:
-            raise TTSException("tts is not ready")
-
-    def _control_delivery_for_sentence(self, sentence_id: str) -> str | None:
-        return self.xiaoxin_control_tts_deliveries.get(sentence_id)
-
-    def mark_xiaoxin_control_tts_done(self, sentence_id: str) -> None:
-        delivery_id = self.xiaoxin_control_tts_deliveries.pop(sentence_id, None)
-        if delivery_id and self.xiaoxin_control_runtime:
-            self.xiaoxin_control_runtime.dispatcher.mark_tts_done(
-                delivery_id, sentence_id
-            )
-            observe_tts_done = getattr(
-                self.xiaoxin_control_runtime,
-                "observe_todo_reminder_tts_done",
-                None,
-            )
-            if callable(observe_tts_done):
-                observe_tts_done(delivery_id, sentence_id)
-
-    def mark_xiaoxin_control_tts_failed(self, sentence_id: str, reason: str) -> None:
-        terminal_result = self._terminalize_tts_attempt_failure(sentence_id, reason)
-        if (
-            terminal_result.state == "done"
-            and terminal_result.sentence_id == sentence_id
-        ):
-            self.mark_xiaoxin_control_tts_done(sentence_id)
-            return
-        delivery_id = self.xiaoxin_control_tts_deliveries.pop(sentence_id, None)
-        if self.sentence_id == sentence_id:
-            self.client_abort = True
-            self.client_is_speaking = False
-        if delivery_id and self.xiaoxin_control_runtime:
-            self.xiaoxin_control_runtime.dispatcher.mark_tts_attempt_failed(
-                delivery_id, sentence_id, reason
-            )
-
-    def mark_xiaoxin_control_tts_legacy_unverified(self, sentence_id: str) -> None:
-        delivery_id = self.xiaoxin_control_tts_deliveries.pop(sentence_id, None)
-        if delivery_id and self.xiaoxin_control_runtime:
-            self.xiaoxin_control_runtime.dispatcher.mark_tts_legacy_unverified(
-                delivery_id, sentence_id
-            )
-
     async def _check_timeout(self):
         """检查连接超时"""
         try:
             while not self.stop_event.is_set():
                 last_activity_time = self.last_activity_time
-                if self.need_bind:
-                    last_activity_time = self.first_activity_time
-
                 # 检查是否超时（只有在时间戳已初始化的情况下）
                 if last_activity_time > 0.0:
                     current_time = time.time() * 1000
@@ -2415,90 +1036,3 @@ class ConnectionHandler:
             self.logger.bind(tag=TAG).error(f"超时检查任务出错: {e}")
         finally:
             self.logger.bind(tag=TAG).info("超时检查任务已退出")
-
-    @staticmethod
-    def _extract_direct_answer_response(arguments_str):
-        """从 direct_answer 的参数中提取 response 值。
-        优先使用 json.loads 标准解析，流式阶段 fallback 到字符串提取。
-        """
-        if not arguments_str:
-            return ""
-        # 优先尝试标准 JSON 解析（适用于完整且格式正确的 JSON）
-        try:
-            data = json.loads(arguments_str)
-            if isinstance(data, dict) and "response" in data:
-                return data["response"]
-        except (json.JSONDecodeError, TypeError):
-            pass
-        # Fallback：流式阶段 JSON 可能不完整，使用字符串提取
-        marker = '"response": "'
-        idx = arguments_str.find(marker)
-        if idx < 0:
-            marker = '"response":"'
-            idx = arguments_str.find(marker)
-        if idx < 0:
-            return ""
-        start = idx + len(marker)
-        raw = arguments_str[start:]
-        # 去掉末尾的 JSON 闭合符号（如果已完整）
-        if raw.endswith('"}'):
-            raw = raw[:-2]
-        elif raw.endswith('"'):
-            raw = raw[:-1]
-        # 处理 JSON 转义
-        raw = raw.replace('\\"', '"').replace("\\n", "\n").replace("\\\\", "\\")
-        return raw
-
-    @staticmethod
-    def _clean_response_garbage(text):
-        """清理 response 中可能泄漏的 JSON 闭合符号。
-        模型有时会在 response 内容中生成 JSON 闭合字符（如 ）"}} 或 '})，
-        这些不是故事内容的一部分，需要去除。
-        """
-        if not text:
-            return text
-        # 清理独立一行的 JSON 闭合垃圾（如 ）"}}  '}}  "}}  }}  } ）
-        _garbage_chars = frozenset("\")'}）")
-        lines = text.split("\n")
-        cleaned = []
-        for line in lines:
-            stripped = line.strip()
-            if (
-                stripped
-                and len(stripped) <= 8
-                and all(c in _garbage_chars for c in stripped)
-            ):
-                continue
-            cleaned.append(line)
-        result = "\n".join(cleaned)
-        # 清理末尾残留的 JSON 闭合符号
-        result = re.sub(r'["\'}\]]+$', "", result.rstrip()).rstrip()
-        return result
-
-    def _merge_tool_calls(self, tool_calls_list, tools_call):
-        """合并工具调用列表
-
-        Args:
-            tool_calls_list: 已收集的工具调用列表
-            tools_call: 新的工具调用
-        """
-        for tool_call in tools_call:
-            tool_index = getattr(tool_call, "index", None)
-            if tool_index is None:
-                if tool_call.function.name:
-                    # 有 function_name，说明是新的工具调用
-                    tool_index = len(tool_calls_list)
-                else:
-                    tool_index = len(tool_calls_list) - 1 if tool_calls_list else 0
-
-            # 确保列表有足够的位置
-            if tool_index >= len(tool_calls_list):
-                tool_calls_list.append({"id": "", "name": "", "arguments": ""})
-
-            # 更新工具调用信息
-            if tool_call.id:
-                tool_calls_list[tool_index]["id"] = tool_call.id
-            if tool_call.function.name:
-                tool_calls_list[tool_index]["name"] = tool_call.function.name
-            if tool_call.function.arguments:
-                tool_calls_list[tool_index]["arguments"] += tool_call.function.arguments

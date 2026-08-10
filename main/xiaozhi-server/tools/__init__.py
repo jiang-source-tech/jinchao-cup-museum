@@ -1,1 +1,1 @@
-"""Offline verification and operations tools for the Xiaoxin server."""
+"""Offline verification and operations tools for the museum server."""

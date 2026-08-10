@@ -3,6 +3,7 @@ from datetime import datetime
 
 from core.business_runtime_factory import create_conversation_runtime
 from core.conversation_runtime import TurnRequest
+from core.museum.answering import GroundedAnswerService
 from core.museum.store import MuseumStore
 
 
@@ -28,10 +29,7 @@ def _runtime(tmp_path, **runtime_overrides):
             **runtime_overrides,
         }
     }
-    return create_conversation_runtime(
-        config,
-        legacy_turn_handler=lambda *_: False,
-    )
+    return create_conversation_runtime(config)
 
 
 def test_published_fact_produces_grounded_answer_and_trace(tmp_path):
@@ -57,6 +55,38 @@ def test_published_fact_produces_grounded_answer_and_trace(tmp_path):
     assert overview.audit_record["knowledge_status"] == "grounded"
     assert "玻璃杯" in overview.spoken_text
 
+    class HallucinatingLLM:
+        def response_no_stream(self, *_args):
+            return "这件水晶杯是王室祭祀专用器物。它由一位著名工匠亲手制作。"
+
+    guarded = runtime.handle_turn(
+        _request(text="它是什么材质做的？", llm=HallucinatingLLM())
+    )
+    assert "王室" not in guarded.spoken_text
+    assert "一整块天然水晶" in guarded.spoken_text
+
+    class SemanticFactSelector:
+        def response_no_stream(self, _system_prompt, _user_prompt, **_kwargs):
+            return json.dumps(
+                {
+                    "status": "grounded",
+                    "fact_ids": ["fact-crystal-cup-material"],
+                    "social_intent": "",
+                    "answer": "它由一整块天然水晶琢制而成。",
+                },
+                ensure_ascii=False,
+            )
+
+    natural_question = runtime.handle_turn(
+        _request(
+            text="你好，古人选了哪种矿石来琢它？",
+            llm=SemanticFactSelector(),
+        )
+    )
+    assert natural_question.knowledge_status == "grounded"
+    assert natural_question.fact_ids == ("fact-crystal-cup-material",)
+    assert "一整块天然水晶" in natural_question.spoken_text
+
 
 def test_unsupported_question_returns_explicit_fallback(tmp_path):
     runtime = _runtime(tmp_path)
@@ -77,9 +107,57 @@ def test_unsupported_question_returns_explicit_fallback(tmp_path):
     assert "不能替它补一个答案" in no_sourced_facts.spoken_text
 
 
-def test_missing_current_exhibit_is_handled_without_legacy_or_llm_fallback(tmp_path):
-    legacy_calls = []
+def test_identity_question_gets_a_normal_conversational_reply(tmp_path):
+    class LLMThatMustNotRun:
+        def response_no_stream(self, *_args, **_kwargs):
+            raise AssertionError("common identity reply should not require the LLM")
 
+    runtime = _runtime(tmp_path)
+
+    outcome = runtime.handle_turn(
+        _request(text="你好，你是谁？", llm=LLMThatMustNotRun())
+    )
+
+    assert outcome.handled is True
+    assert outcome.knowledge_status == "conversational"
+    assert "金潮杯博物馆" in outcome.spoken_text
+    assert "不能替它补一个答案" not in outcome.spoken_text
+    assert outcome.fact_ids == ()
+    assert outcome.display_state["grounding"]["status"] == "ready"
+    trace = MuseumStore(tmp_path / "museum.db").get_interaction_trace(
+        outcome.audit_id
+    )
+    assert trace["grounding_status"] == "conversational"
+    assert trace["guard_result"] == "conversational_scope"
+    assert GroundedAnswerService.answer_conversational("你好这个杯子多大") is None
+
+    unassigned_runtime = create_conversation_runtime(
+        {
+            "business_runtime": {
+                "type": "museum",
+                "database_path": str(tmp_path / "museum.db"),
+                "auto_assign_unknown_devices": False,
+            }
+        }
+    )
+
+    unassigned_outcome = unassigned_runtime.handle_turn(
+        _request(text="你好，你是谁？", device_id="unplaced-device")
+    )
+
+    assert unassigned_outcome.handled is True
+    assert unassigned_outcome.error_code is None
+    assert unassigned_outcome.knowledge_status == "conversational"
+    assert "金潮杯博物馆" in unassigned_outcome.spoken_text
+    assert unassigned_outcome.display_state["context"]["source"] == "unassigned"
+    assert unassigned_outcome.display_state["grounding"]["status"] == "ready"
+    trace = MuseumStore(tmp_path / "museum.db").get_interaction_trace(
+        unassigned_outcome.audit_id
+    )
+    assert trace["grounding_status"] == "conversational"
+
+
+def test_missing_current_exhibit_is_handled_without_legacy_or_llm_fallback(tmp_path):
     class LLMThatMustNotRun:
         def response(self, *_args, **_kwargs):
             raise AssertionError("museum missing-context handling invoked the LLM")
@@ -91,8 +169,7 @@ def test_missing_current_exhibit_is_handled_without_legacy_or_llm_fallback(tmp_p
                 "database_path": str(tmp_path / "museum.db"),
                 "auto_assign_unknown_devices": False,
             }
-        },
-        legacy_turn_handler=lambda *args: legacy_calls.append(args) or True,
+        }
     )
 
     outcome = runtime.handle_turn(
@@ -102,4 +179,3 @@ def test_missing_current_exhibit_is_handled_without_legacy_or_llm_fallback(tmp_p
     assert outcome.handled is True
     assert outcome.error_code == "current_exhibit_missing"
     assert outcome.audit_record["knowledge_status"] == "missing_context"
-    assert legacy_calls == []

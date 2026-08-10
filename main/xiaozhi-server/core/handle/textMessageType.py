@@ -10,5 +10,4 @@ class TextMessageType(Enum):
     MCP = "mcp"
     SERVER = "server"
     PING = "ping"
-    XIAOXIN_ACK = "xiaoxin_ack"
     TTS = "tts"

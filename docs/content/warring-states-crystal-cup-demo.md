@@ -79,4 +79,4 @@ business_runtime:
   auto_assign_unknown_devices: false
 ```
 
-`demo_device_id` 会为这一台明确指定的演示设备建立默认点位。没有配置 `device_placement` 的其他设备会收到“请先选择展品”，不会被静默绑定，也不会进入旧小芯通用聊天。`auto_assign_unknown_devices` 只保留为受控开发开关，不应在比赛配置中开启。
+`demo_device_id` 会为这一台明确指定的演示设备建立默认点位。没有配置 `device_placement` 的其他设备会收到“请先选择展品”，不会被静默绑定，也不会进入旧通用聊天路径。`auto_assign_unknown_devices` 只保留为受控开发开关，不应在比赛配置中开启。

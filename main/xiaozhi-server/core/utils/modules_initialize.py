@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from config.logger import setup_logging
-from core.utils import tts, llm, intent, memory, vad, asr
+from core.utils import tts, llm, vad, asr
 
 TAG = __name__
 logger = setup_logging()
@@ -46,35 +46,6 @@ def initialize_modules(
             config["LLM"][select_llm_module],
         )
         logger.bind(tag=TAG).info(f"初始化组件: llm成功 {select_llm_module}")
-
-    # 初始化Intent模块
-    if init_intent:
-        select_intent_module = config["selected_module"]["Intent"]
-        intent_type = (
-            select_intent_module
-            if "type" not in config["Intent"][select_intent_module]
-            else config["Intent"][select_intent_module]["type"]
-        )
-        modules["intent"] = intent.create_instance(
-            intent_type,
-            config["Intent"][select_intent_module],
-        )
-        logger.bind(tag=TAG).info(f"初始化组件: intent成功 {select_intent_module}")
-
-    # 初始化Memory模块
-    if init_memory:
-        select_memory_module = config["selected_module"]["Memory"]
-        memory_type = (
-            select_memory_module
-            if "type" not in config["Memory"][select_memory_module]
-            else config["Memory"][select_memory_module]["type"]
-        )
-        modules["memory"] = memory.create_instance(
-            memory_type,
-            config["Memory"][select_memory_module],
-            config.get("summaryMemory", None),
-        )
-        logger.bind(tag=TAG).info(f"初始化组件: memory成功 {select_memory_module}")
 
     # 初始化VAD模块
     if init_vad:
@@ -127,25 +98,4 @@ def initialize_asr(config):
     )
     logger.bind(tag=TAG).info("ASR模块初始化完成")
     return new_asr
-
-
-def initialize_voiceprint(asr_instance, config):
-    """初始化声纹识别功能"""
-    voiceprint_config = config.get("voiceprint")
-    if not voiceprint_config:
-        return False  
-
-    # 应用配置
-    if not voiceprint_config.get("url") or not voiceprint_config.get("speakers"):
-        logger.bind(tag=TAG).warning("声纹识别配置不完整")
-        return False
-        
-    try:
-        asr_instance.init_voiceprint(voiceprint_config)
-        logger.bind(tag=TAG).info("ASR模块声纹识别功能已动态启用")
-        logger.bind(tag=TAG).info(f"配置说话人数量: {len(voiceprint_config['speakers'])}")
-        return True
-    except Exception as e:
-        logger.bind(tag=TAG).error(f"动态初始化声纹识别功能失败: {str(e)}")
-        return False
 

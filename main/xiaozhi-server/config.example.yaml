@@ -1,0 +1,74 @@
+server:
+  ip: 0.0.0.0
+  port: 8000
+  http_port: 8003
+  websocket: ""
+  vision_explain: ""
+  timezone_offset: 8
+  auth:
+    enabled: false
+    allowed_devices: []
+  # 启用认证时，必须在未跟踪的 data/.config.yaml 中配置 auth_key。
+
+log:
+  log_format: "<green>{time:YYMMDD HH:mm:ss}</green>[{version}_{extra[selected_module]}][<light-blue>{extra[tag]}</light-blue>]-<level>{level}</level>-<light-green>{message}</light-green>"
+  log_format_file: "{time:YYYY-MM-DD HH:mm:ss} - {version}_{extra[selected_module]} - {name} - {level} - {extra[tag]} - {message}"
+  log_level: INFO
+  log_dir: tmp
+  log_file: server.log
+  data_dir: data
+
+delete_audio: true
+close_connection_no_voice_time: 120
+tts_timeout: 10
+tool_call_timeout: 30
+enable_wakeup_words_response_cache: false
+enable_greeting: false
+enable_stop_tts_notify: false
+enable_websocket_ping: false
+wakeup_response_start_delay_ms: 300
+tts_ready_ack_timeout_ms: 700
+tts_ready_start_retry_delays_ms: [300, 600, 1200]
+tts_delivery_retry_delays_ms: [2000, 5000, 15000, 30000]
+tts_done_ack_timeout_ms: 10000
+
+exit_commands: ["退出", "关闭"]
+wakeup_words: ["你好讲解员"]
+plugins: {}
+prompt: "你是金潮杯博物馆现场语音讲解助手。只根据当前展品的已审核资料回答；资料不足时明确说明，不补充猜测。"
+prompt_template: agent-base-prompt.txt
+system_error_response: "刚才的讲解链路出了点问题，请再问一次。"
+end_prompt:
+  enable: false
+  prompt: ""
+
+xiaozhi:
+  type: hello
+  version: 1
+  transport: websocket
+  audio_params:
+    format: opus
+    sample_rate: 24000
+    channels: 1
+    frame_duration: 60
+
+# 干净检出只启动传输与 HTTP 服务，不选择任何需要凭据的模型。
+selected_module: {}
+VAD: {}
+ASR: {}
+LLM: {}
+VLLM: {}
+TTS: {}
+
+business_runtime:
+  type: museum
+  database_path: data/museum_demo.db
+  auto_assign_unknown_devices: false
+
+ota_release:
+  public_ota_url: ""
+  db: data/museum_firmware_releases.db
+  artifact_dir: data/museum_firmware
+  default_channel: stable
+  allow_insecure_http: false
+  legacy_filename_fallback: false

@@ -25,11 +25,11 @@ class LLMPerformanceTester:
         self.test_sentences = self.config.get("module_test", {}).get(
             "test_sentences",
             [
-                "你好，我今天心情不太好，能安慰一下我吗？",
-                "帮我查一下明天的天气如何？",
-                "我想听一个有趣的故事，你能给我讲一个吗？",
-                "现在几点了？今天是星期几？",
-                "我想设置一个明天早上8点的闹钟提醒我开会",
+                "你好，请介绍一下当前展品",
+                "这件展品的材质是什么？",
+                "馆方资料没有说明的问题要怎么回答？",
+                "你是谁？",
+                "请根据当前展品资料讲一个最值得观察的细节",
             ],
         )
         self.results = {}
@@ -44,20 +44,20 @@ class LLMPerformanceTester:
                 content = f.read()
                 # 替换模板变量为测试值
                 content = content.replace(
-                    "{{base_prompt}}", "你是小智，一个聪明可爱的AI助手"
+                    "{{base_prompt}}", "你是金潮杯博物馆现场语音讲解助手"
                 )
                 content = content.replace(
                     "{{emojiList}}", "😀,😃,😄,😁,😊,😍,🤔,😮,😱,😢,😭,😴,😵,🤗,🙄"
                 )
-                content = content.replace("{{current_time}}", "2024年8月17日 12:30:45")
-                content = content.replace("{{today_date}}", "2024年8月17日")
-                content = content.replace("{{today_weekday}}", "星期六")
-                content = content.replace("{{lunar_date}}", "甲辰年七月十四")
-                content = content.replace("{{local_address}}", "北京市")
+                content = content.replace("{{current_time}}", "2026年8月10日 12:30:45")
+                content = content.replace("{{today_date}}", "2026年8月10日")
+                content = content.replace("{{today_weekday}}", "星期一")
+                content = content.replace("{{lunar_date}}", "")
+                content = content.replace("{{local_address}}", "金潮杯博物馆")
                 return content
         except Exception as e:
             print(f"无法加载系统提示词文件: {e}")
-            return "你是小智，一个聪明可爱的AI助手。请用温暖友善的语气回复用户。"
+            return "你是金潮杯博物馆现场语音讲解助手。只围绕当前展品和馆方资料回答。"
 
     def _collect_response_sync(self, llm, messages, llm_name, sentence_start):
         """同步收集响应数据的辅助方法"""

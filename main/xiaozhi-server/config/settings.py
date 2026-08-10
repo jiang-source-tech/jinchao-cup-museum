@@ -1,5 +1,4 @@
-import os
-from config.config_loader import get_project_dir, load_config
+from config.config_loader import load_config
 
 
 default_config_file = "config.yaml"
@@ -10,14 +9,6 @@ def check_config_file():
     global config_file_valid
     if config_file_valid:
         return
-    """
-    简化的配置检查，仅提示用户配置文件的使用情况
-    """
-    custom_config_file = get_project_dir() + "data/." + default_config_file
-    if not os.path.exists(custom_config_file):
-        raise FileNotFoundError(
-            "找不到data/.config.yaml文件，请按教程确认该配置文件是否存在"
-        )
-
+    """确认受版本控制的默认配置或本地覆盖可以正常加载。"""
     load_config()
     config_file_valid = True

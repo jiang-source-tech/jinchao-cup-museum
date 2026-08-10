@@ -15,7 +15,6 @@ from core.utils.util import (
     validate_mcp_endpoint,
 )
 from core.websocket_server import WebSocketServer
-from core.xiaoxin.control_runtime import create_xiaoxin_control_runtime
 
 TAG = __name__
 logger = setup_logging()
@@ -50,7 +49,6 @@ async def monitor_stdin():
 async def main():
     check_ffmpeg_installed()
     config = load_config()
-    xiaoxin_runtime = None
     stdin_task = None
     ws_task = None
     ota_task = None
@@ -69,18 +67,15 @@ async def main():
         gc_manager = get_gc_manager(interval_seconds=300)
         await gc_manager.start()
 
-        xiaoxin_runtime = create_xiaoxin_control_runtime(config)
-        await xiaoxin_runtime.start()
-
-        ws_server = WebSocketServer(config, xiaoxin_runtime=xiaoxin_runtime)
+        ws_server = WebSocketServer(config)
         ws_task = asyncio.create_task(ws_server.start())
 
-        ota_server = SimpleHttpServer(config, xiaoxin_runtime=xiaoxin_runtime)
+        ota_server = SimpleHttpServer(config)
         ota_task = asyncio.create_task(ota_server.start())
 
         port = int(config["server"].get("http_port", 8003))
         logger.bind(tag=TAG).info(
-            "OTA接口是\t\thttp://{}:{}/xiaoxin/ota/",
+            "OTA接口是\t\thttp://{}:{}/museum/ota/",
             get_local_ip(),
             port,
         )
@@ -104,7 +99,7 @@ async def main():
             websocket_port = int(server_config.get("port", 8000))
 
         logger.bind(tag=TAG).info(
-            "Websocket地址是\tws://{}:{}/xiaoxin/v1/",
+            "Websocket地址是\tws://{}:{}/museum/v1/",
             get_local_ip(),
             websocket_port,
         )
@@ -112,7 +107,7 @@ async def main():
             "=======上面的地址是websocket协议地址，请勿用浏览器访问======="
         )
         logger.bind(tag=TAG).info(
-            "如想测试websocket请启动digital-human模块，打开浏览器交互测试"
+"如想测试 WebSocket，请启动 museum-web-test 模块，打开浏览器交互测试"
         )
         logger.bind(tag=TAG).info(
             "=============================================================\n"
@@ -124,9 +119,6 @@ async def main():
     finally:
         if gc_manager is not None:
             await gc_manager.stop()
-        if xiaoxin_runtime is not None:
-            await xiaoxin_runtime.stop()
-
         for task in (stdin_task, ws_task, ota_task):
             if task is not None:
                 task.cancel()

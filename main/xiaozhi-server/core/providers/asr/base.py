@@ -1,5 +1,4 @@
 import os
-import io
 import wave
 import uuid
 import json
@@ -85,39 +84,13 @@ class ASRProviderBase(ABC):
 
     # 处理语音停止
     async def handle_voice_stop(self, conn: "ConnectionHandler", asr_audio_task: List[bytes]):
-        """并行处理ASR和声纹识别"""
+        """处理语音停止并将音频提交给 ASR"""
         try:
             total_start_time = time.monotonic()
 
-            # 准备音频数据
-            if conn.audio_format == "pcm":
-                pcm_data = asr_audio_task
-            else:
-                pcm_data = self.decode_opus(asr_audio_task)
-
-            combined_pcm_data = b"".join(pcm_data)
-
-            # 预先准备WAV数据
-            wav_data = None
-            if conn.voiceprint_provider and combined_pcm_data:
-                wav_data = self._pcm_to_wav(combined_pcm_data)
-
-            # 定义ASR任务
-            asr_task = self.speech_to_text_wrapper(
+            asr_result = await self.speech_to_text_wrapper(
                 asr_audio_task, conn.session_id, conn.audio_format
             )
-
-            if conn.voiceprint_provider and wav_data:
-                voiceprint_task = conn.voiceprint_provider.identify_speaker(
-                    wav_data, conn.session_id, device_id=conn.device_id
-                )
-                # 并发等待两个结果
-                asr_result, voiceprint_result = await asyncio.gather(
-                    asr_task, voiceprint_task, return_exceptions=True
-                )
-            else:
-                asr_result = await asr_task
-                voiceprint_result = None
 
             # 记录识别结果 - 检查是否为异常
             if isinstance(asr_result, Exception):
@@ -126,18 +99,9 @@ class ASRProviderBase(ABC):
             else:
                 raw_text, _ = asr_result
 
-            if isinstance(voiceprint_result, Exception):
-                logger.bind(tag=TAG).error(f"声纹识别失败: {voiceprint_result}")
-                speaker_name = ""
-            else:
-                speaker_name = voiceprint_result
-
             # 判断 ASR 结果类型
             if isinstance(raw_text, dict):
                 # 结构化ASR结果
-                if speaker_name:
-                    raw_text["speaker"] = speaker_name
-
                 # 记录识别结果
                 if raw_text.get("language"):
                     logger.bind(tag=TAG).info(f"识别语言: {raw_text['language']}")
@@ -145,9 +109,6 @@ class ASRProviderBase(ABC):
                     logger.bind(tag=TAG).info(f"识别情绪: {raw_text['emotion']}")
                 if raw_text.get("content"):
                     logger.bind(tag=TAG).info(f"识别文本: {raw_text['content']}")
-                if speaker_name:
-                    logger.bind(tag=TAG).info(f"识别说话人: {speaker_name}")
-
                 # 转换为 JSON 字符串用于下游
                 enhanced_text = json.dumps(raw_text, ensure_ascii=False)
                 content_for_length_check = raw_text.get("content", "")
@@ -155,11 +116,7 @@ class ASRProviderBase(ABC):
                 # 其他 ASR 返回的纯文本
                 if raw_text:
                     logger.bind(tag=TAG).info(f"识别文本: {raw_text}")
-                if speaker_name:
-                    logger.bind(tag=TAG).info(f"识别说话人: {speaker_name}")
-
-                # 构建包含说话人信息的JSON字符串
-                enhanced_text = self._build_enhanced_text(raw_text, speaker_name)
+                enhanced_text = raw_text
                 content_for_length_check = raw_text
 
             # 性能监控
@@ -178,42 +135,6 @@ class ASRProviderBase(ABC):
             import traceback
 
             logger.bind(tag=TAG).debug(f"异常详情: {traceback.format_exc()}")
-
-    def _build_enhanced_text(self, text: str, speaker_name: Optional[str]) -> str:
-        """构建包含说话人信息的文本（仅用于纯文本ASR）"""
-        if speaker_name and speaker_name.strip():
-            return json.dumps(
-                {"speaker": speaker_name, "content": text}, ensure_ascii=False
-            )
-        else:
-            return text
-
-    def _pcm_to_wav(self, pcm_data: bytes) -> bytes:
-        """将PCM数据转换为WAV格式"""
-        if len(pcm_data) == 0:
-            logger.bind(tag=TAG).warning("PCM数据为空，无法转换WAV")
-            return b""
-
-        # 确保数据长度是偶数（16位音频）
-        if len(pcm_data) % 2 != 0:
-            pcm_data = pcm_data[:-1]
-
-        # 创建WAV文件头
-        wav_buffer = io.BytesIO()
-        try:
-            with wave.open(wav_buffer, "wb") as wav_file:
-                wav_file.setnchannels(1)  # 单声道
-                wav_file.setsampwidth(2)  # 16位
-                wav_file.setframerate(16000)  # 16kHz采样率
-                wav_file.writeframes(pcm_data)
-
-            wav_buffer.seek(0)
-            wav_data = wav_buffer.read()
-
-            return wav_data
-        except Exception as e:
-            logger.bind(tag=TAG).error(f"WAV转换失败: {e}")
-            return b""
 
     def stop_ws_connection(self):
         pass

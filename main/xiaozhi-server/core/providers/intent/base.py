@@ -24,10 +24,7 @@ class IntentProviderBase(ABC):
         Args:
             dialogue_history: 对话历史记录列表，每条记录包含role和content
         Returns:
-            返回识别出的意图，格式为:
-            - "继续聊天"
-            - "结束聊天"
-            - "播放音乐 歌名" 或 "随机播放音乐"
-            - "查询天气 地点名" 或 "查询天气 [当前位置]"
+            返回识别出的意图。当前博物馆运行时只允许返回由具体
+            provider 定义的博物馆交互意图；未匹配时应回退到普通讲解对话。
         """
         pass

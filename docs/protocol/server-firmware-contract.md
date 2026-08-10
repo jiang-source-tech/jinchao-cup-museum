@@ -2,7 +2,7 @@
 
 ## 原则
 
-现有 `/xiaoxin/v1/` WebSocket、`/xiaoxin/ota/` OTA 和 TTS 音频协议继续作为小芯设备基座。博物馆业务通过新增消息类型扩展，不复用课程、待办或陪伴年龄字段。
+当前正式路径为 `/museum/v1/` WebSocket 和 `/museum/ota/` OTA；`/xiaoxin/v1/`、`/xiaoxin/ota/` 及旧 activation 别名仅作为历史设备传输兼容基座保留。博物馆业务通过新增消息类型扩展，不复用课程、待办或陪伴年龄字段。
 
 所有新增业务消息都包含整数 `version`。固件遇到不支持的版本时保持当前可用界面并记录错误，不能应用半份数据。
 
@@ -16,30 +16,44 @@
   "session_id": "session-123",
   "context": {
     "museum_id": "museum-demo",
-    "zone_id": "zone-ceramics",
-    "exhibit_id": "exhibit-001",
-    "exhibit_name": "青瓷莲花尊"
+    "zone_id": "zone-demo",
+    "exhibit_id": "warring-states-crystal-cup",
+    "exhibit_name": "战国水晶杯",
+    "source": "device_placement"
   },
-  "visitor_mode": "family",
+  "visitor_mode": "general",
   "journey": {
-    "route_id": "family-treasure-01",
-    "current_stop": 2,
-    "total_stops": 4,
-    "next_exhibit_name": "越窑青瓷碗"
+    "route_id": "",
+    "current_stop": 1,
+    "total_stops": 1,
+    "next_exhibit_name": ""
   },
   "prompt": {
-    "title": "找一找莲花纹",
-    "body": "看看器身上下两组花瓣有什么不同"
+    "title": "像现代杯子的古代水晶杯",
+    "body": "观察杯口、杯壁和圈足，找找它与现代玻璃杯相似的地方。"
   },
   "grounding": {
     "status": "grounded",
     "source_count": 2,
-    "content_version": 3
+    "content_version": 1
+  },
+  "navigation": {
+    "can_previous": false,
+    "can_next": false,
+    "can_end": true
   }
 }
 ```
 
 固件必须原子应用整条状态。任一必填字段非法时拒绝整条消息，不保留一半新状态。
+
+`grounding.status` 第一版允许：
+
+- `ready`
+- `retrieving`
+- `grounded`
+- `unsupported`
+- `missing_context`
 
 ## 固件上行：museum_action
 
@@ -122,3 +136,9 @@
 - 真机验收设备标识。
 
 当前服务器部署目录、域名、健康检查入口尚未确认，因此本文不提供生产部署命令。
+
+## Phase C 现场验收状态
+
+当前工作区只具备源码检查和自动化测试证据，尚无可复核的目标设备验收记录。不能据此声明麦克风、ASR、事实检索、回答、音频下发、扬声器播放、TTS ACK 或屏幕状态链路已经在真机贯通。
+
+现场验收至少记录目标设备标识、固件提交、服务端提交、测试时间、操作步骤、ASR 文本、审计记录、TTS ACK、屏幕与扬声器实际表现以及异常日志。只有实际经过并留有证据的链路才可标记为通过。

@@ -47,7 +47,7 @@ async def sendAudioMessage(
 
     # 发送结束消息（如果是最后一个文本）
     # 通话需要维持speaking状态
-    if not conn.calling and sentenceType == SentenceType.LAST:
+    if sentenceType == SentenceType.LAST:
         await send_tts_message(conn, "stop", None, sentence_id=sentence_id)
         if conn.close_after_chat:
             await conn.close()
@@ -303,56 +303,11 @@ async def send_tts_message(
     # TTS playback finished
     if state == "stop":
         stop_sentence_id = sentence_id if sentence_id is not None else conn.sentence_id
-        if stop_sentence_id == getattr(conn, "control_text_chat_sentence_id", None):
-            conn.control_text_chat_sentence_id = None
-        is_control_delivery = (
-            stop_sentence_id is not None
-            and hasattr(conn, "xiaoxin_control_tts_deliveries")
-            and stop_sentence_id in conn.xiaoxin_control_tts_deliveries
-        )
-        reliable_mode = (
-            is_control_delivery
-            and hasattr(conn, "supports_reliable_notification_tts")
-            and conn.supports_reliable_notification_tts()
-        )
-        delivery_id = (
-            conn._control_delivery_for_sentence(stop_sentence_id)
-            if is_control_delivery and hasattr(conn, "_control_delivery_for_sentence")
-            else None
-        )
-
         if stop_sentence_id != conn.sentence_id:
-            if is_control_delivery:
-                flow_control = getattr(conn, "audio_flow_control", None)
-                if flow_control is not None:
-                    await _flush_initial_prebuffer(conn, flow_control)
-                await _wait_for_audio_completion(conn)
-                done_wait_started_at = time.monotonic()
-                if reliable_mode:
-                    conn.begin_tts_ack_wait("done", stop_sentence_id)
-                await conn.websocket.send(json.dumps(message))
-                result = None
-                if reliable_mode:
-                    timeout_ms = int(conn.config.get("tts_done_ack_timeout_ms", 10000))
-                    result = await conn.wait_for_tts_ack(
-                        "done", stop_sentence_id, timeout_ms
-                    )
-                    conn.logger.bind(tag=TAG).info(
-                        "delivery_id={} sentence_id={} tts_state=terminal "
-                        "done_wait_ms={}".format(
-                            delivery_id,
-                            stop_sentence_id,
-                            int((time.monotonic() - done_wait_started_at) * 1000),
-                        )
-                    )
-                _mark_control_tts_outcome(conn, stop_sentence_id, reliable_mode, result)
             return
 
-        ordinary_done_ack_supported = (
-            not is_control_delivery
-            and stop_sentence_id is not None
-            and hasattr(conn, "supports_tts_done_ack")
-            and conn.supports_tts_done_ack()
+        done_ack_supported = (
+            stop_sentence_id is not None and conn.supports_tts_done_ack()
         )
         tts_notify = conn.config.get("enable_stop_tts_notify", False)
         if tts_notify:
@@ -373,28 +328,23 @@ async def send_tts_message(
         # Wait for all audio packets to finish sending.
         await _wait_for_audio_completion(conn)
         done_wait_started_at = time.monotonic()
-        if reliable_mode or ordinary_done_ack_supported:
+        if done_ack_supported:
             conn.begin_tts_ack_wait("done", stop_sentence_id)
         await conn.websocket.send(json.dumps(message))
         timeout_ms = int(conn.config.get("tts_done_ack_timeout_ms", 10000))
         result = None
-        if reliable_mode or ordinary_done_ack_supported:
+        if done_ack_supported:
             result = await conn.wait_for_tts_ack("done", stop_sentence_id, timeout_ms)
             conn.logger.bind(tag=TAG).info(
-                "delivery_id={} sentence_id={} tts_state=terminal "
-                "done_wait_ms={}".format(
-                    delivery_id,
+                "sentence_id={} tts_state=terminal done_wait_ms={}".format(
                     stop_sentence_id,
                     int((time.monotonic() - done_wait_started_at) * 1000),
                 )
             )
-            if result is None and not is_control_delivery:
+            if result is None:
                 conn._terminalize_tts_attempt_failure(
                     stop_sentence_id, "done_timeout"
                 )
-
-        if is_control_delivery:
-            _mark_control_tts_outcome(conn, stop_sentence_id, reliable_mode, result)
 
         if hasattr(conn, "audio_rate_controller") and conn.audio_rate_controller:
             conn.audio_rate_controller.stop_sending()
@@ -402,31 +352,6 @@ async def send_tts_message(
         return
 
     await conn.websocket.send(json.dumps(message))
-
-
-def _mark_control_tts_outcome(conn, sentence_id, reliable_mode, result):
-    if reliable_mode:
-        if (
-            result is not None
-            and result.successful
-            and result.state == "done"
-            and result.sentence_id == sentence_id
-        ):
-            conn.mark_xiaoxin_control_tts_done(sentence_id)
-            return
-        reason = (
-            result.reason
-            if (
-                result is not None
-                and result.state == "error"
-                and result.sentence_id == sentence_id
-                and result.reason
-            )
-            else "done_timeout"
-        )
-        conn.mark_xiaoxin_control_tts_failed(sentence_id, reason)
-        return
-    conn.mark_xiaoxin_control_tts_legacy_unverified(sentence_id)
 
 
 async def send_stt_message(
@@ -438,18 +363,15 @@ async def send_stt_message(
         await send_tts_message(conn, "start", sentence_id=sentence_id)
         return
 
-    # 解析JSON格式，提取实际的用户说话内容
+    # 兼容少量传输层包装，只提取最终要显示和发送给设备的文本。
     display_text = text
     try:
-        # 尝试解析JSON格式
+        # 某些传输层可能把文本包装在 content 字段中；其余字段不属于
+        # 博物馆业务上下文，不写入连接状态。
         if text.strip().startswith("{") and text.strip().endswith("}"):
             parsed_data = json.loads(text)
             if isinstance(parsed_data, dict) and "content" in parsed_data:
-                # 如果是包含说话人信息的JSON格式，只显示content部分
                 display_text = parsed_data["content"]
-                # 保存说话人信息到conn对象
-                if "speaker" in parsed_data:
-                    conn.current_speaker = parsed_data["speaker"]
     except (json.JSONDecodeError, TypeError):
         # 如果不是JSON格式，直接使用原始文本
         display_text = text

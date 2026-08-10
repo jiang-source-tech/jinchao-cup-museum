@@ -182,10 +182,9 @@ uploadfile
 !**/package.json
 
 !main/xiaozhi-server/**/*.json
-main/xiaozhi-server/data/xiaoxin_demo_data.json
-!main/digital-human/**/*.json
-main/digital-human/wakeword_runtime/models
-main/digital-human/wakeword_runtime/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
+!main/museum-web-test/**/*.json
+main/museum-web-test/wakeword_runtime/models
+main/museum-web-test/wakeword_runtime/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
 .worktrees/
 .codex_tmp/
@@ -196,6 +195,7 @@ sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
 /.pytest-tmp/
 /output/
 **/.pytest-tmp/
+**/.pytest-tmp*/
 
 # Local deployment credentials: keep these files available on the machine but out of Git.
 /main/xiaozhi-server/config.yaml

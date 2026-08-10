@@ -6,7 +6,6 @@ from core.handle.textHandler.iotMessageHandler import IotTextMessageHandler
 from core.handle.textHandler.listenMessageHandler import ListenTextMessageHandler
 from core.handle.textHandler.mcpMessageHandler import McpTextMessageHandler
 from core.handle.textHandler.ttsMessageHandler import TtsTextMessageHandler
-from core.handle.textHandler.xiaoxinAckMessageHandler import XiaoxinAckMessageHandler
 from core.handle.textMessageHandler import TextMessageHandler
 from core.handle.textHandler.serverMessageHandler import ServerTextMessageHandler
 from core.handle.textHandler.pingMessageHandler import PingMessageHandler
@@ -32,7 +31,6 @@ class TextMessageHandlerRegistry:
             ServerTextMessageHandler(),
             PingMessageHandler(),
             TtsTextMessageHandler(),
-            XiaoxinAckMessageHandler(),
         ]
 
         for handler in handlers:
