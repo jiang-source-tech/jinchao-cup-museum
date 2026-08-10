@@ -71,4 +71,3 @@ ota_release:
   artifact_dir: data/museum_firmware
   default_channel: stable
   allow_insecure_http: false
-  legacy_filename_fallback: false

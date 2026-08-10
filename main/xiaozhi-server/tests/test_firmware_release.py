@@ -37,7 +37,7 @@ def test_published_release_selects_an_immutable_digest_artifact(tmp_path):
     catalog = FirmwareReleaseCatalog(
         database_path=tmp_path / "releases.db",
         artifact_dir=tmp_path / "artifacts",
-        public_ota_url="https://updates.example/xiaoxin/ota/",
+        public_ota_url="https://updates.example/museum/ota/",
     )
 
     release = catalog.create_release_from_file(
@@ -69,7 +69,7 @@ def test_draft_release_artifact_is_not_available_for_public_download(tmp_path):
     catalog = FirmwareReleaseCatalog(
         database_path=tmp_path / "releases.db",
         artifact_dir=tmp_path / "artifacts",
-        public_ota_url="https://updates.example/xiaoxin/ota/",
+        public_ota_url="https://updates.example/museum/ota/",
     )
 
     release = catalog.create_release_from_file(
@@ -91,7 +91,7 @@ def test_published_release_requires_a_complete_compiled_firmware_target(
     catalog = FirmwareReleaseCatalog(
         database_path=tmp_path / "releases.db",
         artifact_dir=tmp_path / "artifacts",
-        public_ota_url="https://updates.example/xiaoxin/ota/",
+        public_ota_url="https://updates.example/museum/ota/",
     )
     target = {
         "model": FIRMWARE_MODEL,
@@ -117,7 +117,7 @@ def test_canary_release_applies_allowlist_and_deterministic_percentage_rollout(
     catalog = FirmwareReleaseCatalog(
         database_path=tmp_path / "releases.db",
         artifact_dir=tmp_path / "artifacts",
-        public_ota_url="https://updates.example/xiaoxin/ota/",
+        public_ota_url="https://updates.example/museum/ota/",
     )
     release = catalog.create_release_from_file(
         source,
@@ -149,7 +149,7 @@ def test_paused_or_revoked_release_is_immediately_unavailable(tmp_path):
     catalog = FirmwareReleaseCatalog(
         database_path=tmp_path / "releases.db",
         artifact_dir=tmp_path / "artifacts",
-        public_ota_url="https://updates.example/xiaoxin/ota/",
+        public_ota_url="https://updates.example/museum/ota/",
     )
     release = catalog.create_release_from_file(
         source,
@@ -185,7 +185,7 @@ def test_corrupt_published_artifact_is_never_offered_or_downloaded(tmp_path):
     catalog = FirmwareReleaseCatalog(
         database_path=tmp_path / "releases.db",
         artifact_dir=tmp_path / "artifacts",
-        public_ota_url="https://updates.example/xiaoxin/ota/",
+        public_ota_url="https://updates.example/museum/ota/",
     )
     release = catalog.create_release_from_file(
         source,
@@ -212,7 +212,7 @@ def test_target_version_cannot_be_reused_for_a_different_immutable_artifact(tmp_
     catalog = FirmwareReleaseCatalog(
         database_path=tmp_path / "releases.db",
         artifact_dir=tmp_path / "artifacts",
-        public_ota_url="https://updates.example/xiaoxin/ota/",
+        public_ota_url="https://updates.example/museum/ota/",
     )
     catalog.create_release_from_file(
         first,
@@ -240,7 +240,7 @@ def test_observation_idempotency_key_deduplicates_an_exact_device_report(tmp_pat
     catalog = FirmwareReleaseCatalog(
         database_path=tmp_path / "releases.db",
         artifact_dir=tmp_path / "artifacts",
-        public_ota_url="https://updates.example/xiaoxin/ota/",
+        public_ota_url="https://updates.example/museum/ota/",
     )
     release = catalog.create_release_from_file(
         source,
@@ -277,16 +277,25 @@ def test_catalog_rejects_http_except_when_explicit_development_flag_is_enabled(t
         FirmwareReleaseCatalog(
             database_path=tmp_path / "releases.db",
             artifact_dir=tmp_path / "artifacts",
-            public_ota_url="http://updates.example/xiaoxin/ota/",
+            public_ota_url="http://updates.example/museum/ota/",
         )
 
     catalog = FirmwareReleaseCatalog(
         database_path=tmp_path / "releases.db",
         artifact_dir=tmp_path / "artifacts",
-        public_ota_url="http://updates.example/xiaoxin/ota/",
+        public_ota_url="http://updates.example/museum/ota/",
         allow_insecure_http=True,
     )
-    assert catalog.public_ota_url == "http://updates.example/xiaoxin/ota"
+    assert catalog.public_ota_url == "http://updates.example/museum/ota"
+
+
+def test_catalog_rejects_the_removed_legacy_ota_path(tmp_path):
+    with pytest.raises(FirmwareReleaseError, match="/museum/ota/"):
+        FirmwareReleaseCatalog(
+            database_path=tmp_path / "releases.db",
+            artifact_dir=tmp_path / "artifacts",
+            public_ota_url="https://updates.example/xiaoxin/ota/",
+        )
 
 
 @pytest.mark.parametrize(
@@ -302,7 +311,7 @@ def test_catalog_rejects_versions_that_the_firmware_numeric_parser_cannot_read(
     catalog = FirmwareReleaseCatalog(
         database_path=tmp_path / "releases.db",
         artifact_dir=tmp_path / "artifacts",
-        public_ota_url="https://updates.example/xiaoxin/ota/",
+        public_ota_url="https://updates.example/museum/ota/",
     )
 
     with pytest.raises(FirmwareReleaseError, match="version is invalid"):

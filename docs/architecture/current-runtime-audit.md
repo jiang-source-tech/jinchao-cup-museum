@@ -40,7 +40,7 @@ ESP32 麦克风
 
 `app.py` 启动 WebSocket 和 HTTP/OTA 服务，不再创建旧控制运行时。`ConnectionHandler` 使用设备请求头中的 `device-id` 作为稳定设备标识，并在 Hello 后创建或恢复临时游客会话、下发初始 `museum_state`。
 
-当前正式路径为 `/museum/v1/` 和 `/museum/ota/`。历史 `/xiaoxin/v1/`、`/xiaoxin/ota/` 及旧 activation 别名仅承担设备传输兼容；旧小程序控制接口不再属于比赛运行面。
+当前唯一正式路径为 `/museum/v1/` 和 `/museum/ota/`。WebSocket 握手拒绝其他路径，OTA 不注册旧项目路径、activation 别名或文件名固件下载接口；旧小程序控制接口也不属于比赛运行面。
 
 ### 2.2 语音与业务运行时
 
@@ -70,7 +70,7 @@ ESP32 麦克风
 - 门铃、Overview、旧控制台和小程序业务；
 - 通用工具调用作为博物馆问答回退。
 
-残留的 `xiaoxin`、`xiaozhi` 名称仅在传输路径、上游基座目录或兼容标识中按调用关系保留。
+残留的 `xiaoxin`、`xiaozhi` 名称仅可能存在于上游基座目录、历史记录或经核实仍属于板级合同的标识中，不构成服务端兼容接口。
 
 ## 3. 当前固件链路
 

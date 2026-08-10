@@ -30,7 +30,7 @@ def test_publish_firmware_cli_creates_an_offer_when_explicitly_published(tmp_pat
             "--artifact-dir",
             str(artifact_dir),
             "--public-ota-url",
-            "https://updates.example/xiaoxin/ota/",
+            "https://updates.example/museum/ota/",
             "--model",
             FIRMWARE_MODEL,
             "--version",
@@ -53,7 +53,7 @@ def test_publish_firmware_cli_creates_an_offer_when_explicitly_published(tmp_pat
     catalog = FirmwareReleaseCatalog(
         database_path=database_path,
         artifact_dir=artifact_dir,
-        public_ota_url="https://updates.example/xiaoxin/ota/",
+        public_ota_url="https://updates.example/museum/ota/",
     )
     offer = catalog.select_offer(
         FirmwareCheck(
@@ -86,7 +86,7 @@ def test_publish_firmware_cli_rejects_a_published_release_without_target_fields(
             "--artifact-dir",
             str(tmp_path / "artifacts"),
             "--public-ota-url",
-            "https://updates.example/xiaoxin/ota/",
+            "https://updates.example/museum/ota/",
             "--model",
             FIRMWARE_MODEL,
             "--version",
@@ -121,7 +121,7 @@ def test_publish_firmware_cli_can_pause_an_existing_release(tmp_path):
             "--artifact-dir",
             str(artifact_dir),
             "--public-ota-url",
-            "https://updates.example/xiaoxin/ota/",
+            "https://updates.example/museum/ota/",
             "--model",
             FIRMWARE_MODEL,
             "--version",
@@ -166,7 +166,7 @@ def test_publish_firmware_cli_can_pause_an_existing_release(tmp_path):
     catalog = FirmwareReleaseCatalog(
         database_path=database_path,
         artifact_dir=artifact_dir,
-        public_ota_url="https://updates.example/xiaoxin/ota/",
+        public_ota_url="https://updates.example/museum/ota/",
     )
     assert (
         catalog.select_offer(
@@ -190,7 +190,7 @@ def test_publish_firmware_cli_lists_credential_free_release_observations(tmp_pat
     catalog = FirmwareReleaseCatalog(
         database_path=database_path,
         artifact_dir=artifact_dir,
-        public_ota_url="https://updates.example/xiaoxin/ota/",
+        public_ota_url="https://updates.example/museum/ota/",
     )
     release = catalog.create_release_from_file(
         source,

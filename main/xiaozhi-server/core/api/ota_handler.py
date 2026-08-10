@@ -3,10 +3,7 @@ import time
 import base64
 import hashlib
 import hmac
-import os
 import re
-import glob
-from typing import Dict, List, Tuple
 from aiohttp import web
 
 from core.auth import create_auth_manager
@@ -16,40 +13,13 @@ from core.firmware_release import (
     FirmwareReleaseError,
 )
 from config.config_loader import get_project_dir
-from core.utils.util import get_local_ip, get_vision_url
+from core.utils.util import get_local_ip
 from core.api.base_handler import BaseHandler
 
 TAG = __name__
 
 _OTA_REPORT_OUTCOMES = frozenset({"pending", "committed", "rolled_back", "failed"})
 _OTA_REPORT_PARTITIONS = frozenset({"ota_0", "ota_1"})
-
-
-def _safe_basename(filename: str) -> str:
-    # Prevent directory traversal
-    return os.path.basename(filename)
-
-
-def _parse_version(ver: str) -> Tuple[int, ...]:
-    # conservative parser: split by non-digit, keep numeric parts
-    parts = re.findall(r"\d+", ver)
-    return tuple(int(p) for p in parts) if parts else (0,)
-
-
-def _is_higher_version(a: str, b: str) -> bool:
-    """Return True if version string a > b (semver-like numeric compare)."""
-    ta = _parse_version(a)
-    tb = _parse_version(b)
-    # compare tuple lexicographically, but allow different lengths
-    maxlen = max(len(ta), len(tb))
-    for i in range(maxlen):
-        ai = ta[i] if i < len(ta) else 0
-        bi = tb[i] if i < len(tb) else 0
-        if ai > bi:
-            return True
-        if ai < bi:
-            return False
-    return False
 
 
 class OTAHandler(BaseHandler):
@@ -66,74 +36,11 @@ class OTAHandler(BaseHandler):
                 config,
                 project_dir=get_project_dir(),
             )
-        self.legacy_filename_fallback = bool(
-            self.firmware_release_catalog
-            and self.firmware_release_catalog.legacy_filename_fallback
-        )
         auth_config = config["server"].get("auth", {})
         self.auth_enable = auth_config.get("enabled", False)
         # 设备白名单
         self.allowed_devices = set(auth_config.get("allowed_devices", []))
         self.auth = create_auth_manager(config["server"])
-
-        # firmware storage
-        self.bin_dir = os.path.join(os.getcwd(), "data", "bin")
-        # cache structure: { 'updated_at': timestamp, 'ttl': seconds, 'files_by_model': { model: [(version, filename), ...] } }
-        self._bin_cache: Dict = {
-            "updated_at": 0,
-            "ttl": config.get("firmware_cache_ttl", 30),
-            "files_by_model": {},
-        }
-
-    async def handle_activate(self, request):
-        response = web.Response(status=404, text="")
-        self._add_cors_headers(response)
-        return response
-
-    def _refresh_bin_cache_if_needed(self):
-        now = int(time.time())
-        ttl = int(self._bin_cache.get("ttl", 30))
-        if now - int(
-            self._bin_cache.get("updated_at", 0)
-        ) < ttl and self._bin_cache.get("files_by_model"):
-            return
-
-        files_by_model: Dict[str, List[Tuple[str, str]]] = {}
-        try:
-            if not os.path.isdir(self.bin_dir):
-                os.makedirs(self.bin_dir, exist_ok=True)
-
-            # match files like model_1.2.3.bin (allow dots, dashes, underscores in model and version)
-            pattern = os.path.join(self.bin_dir, "*.bin")
-            for path in glob.glob(pattern):
-                fname = os.path.basename(path)
-                # filename format: {model}_{version}.bin
-                m = re.match(r"^(.+?)_([0-9][A-Za-z0-9\.\-_]*)\.bin$", fname)
-                if not m:
-                    # skip files not conforming to naming rule
-                    continue
-                model = m.group(1)
-                version = m.group(2)
-                try:
-                    # The compatibility path must not bypass the release version
-                    # contract: firmware parses each dotted segment numerically.
-                    FirmwareReleaseCatalog._validate_version(version)
-                except FirmwareReleaseError:
-                    continue
-                files_by_model.setdefault(model, []).append((version, fname))
-
-            # sort versions for each model descending
-            for model, items in files_by_model.items():
-                items.sort(key=lambda it: _parse_version(it[0]), reverse=True)
-
-            self._bin_cache["files_by_model"] = files_by_model
-            self._bin_cache["updated_at"] = now
-            self.logger.bind(tag=TAG).info(
-                f"Firmware cache refreshed: {len(files_by_model)} models"
-            )
-        except Exception as e:
-            self.logger.bind(tag=TAG).error(f"刷新固件缓存失败: {e}")
-            # keep previous cache if any
 
     def generate_password_signature(self, content: str, secret_key: str) -> str:
         """生成MQTT密码签名
@@ -177,9 +84,9 @@ class OTAHandler(BaseHandler):
 
         This handler will:
         - read device id/client id (as before)
-        - attempt to determine device model and current firmware version (prefer headers, fallback to body)
-        - check data/bin for newer firmware for that model
-        - if found a newer firmware, set firmware.url to the download endpoint
+        - determine the device release facts from the request
+        - select an explicitly published, digest-addressed firmware release
+        - return the selected artifact URL when the device is eligible
         """
         try:
             data = await request.text()
@@ -212,14 +119,10 @@ class OTAHandler(BaseHandler):
                 data_json = {}
 
             server_config = self.config["server"]
-            # Distinguish ports:
-            # - websocket_port is used to construct websocket URL (server["port"])
-            # - http_port is used to construct OTA download URLs (server["http_port"])
             websocket_port = int(server_config.get("port", 8000))
-            http_port = int(server_config.get("http_port", 8003))
             local_ip = get_local_ip()
 
-            # Determine the board type independently from the legacy model field.
+            # Determine the board type independently from the device model.
             board_type = ""
             for h in ("board-type", "board_type"):
                 if h in request.headers:
@@ -233,8 +136,7 @@ class OTAHandler(BaseHandler):
                 except Exception:
                     board_type = ""
 
-            # Determine device model (prefer headers).  Keep board.type as the
-            # legacy fallback because older firmware only reports that field.
+            # Determine device model (prefer headers).
             device_model = ""
             # header candidates
             for h in ("device-model", "device_model", "model"):
@@ -388,9 +290,8 @@ class OTAHandler(BaseHandler):
                     f"未配置MQTT网关，为设备 {device_id} 下发WebSocket配置"
                 )
 
-            # The release catalog is authoritative.  Legacy filename scanning is
-            # deliberately opt-in so a mutable data/bin file cannot silently
-            # replace a published digest artifact.
+            # The release catalog is authoritative. Firmware is offered only from
+            # an explicitly published, digest-addressed release.
             try:
                 catalog = self.firmware_release_catalog
                 self._record_firmware_observation(
@@ -429,32 +330,6 @@ class OTAHandler(BaseHandler):
                     self.logger.bind(tag=TAG).info(
                         f"为设备 {device_id} 下发发布固件 {offer.version} release={offer.release_id}"
                     )
-                elif self.legacy_filename_fallback:
-                    self._apply_legacy_filename_fallback(
-                        return_json,
-                        device_id=device_id,
-                        device_model=str(device_model),
-                        device_version=device_version,
-                    )
-                    if return_json["firmware"].get("url"):
-                        self._record_firmware_observation(
-                            device_id=device_id,
-                            event="offer",
-                            current_version=device_version,
-                            target_version=str(
-                                return_json["firmware"].get("version") or ""
-                            ),
-                            result="legacy_fallback",
-                            reason="legacy_filename_fallback",
-                        )
-                    else:
-                        self._record_firmware_observation(
-                            device_id=device_id,
-                            event="offer",
-                            current_version=device_version,
-                            result="not_eligible",
-                            reason="no_eligible_release",
-                        )
                 else:
                     self._record_firmware_observation(
                         device_id=device_id,
@@ -526,8 +401,7 @@ class OTAHandler(BaseHandler):
         """Record a strictly validated, optional device lifecycle report.
 
         This consumes an additive request-body field only. It never alters
-        compatibility checks, rollout selection, release state, or the OTA
-        response, so legacy devices remain unaffected.
+        release selection, release state, or the OTA response.
         """
 
         if not isinstance(data_json, dict):
@@ -604,39 +478,6 @@ class OTAHandler(BaseHandler):
         except Exception:
             self.logger.bind(tag=TAG).exception("OTA 状态上报审计失败")
 
-    def _apply_legacy_filename_fallback(
-        self,
-        return_json: dict,
-        *,
-        device_id: str,
-        device_model: str,
-        device_version: str,
-    ) -> None:
-        self._refresh_bin_cache_if_needed()
-        files_by_model = self._bin_cache.get("files_by_model", {})
-        candidates = files_by_model.get(device_model, [])
-
-        self.logger.bind(tag=TAG).info(
-            f"查找旧版型号 {device_model} 的固件，找到 {len(candidates)} 个候选"
-        )
-        for version, filename in candidates:
-            if not _is_higher_version(version, device_version):
-                continue
-            vision_url = get_vision_url(self.config)
-            url = vision_url.replace(
-                "/mcp/vision/explain",
-                f"/museum/ota/download/{filename}",
-            )
-            return_json["firmware"]["version"] = version
-            return_json["firmware"]["url"] = url
-            self.logger.bind(tag=TAG).info(
-                f"为设备 {device_id} 下发旧版文件名固件 {version} -> {url}"
-            )
-            return
-        self.logger.bind(tag=TAG).info(
-            f"设备 {device_id} 固件已是最新: {device_version}"
-        )
-
     async def handle_get(self, request):
         """处理 OTA GET 请求"""
         try:
@@ -653,53 +494,6 @@ class OTAHandler(BaseHandler):
         finally:
             self._add_cors_headers(response)
             return response
-
-    async def handle_download(self, request):
-        """
-        下载固件接口
-        URL: /museum/ota/download/{filename}
-        - 只允许下载 data/bin 目录下的 .bin 文件
-        - filename 必须是 basename 且匹配安全的模式
-        """
-        try:
-            if not self.legacy_filename_fallback:
-                raise web.HTTPNotFound(text="legacy firmware download disabled")
-            fname = request.match_info.get("filename", "")
-            if not fname:
-                raise web.HTTPBadRequest(text="filename required")
-
-            # sanitize
-            fname = _safe_basename(fname)
-            # pattern: allow letters, numbers, dot, underscore, dash
-            if not re.match(r"^[A-Za-z0-9\.\-_]+\.bin$", fname):
-                raise web.HTTPBadRequest(text="invalid filename")
-
-            file_path = os.path.join(self.bin_dir, fname)
-            # ensure realpath is under bin_dir
-            file_real = os.path.realpath(file_path)
-            bin_dir_real = os.path.realpath(self.bin_dir)
-            if (
-                not file_real.startswith(bin_dir_real + os.sep)
-                and file_real != bin_dir_real
-            ):
-                raise web.HTTPForbidden(text="forbidden")
-
-            if not os.path.isfile(file_real):
-                raise web.HTTPNotFound(text="file not found")
-
-            # use FileResponse to stream file
-            resp = web.FileResponse(path=file_real)
-        except web.HTTPError as e:
-            resp = e
-        except Exception as e:
-            self.logger.bind(tag=TAG).error(f"固件下载异常: {e}")
-            resp = web.Response(text="download error", status=500)
-        finally:
-            try:
-                self._add_cors_headers(resp)
-            except Exception:
-                pass
-            return resp
 
     async def handle_artifact_download(self, request):
         """Stream a published artifact only through its verified SHA-256 path."""

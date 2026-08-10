@@ -37,50 +37,19 @@ class SimpleHttpServer:
 
     def build_app(self) -> web.Application:
         app = web.Application()
-        ota_routes = []
-        for prefix in ("/museum/ota", "/xiaoxin/ota"):
-            ota_routes.extend(
-                [
-                    web.get(f"{prefix}/", self.ota_handler.handle_get),
-                    web.post(f"{prefix}/", self.ota_handler.handle_post),
-                    web.post(
-                        f"{prefix}/activate", self.ota_handler.handle_activate
-                    ),
-                    web.options(f"{prefix}/", self.ota_handler.handle_options),
-                    web.get(
-                        f"{prefix}/download/{{filename}}",
-                        self.ota_handler.handle_download,
-                    ),
-                    web.options(
-                        f"{prefix}/download/{{filename}}",
-                        self.ota_handler.handle_options,
-                    ),
-                ]
-            )
-        # Keep the old activation-only alias readable for devices that have not
-        # yet received the museum OTA contract.
-        ota_routes.append(
-            web.post("/xiaozhi/ota/activate", self.ota_handler.handle_activate)
-        )
-        artifact_download = getattr(
-            self.ota_handler,
-            "handle_artifact_download",
-            None,
-        )
-        if callable(artifact_download):
-            for prefix in ("/museum/ota", "/xiaoxin/ota"):
-                ota_routes.extend(
-                    [
-                        web.get(
-                            f"{prefix}/artifacts/{{sha256}}.bin",
-                            artifact_download,
-                        ),
-                        web.options(
-                            f"{prefix}/artifacts/{{sha256}}.bin",
-                            self.ota_handler.handle_options,
-                        ),
-                    ]
-                )
+        ota_routes = [
+            web.get("/museum/ota/", self.ota_handler.handle_get),
+            web.post("/museum/ota/", self.ota_handler.handle_post),
+            web.options("/museum/ota/", self.ota_handler.handle_options),
+            web.get(
+                "/museum/ota/artifacts/{sha256}.bin",
+                self.ota_handler.handle_artifact_download,
+            ),
+            web.options(
+                "/museum/ota/artifacts/{sha256}.bin",
+                self.ota_handler.handle_options,
+            ),
+        ]
         app.add_routes(ota_routes)
 
         app.add_routes(

@@ -93,7 +93,7 @@ docker compose \
 6. 活动数据目录仅包含 `.config.yaml`、`.mcp_server_settings.json`、`.wakeup_words.yaml`、`museum_demo.db`、`museum_firmware_releases.db` 和 `museum_firmware/`，未发现旧数据库、旧知识目录或旧配置段。
 7. 首次创建容器时，Compose 未自动读取仓库根目录 `.env`，进程因缺少 `DASHSCOPE_API_KEY` 进入重启。镜像已经构建完成，因此故障恢复时显式传入 `--env-file`，并使用 `up -d --force-recreate --no-build museum-server` 重建容器；上方带 `--build` 的命令用于后续常规部署。最终容器状态为 `running`、重启次数为 `0`，`8000` 和 `8003` 正常监听，服务器本机 OTA 健康入口返回 `/museum/v1/` WebSocket 地址。
 8. 对最终重建后的完整当前容器日志执行检查，未发现 `Traceback`、启动异常、`Business runtime failed`，也未发现 `course_reminder`、`todo_reminder`、`student_courses`、`student_todos`、`XiaoxinControlRuntime`、Doorbell 或 Voiceprint 运行时标记。
-9. 旧控制台 `/xiaoxin/control/`、旧小程序课程接口 `/api/miniprogram/courses` 和旧设备管理接口 `/api/xiaoxin/devices` 均返回 `404`。历史设备传输兼容路径是否保留仍以协议 ADR 为准，不用这些业务接口的结果替代传输兼容性判断。
+9. 旧控制台 `/xiaoxin/control/`、旧小程序课程接口 `/api/miniprogram/courses`、旧设备管理接口 `/api/xiaoxin/devices`、旧 OTA 路径和 activation 别名均返回 `404`；非 `/museum/v1/` 的 WebSocket 握手也必须被拒绝。
 10. 模拟设备 `deployment-smoke-e1b7c0b01334` 于 2026 年 8 月 10 日 18:56（Asia/Shanghai）通过 `/museum/v1/` 发送“你好，你是谁”。服务端原样返回 STT 文本，业务状态依次为 `retrieving`、`ready`，回答为“你好，我是金潮杯博物馆的现场语音讲解助手。你可以直接问我眼前这件展品，我会根据馆方审核资料回答。”
 11. 对应数据库审计记录为 `grounding_status=conversational`、`guard_result=conversational_scope`，未出现“小芯、高等数学、课程、待办、提醒、学生、宠物”等旧业务词。该检查只证明模拟文字输入、博物馆业务运行时和 WebSocket TTS 文本状态链路可工作，不代表麦克风、ASR、音频内容、扬声器、屏幕或真机 TTS ACK 已验收。
 12. `museum_firmware_releases.db` 当前 `firmware_releases=0`、`firmware_artifacts=0`。OTA 健康入口可用，但尚未发布任何固件，不能据此声明设备升级或真机迁移完成。
@@ -103,7 +103,7 @@ docker compose \
 
 1. 容器状态为 running，且镜像标签与服务端提交一致。
 2. `GET http://127.0.0.1:8003/museum/ota/` 返回成功状态和 `/museum/v1/` WebSocket 地址。
-3. `8000` 的正式 WebSocket 路径为 `/museum/v1/`；历史设备传输别名按协议 ADR 管理。旧控制台、小程序和 Xiaoxin 业务接口必须不可达。
+3. `8000` 只接受 `/museum/v1/` WebSocket；旧传输路径、旧控制台、小程序和 Xiaoxin 业务接口必须不可达。
 4. 日志不出现课程、待办、学生、Doorbell、Overview、Voiceprint 或主动陪伴调度器。
 5. 容器挂载源为 `/opt/jinchao-cup-museum-data`，目录中不存在禁止项。
 6. 通过文字或模拟客户端验证“你好，你是谁”可以正常回答博物馆身份。

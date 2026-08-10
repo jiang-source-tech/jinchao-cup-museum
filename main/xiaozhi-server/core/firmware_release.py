@@ -123,7 +123,6 @@ class FirmwareReleaseCatalog:
         artifact_dir: str | Path,
         public_ota_url: str = "",
         default_channel: str = "stable",
-        legacy_filename_fallback: bool = False,
         allow_insecure_http: bool = False,
     ):
         self.database_path = Path(database_path)
@@ -134,7 +133,6 @@ class FirmwareReleaseCatalog:
             allow_insecure_http=self.allow_insecure_http,
         )
         self.default_channel = self._validate_channel(default_channel)
-        self.legacy_filename_fallback = bool(legacy_filename_fallback)
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
         self.artifact_dir.mkdir(parents=True, exist_ok=True)
         self._initialize()
@@ -157,20 +155,11 @@ class FirmwareReleaseCatalog:
             root,
             release_config.get("artifact_dir") or "data/museum_firmware",
         )
-        server_config = config.get("server", {}) or {}
-        public_ota_url = (
-            release_config.get("public_ota_url")
-            or server_config.get("ota")
-            or ""
-        )
         return cls(
             database_path=database_path,
             artifact_dir=artifact_dir,
-            public_ota_url=str(public_ota_url),
+            public_ota_url=str(release_config.get("public_ota_url") or ""),
             default_channel=str(release_config.get("default_channel") or "stable"),
-            legacy_filename_fallback=cls._config_bool(
-                release_config.get("legacy_filename_fallback", False)
-            ),
             allow_insecure_http=cls._config_bool(
                 release_config.get("allow_insecure_http", False)
             ),
@@ -1180,17 +1169,15 @@ class FirmwareReleaseCatalog:
         accepted_schemes = {"https"}
         if allow_insecure_http:
             accepted_schemes.add("http")
-        supported_paths = {"/museum/ota", "/xiaoxin/ota"}
         if (
             parsed.scheme not in accepted_schemes
             or not parsed.netloc
             or parsed.query
             or parsed.fragment
-            or parsed.path.rstrip("/") not in supported_paths
+            or parsed.path.rstrip("/") != "/museum/ota"
         ):
             raise FirmwareReleaseError(
-                "public_ota_url must be an HTTPS /museum/ota/ URL "
-                "(the legacy /xiaoxin/ota/ alias is accepted during migration); "
+                "public_ota_url must be an HTTPS /museum/ota/ URL; "
                 "set allow_insecure_http only for development"
             )
         return url

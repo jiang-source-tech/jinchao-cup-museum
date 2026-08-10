@@ -2,7 +2,7 @@
 
 ## 原则
 
-当前正式路径为 `/museum/v1/` WebSocket 和 `/museum/ota/` OTA；`/xiaoxin/v1/`、`/xiaoxin/ota/` 及旧 activation 别名仅作为历史设备传输兼容基座保留。博物馆业务通过新增消息类型扩展，不复用课程、待办或陪伴年龄字段。
+服务端与固件只使用 `/museum/v1/` WebSocket 和 `/museum/ota/` OTA。服务端拒绝其他 WebSocket 路径，也不提供旧项目 OTA 路径、activation 别名或文件名固件下载接口。博物馆业务通过新增消息类型扩展，不复用课程、待办或陪伴年龄字段。
 
 所有新增业务消息都包含整数 `version`。固件遇到不支持的版本时保持当前可用界面并记录错误，不能应用半份数据。
 

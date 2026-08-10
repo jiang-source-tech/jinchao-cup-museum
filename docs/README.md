@@ -15,7 +15,7 @@
 
 ## 架构决策
 
-- [ADR-0001：保留历史设备传输路径，独立运行博物馆业务](adr/0001-rebuild-museum-runtime-behind-xiaoxin-transport.md)
+- [ADR-0001：使用唯一博物馆传输路径，独立运行博物馆业务](adr/0001-isolate-museum-runtime-and-transport.md)
 - [ADR-0002：以展品事实和资料来源作为回答依据单位](adr/0002-ground-answers-in-reviewed-facts.md)
 
 ## 文档状态规则

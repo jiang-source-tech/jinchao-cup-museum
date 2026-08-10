@@ -36,6 +36,7 @@ from core.auth import AuthenticationError, create_auth_manager
 from core.utils.modules_initialize import initialize_modules
 from core.utils.cache.config import CacheType
 from core.utils.cache.manager import cache_manager
+from core.transport_paths import process_museum_websocket_request
 from core.utils.util import check_vad_update, check_asr_update
 
 TAG = __name__
@@ -75,7 +76,10 @@ class WebSocketServer:
         port = int(server_config.get("port", 8000))
 
         async with websockets.serve(
-            self._handle_connection, host, port, process_request=self._http_response
+            self._handle_connection,
+            host,
+            port,
+            process_request=process_museum_websocket_request,
         ):
             await asyncio.Future()
 
@@ -143,15 +147,6 @@ class WebSocketServer:
                 self.logger.bind(tag=TAG).error(
                     f"服务器端强制关闭连接时出错: {close_error}"
                 )
-
-    async def _http_response(self, websocket, request_headers):
-        # 检查是否为 WebSocket 升级请求
-        if request_headers.headers.get("connection", "").lower() == "upgrade":
-            # 如果是 WebSocket 请求，返回 None 允许握手继续
-            return None
-        else:
-            # 如果是普通 HTTP 请求，返回 "server is running"
-            return websocket.respond(200, "Server is running\n")
 
     async def update_config(self) -> bool:
         """更新服务器配置并重新初始化组件
