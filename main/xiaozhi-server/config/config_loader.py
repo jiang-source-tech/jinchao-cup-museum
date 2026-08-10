@@ -1,9 +1,23 @@
 import os
-import sys
 from collections.abc import Mapping
 from pathlib import Path
 
 import yaml
+
+
+LEGACY_CONFIG_SECTIONS = frozenset(
+    {
+        "voiceprint",
+        "xiaoxin_control",
+        "xiaoxin_runtime",
+    }
+)
+LEGACY_DATA_NAMES = frozenset({"ota-inbox"})
+LEGACY_DATA_PREFIXES = (
+    "xiaoxin_",
+    "xiaozhi_companion.db",
+    "xiaozhi_control.db",
+)
 
 
 def get_project_dir():
@@ -23,7 +37,7 @@ def load_config():
     """加载配置文件"""
     from core.utils.cache.manager import cache_manager, CacheType
 
-    warn_if_legacy_data_present()
+    enforce_museum_data_boundary()
 
     # 检查缓存
     cached_config = cache_manager.get(CacheType.CONFIG, "main_config")
@@ -44,9 +58,11 @@ def load_config():
             "找不到 config.yaml 或 config.example.yaml，无法加载服务配置"
         )
     default_config = read_config(default_config_path)
+    reject_legacy_config_sections(default_config, default_config_path)
     custom_config = (
         read_config(custom_config_path) if custom_config_path.exists() else {}
     )
+    reject_legacy_config_sections(custom_config, custom_config_path)
 
     config = merge_configs(default_config, custom_config)
     # 初始化目录
@@ -57,26 +73,54 @@ def load_config():
     return config
 
 
-def find_legacy_xiaoxin_databases(data_dir):
-    """Return legacy databases that must not remain in the active data mount."""
-    return tuple(sorted(Path(data_dir).glob("xiaoxin_*.db")))
-
-
-def warn_if_legacy_data_present(project_dir=None):
-    """Emit a startup-visible warning when an old project database is mounted."""
-    root = Path(project_dir) if project_dir is not None else Path(get_project_dir())
-    legacy_databases = find_legacy_xiaoxin_databases(root / "data")
-    if not legacy_databases:
+def find_legacy_project_data(data_dir):
+    """Return old-project entries that are forbidden in the active data mount."""
+    root = Path(data_dir)
+    if not root.exists():
         return ()
 
-    names = ", ".join(path.name for path in legacy_databases)
-    print(
-        "CRITICAL: 活动 data 目录检测到旧项目数据库："
-        f"{names}。当前博物馆运行时不会读取这些数据库；"
-        "部署前必须确认数据挂载并完成隔离或归档。",
-        file=sys.stderr,
+    matches = []
+    for path in root.rglob("*"):
+        normalized_name = path.name.lstrip(".").lower()
+        if normalized_name in LEGACY_DATA_NAMES or normalized_name.startswith(
+            LEGACY_DATA_PREFIXES
+        ):
+            matches.append(path)
+    return tuple(sorted(matches, key=lambda path: path.name.lower()))
+
+
+def enforce_museum_data_boundary(project_dir=None):
+    """Refuse to start when the active mount contains old-project data."""
+    root = Path(project_dir) if project_dir is not None else Path(get_project_dir())
+    data_root = root / "data"
+    legacy_entries = find_legacy_project_data(data_root)
+    if not legacy_entries:
+        return ()
+
+    names = ", ".join(
+        path.relative_to(data_root).as_posix() for path in legacy_entries
     )
-    return legacy_databases
+    raise RuntimeError(
+        "活动 data 目录包含旧项目数据，拒绝启动："
+        f"{names}。请改用独立的博物馆数据目录；"
+        "旧数据只能保存在活动挂载范围之外的归档中。"
+    )
+
+
+def reject_legacy_config_sections(config, config_path):
+    """Reject configuration sections that can only belong to the old business."""
+    legacy_sections = sorted(
+        str(key) for key in config if str(key) in LEGACY_CONFIG_SECTIONS
+    )
+    if not legacy_sections:
+        return
+
+    names = ", ".join(legacy_sections)
+    raise ValueError(
+        f"配置文件包含已禁止的旧项目业务段：{names} ({config_path})。"
+        "请仅迁移博物馆运行所需配置，不得整体复用旧项目配置。"
+    )
+
 
 def ensure_directories(config):
     """确保所有配置路径存在"""

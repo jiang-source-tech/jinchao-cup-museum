@@ -1,7 +1,8 @@
-# Docker安装Server
+name: jinchao-museum
+
 services:
   museum-server:
-    image: jinchao-museum-server:local
+    image: jinchao-museum-server:${MUSEUM_IMAGE_TAG:-local}
     build:
       context: ../..
       dockerfile: Dockerfile-server
@@ -21,5 +22,7 @@ services:
       # http服务的端口，用于简单OTA接口(单服务部署)，以及视觉分析接口
       - "8003:8003"
     volumes:
-      # 配置文件目录
-      - ./data:/opt/jinchao-museum-server/data
+      # 默认使用独立目录；生产必须显式设置为仓库外的博物馆数据目录。
+      - type: bind
+        source: ${MUSEUM_DATA_DIR:-./museum-data}
+        target: /opt/jinchao-museum-server/data

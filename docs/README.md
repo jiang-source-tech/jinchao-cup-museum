@@ -11,6 +11,7 @@
 5. [领域数据模型](domain/data-model.md)
 6. [服务端与固件合同](protocol/server-firmware-contract.md)
 7. [2026 年 8 月实施路线](roadmap/2026-08-competition-plan.md)
+8. [`121.43.33.0` 博物馆服务部署方案](production-deployment-plan.md)
 
 ## 架构决策
 

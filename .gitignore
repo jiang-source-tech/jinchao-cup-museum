@@ -150,6 +150,7 @@ tmp
 .DS_Store
 main/xiaozhi-server/data/*
 !main/xiaozhi-server/data/.config.yaml
+main/xiaozhi-server/museum-data/*
 main/xiaozhi-server/.claude
 
 /.config.yaml

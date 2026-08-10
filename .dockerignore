@@ -5,6 +5,7 @@ __pycache__
 Dockerfile
 tmp/
 data/
+main/xiaozhi-server/museum-data/
 main/xiaozhi-server/mysql/
 main/xiaozhi-server/redis/
 main/xiaozhi-server/tmp/
