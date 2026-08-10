@@ -4,10 +4,10 @@
 
 - 编制日期：2026 年 8 月 10 日
 - 目标服务器：`121.43.33.0:22`，用户 `jiang`
-- 当前状态：用户已于 2026 年 8 月 10 日确认清理旧项目并按本方案重新部署；执行中
+- 当前状态：已完成旧项目隔离、博物馆服务部署和模拟文本链路验收；真机验收待执行
 - 范围边界：本方案只涉及 `121.43.33.0`，不涉及任何历史迁移目标服务器
 
-## 已确认现状
+## 切换前取证结果
 
 1. 旧项目位于 `/opt/xiaoxin-work/xiaoxin-esp32-server`，Git 远端仍是旧项目仓库。
 2. 旧服务、Doorbell、MySQL、Voiceprint 和迁移代理容器均已停止，当前没有业务端口监听。
@@ -16,11 +16,11 @@
 5. 根分区约 40 GB，2026 年 8 月 10 日读取时使用率为 90%，构建镜像前必须重新检查可用空间。
 6. 旧数据已有 2026 年 8 月 6 日备份，但正式切换前仍需生成新的、带校验值的只读备份。
 
-## 拟定部署拓扑
+## 生产部署拓扑
 
 以下参数已经用户确认：
 
-| 项目 | 拟定值 |
+| 项目 | 实际值 |
 | --- | --- |
 | 代码目录 | `/opt/jinchao-cup-museum` |
 | 数据目录 | `/opt/jinchao-cup-museum-data` |
@@ -67,23 +67,43 @@
 7. 确认 `8000`、`8003` 未被占用，并确认防火墙与安全组策略。
 8. 确认固件使用的 OTA 地址。当前固件受版本控制的默认 OTA 地址为空，正式构建必须显式配置真实 `/museum/ota/` 地址。
 
-## 拟定启动命令
+## 生产启动命令
 
-确认上述参数后，在新代码目录执行：
+生产密钥只保存在 Git 跟踪之外的 `/opt/jinchao-cup-museum/.env`，文件权限为 `0600`。Compose 文件位于子目录，因此必须显式传入根目录环境变量文件，并从生产代码目录执行：
 
 ```bash
+cd /opt/jinchao-cup-museum
 MUSEUM_DATA_DIR=/opt/jinchao-cup-museum-data \
 MUSEUM_IMAGE_TAG=<服务端提交短SHA> \
-docker compose -f main/xiaozhi-server/docker-compose.yml up -d --build museum-server
+docker compose \
+  --env-file /opt/jinchao-cup-museum/.env \
+  -f main/xiaozhi-server/docker-compose.yml \
+  up -d --build museum-server
 ```
 
 该命令不是旧项目部署命令，也不允许在 `/opt/xiaoxin-work/xiaoxin-esp32-server` 中执行。
+
+## 2026 年 8 月 10 日执行结果
+
+1. 切换前备份位于 `/opt/jinchao-cup-museum-backups/pre-cleanup-20260810-182842`，备份目录权限限制为生产用户使用。
+2. `xiaoxin-work-full.tar.gz` 的 SHA-256 为 `02c0954391393100e0b3c8830ab342fa0b27cb9e7d4f7598567fb57484302ea3`；`xiaoxin-mysql-recovery.tar.gz` 的 SHA-256 为 `819e14639e4704a59c83162dbc75c797e27f064a8d1bb677216dbca790642590`。两个归档均通过 `sha256sum -c` 和 tar 结构校验。
+3. 六个旧容器及明确属于 Xiaoxin、Xiaozhi、Voiceprint 的旧镜像已移除。活动路径 `/opt/xiaoxin-work` 和 `/tmp/xiaoxin*` 已不存在；原始旧文件只保留在上述隔离备份中，不再作为运行目录或挂载源。
+4. 首次功能部署和模拟验收使用的完整服务端提交为 `dfdd805446a9f17224f1482fb98e5e2146203ee5`。部署前本地 `HEAD`、GitHub `origin/main` 和服务器 `HEAD` 均为该提交，服务器工作区干净；实际镜像标签为 `jinchao-museum-server:dfdd805`。
+5. 新代码目录为 `/opt/jinchao-cup-museum`，新数据目录为 `/opt/jinchao-cup-museum-data`。数据挂载为 `/opt/jinchao-cup-museum-data:/opt/jinchao-museum-server/data`。
+6. 活动数据目录仅包含 `.config.yaml`、`.mcp_server_settings.json`、`.wakeup_words.yaml`、`museum_demo.db`、`museum_firmware_releases.db` 和 `museum_firmware/`，未发现旧数据库、旧知识目录或旧配置段。
+7. 首次创建容器时，Compose 未自动读取仓库根目录 `.env`，进程因缺少 `DASHSCOPE_API_KEY` 进入重启。镜像已经构建完成，因此故障恢复时显式传入 `--env-file`，并使用 `up -d --force-recreate --no-build museum-server` 重建容器；上方带 `--build` 的命令用于后续常规部署。最终容器状态为 `running`、重启次数为 `0`，`8000` 和 `8003` 正常监听，服务器本机 OTA 健康入口返回 `/museum/v1/` WebSocket 地址。
+8. 对最终重建后的完整当前容器日志执行检查，未发现 `Traceback`、启动异常、`Business runtime failed`，也未发现 `course_reminder`、`todo_reminder`、`student_courses`、`student_todos`、`XiaoxinControlRuntime`、Doorbell 或 Voiceprint 运行时标记。
+9. 旧控制台 `/xiaoxin/control/`、旧小程序课程接口 `/api/miniprogram/courses` 和旧设备管理接口 `/api/xiaoxin/devices` 均返回 `404`。历史设备传输兼容路径是否保留仍以协议 ADR 为准，不用这些业务接口的结果替代传输兼容性判断。
+10. 模拟设备 `deployment-smoke-e1b7c0b01334` 于 2026 年 8 月 10 日 18:56（Asia/Shanghai）通过 `/museum/v1/` 发送“你好，你是谁”。服务端原样返回 STT 文本，业务状态依次为 `retrieving`、`ready`，回答为“你好，我是金潮杯博物馆的现场语音讲解助手。你可以直接问我眼前这件展品，我会根据馆方审核资料回答。”
+11. 对应数据库审计记录为 `grounding_status=conversational`、`guard_result=conversational_scope`，未出现“小芯、高等数学、课程、待办、提醒、学生、宠物”等旧业务词。该检查只证明模拟文字输入、博物馆业务运行时和 WebSocket TTS 文本状态链路可工作，不代表麦克风、ASR、音频内容、扬声器、屏幕或真机 TTS ACK 已验收。
+12. `museum_firmware_releases.db` 当前 `firmware_releases=0`、`firmware_artifacts=0`。OTA 健康入口可用，但尚未发布任何固件，不能据此声明设备升级或真机迁移完成。
+13. 最终复核时根分区约 40 GB，已用约 21 GB，可用约 17 GB，使用率 57%。旧项目备份保留，未执行全局 `docker system prune`。
 
 ## 部署后验收
 
 1. 容器状态为 running，且镜像标签与服务端提交一致。
 2. `GET http://127.0.0.1:8003/museum/ota/` 返回成功状态和 `/museum/v1/` WebSocket 地址。
-3. `8000` 只接受博物馆 WebSocket 路径，旧控制台和小程序接口不可达。
+3. `8000` 的正式 WebSocket 路径为 `/museum/v1/`；历史设备传输别名按协议 ADR 管理。旧控制台、小程序和 Xiaoxin 业务接口必须不可达。
 4. 日志不出现课程、待办、学生、Doorbell、Overview、Voiceprint 或主动陪伴调度器。
 5. 容器挂载源为 `/opt/jinchao-cup-museum-data`，目录中不存在禁止项。
 6. 通过文字或模拟客户端验证“你好，你是谁”可以正常回答博物馆身份。
