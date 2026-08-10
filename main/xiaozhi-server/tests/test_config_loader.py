@@ -74,6 +74,11 @@ def test_compose_uses_an_isolated_museum_data_mount():
             "target": "/opt/jinchao-museum-server/data",
         }
     ]
-    assert "main/xiaozhi-server/museum-data/" in dockerignore_path.read_text(
-        encoding="utf-8"
-    ).splitlines()
+    dockerignore = dockerignore_path.read_text(encoding="utf-8").splitlines()
+    for excluded_path in (
+        "main/xiaozhi-server/config.yaml",
+        "main/xiaozhi-server/data/",
+        "main/xiaozhi-server/mcp_server_settings.json",
+        "main/xiaozhi-server/museum-data/",
+    ):
+        assert excluded_path in dockerignore

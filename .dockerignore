@@ -5,6 +5,9 @@ __pycache__
 Dockerfile
 tmp/
 data/
+main/xiaozhi-server/config.yaml
+main/xiaozhi-server/data/
+main/xiaozhi-server/mcp_server_settings.json
 main/xiaozhi-server/museum-data/
 main/xiaozhi-server/mysql/
 main/xiaozhi-server/redis/
