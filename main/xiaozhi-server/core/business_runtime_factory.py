@@ -20,13 +20,20 @@ def create_conversation_runtime(
     runtime_type = str(runtime_config.get("type", "museum")).strip().lower()
     if runtime_type != "museum":
         raise ValueError("only business_runtime.type=museum is supported")
+    exhibit_context_mode = str(
+        runtime_config.get("exhibit_context_mode", "explicit")
+    ).strip().lower()
+    if exhibit_context_mode not in {"explicit", "demo_placement"}:
+        raise ValueError(
+            "business_runtime.exhibit_context_mode must be explicit or demo_placement"
+        )
     database_path = Path(
         str(runtime_config.get("database_path", "data/museum_demo.db"))
     )
     store = MuseumStore(database_path)
     store.seed_demo_content()
     demo_device_id = str(runtime_config.get("demo_device_id", "")).strip()
-    if demo_device_id:
+    if demo_device_id and exhibit_context_mode == "demo_placement":
         store.ensure_demo_placement(
             demo_device_id,
             datetime.now().astimezone(),
@@ -36,4 +43,5 @@ def create_conversation_runtime(
         auto_assign_unknown_devices=bool(
             runtime_config.get("auto_assign_unknown_devices", False)
         ),
+        exhibit_context_mode=exhibit_context_mode,
     )

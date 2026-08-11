@@ -117,6 +117,9 @@ CREATE TABLE IF NOT EXISTS interaction_trace (
     evidence_json TEXT NOT NULL,
     answer_text TEXT NOT NULL,
     unanswered_reason TEXT,
+    coarse_intent TEXT NOT NULL DEFAULT '',
+    fine_intent TEXT NOT NULL DEFAULT '',
+    intent_confidence REAL NOT NULL DEFAULT 0,
     guard_result TEXT NOT NULL,
     stage_latency_json TEXT NOT NULL,
     duration_ms INTEGER NOT NULL,
@@ -193,7 +196,9 @@ _TYPE_TERMS = {
     "dimensions": ("尺寸", "多高", "多大", "口径", "底径"),
     "appearance": ("外形", "样子", "玻璃杯", "现代", "长什么", "为什么像"),
     "research_limit": ("工艺", "制作", "怎么做", "掏膛", "抛光", "原料来源"),
+    "price": ("多少钱", "价格", "售价", "卖了多少", "值多少钱", "市场价"),
 }
+_HIGH_PRIORITY_TYPES = {"price"}
 
 _INTRO_TERMS = ("介绍", "讲讲", "看看", "了解")
 _INTRO_TYPES = {"era": 30, "material": 29, "appearance": 28, "excavation": 20}
@@ -233,6 +238,24 @@ class MuseumStore:
                 "interaction_trace",
                 "stage_latency_json",
                 "TEXT NOT NULL DEFAULT '{}'",
+            )
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "coarse_intent",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "fine_intent",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "intent_confidence",
+                "REAL NOT NULL DEFAULT 0",
             )
             fts_columns = {
                 row["name"]
@@ -381,6 +404,23 @@ class MuseumStore:
                 ),
             )
 
+    def active_exhibits(self) -> tuple[tuple[str, str, str], ...]:
+        with self.connection() as connection:
+            rows = connection.execute(
+                """
+                SELECT e.id, e.name, e.aliases_json
+                FROM exhibit e
+                JOIN zone z ON z.id = e.zone_id
+                JOIN museum m ON m.id = z.museum_id
+                WHERE e.status = 'active' AND m.status = 'active'
+                ORDER BY e.id
+                """
+            ).fetchall()
+        return tuple(
+            (str(row["id"]), str(row["name"]), str(row["aliases_json"] or "[]"))
+            for row in rows
+        )
+
     def resolve_or_create_session(
         self,
         *,
@@ -389,6 +429,7 @@ class MuseumStore:
         requested_session_id: str | None = None,
         explicit_exhibit_id: str | None = None,
         route_exhibit_id: str | None = None,
+        allow_device_placement: bool = True,
     ) -> tuple[VisitorSession, ExhibitContext] | None:
         now = _as_utc(occurred_at)
         now_iso = _iso(now)
@@ -433,7 +474,7 @@ class MuseumStore:
                         (row["id"],),
                     ).fetchone()
 
-            if row is None and authoritative_exhibit_id is None:
+            if row is None and authoritative_exhibit_id is None and allow_device_placement:
                 placement = connection.execute(
                     "SELECT * FROM device_placement WHERE device_id = ?",
                     (device_id,),
@@ -442,6 +483,12 @@ class MuseumStore:
                     return None
                 authoritative_exhibit_id = placement["default_exhibit_id"]
                 context_source = "device_placement"
+
+            # Explicit mode must not create a session without a current exhibit.
+            # The schema intentionally keeps current_exhibit_id non-null for now;
+            # callers can ask for clarification before an exhibit is identified.
+            if row is None and authoritative_exhibit_id is None and not allow_device_placement:
+                return None
 
             if row is None:
                 session_id = uuid.uuid4().hex
@@ -507,6 +554,9 @@ class MuseumStore:
         exhibit_id: str,
         question: str,
         limit: int = 3,
+        fact_types: tuple[str, ...] | None = None,
+        query_terms: tuple[str, ...] = (),
+        overview: bool = False,
     ) -> EvidenceSnapshot | None:
         with self.connection() as connection:
             revision = connection.execute(
@@ -538,12 +588,20 @@ class MuseumStore:
                 return None
             fts_ids = self._fts_candidate_ids(connection, rows, question)
 
-        normalized = _normalize_text(question)
-        matched_types = {
-            fact_type
-            for fact_type, terms in _TYPE_TERMS.items()
-            if any(term in normalized for term in terms)
-        }
+        normalized = _normalize_text(
+            question + " " + " ".join(query_terms)
+        )
+        if fact_types is None:
+            matched_types = {
+                fact_type
+                for fact_type, terms in _TYPE_TERMS.items()
+                if any(term in normalized for term in terms)
+            }
+            high_priority_types = matched_types & _HIGH_PRIORITY_TYPES
+            if high_priority_types:
+                matched_types = high_priority_types
+        else:
+            matched_types = set(fact_types)
         aliases = {
             rows[0]["exhibit_name"],
             *json.loads(rows[0]["aliases_json"]),
@@ -555,7 +613,7 @@ class MuseumStore:
             term in normalized
             for term in ("特点", "特别", "看点", "介绍", "讲讲", "是什么", "怎么样")
         )
-        intro = general_exhibit_question or any(
+        intro = overview or general_exhibit_question or any(
             term in normalized for term in _INTRO_TERMS
         ) or normalized in {
             "这是什么",
@@ -661,10 +719,6 @@ class MuseumStore:
         normalized = _normalize_text(question)
         terms: list[str] = []
         for row in rows:
-            names = [row["exhibit_name"], *json.loads(row["aliases_json"])]
-            for name in names:
-                if _normalize_text(name) in normalized and name not in terms:
-                    terms.append(name)
             for keyword in json.loads(row["keywords_json"]):
                 if keyword in normalized and keyword not in terms:
                     terms.append(keyword)
@@ -697,6 +751,9 @@ class MuseumStore:
         evidence: EvidenceSnapshot | None,
         answer_text: str,
         unanswered_reason: str | None,
+        coarse_intent: str = "",
+        fine_intent: str = "",
+        intent_confidence: float = 0.0,
         guard_result: str,
         stage_latency: dict[str, int],
         duration_ms: int,
@@ -720,9 +777,10 @@ class MuseumStore:
                 INSERT INTO interaction_trace(
                     id, request_id, visitor_session_id, device_id, exhibit_id,
                     user_text, grounding_status, evidence_json, answer_text,
-                    unanswered_reason, guard_result, stage_latency_json,
+                    unanswered_reason, coarse_intent, fine_intent,
+                    intent_confidence, guard_result, stage_latency_json,
                     duration_ms, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     trace_id,
@@ -735,6 +793,9 @@ class MuseumStore:
                     evidence_json,
                     answer_text,
                     unanswered_reason,
+                    coarse_intent,
+                    fine_intent,
+                    intent_confidence,
                     guard_result,
                     json.dumps(stage_latency, ensure_ascii=False),
                     duration_ms,

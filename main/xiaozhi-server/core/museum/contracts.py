@@ -5,6 +5,29 @@ from datetime import datetime
 
 
 @dataclass(frozen=True)
+class ExhibitResolution:
+    status: str
+    exhibit_id: str | None = None
+    exhibit_name: str | None = None
+    matched_text: str | None = None
+    candidate_ids: tuple[str, ...] = ()
+    context_source: str = "missing"
+
+    def __post_init__(self) -> None:
+        valid_statuses = {
+            "explicit",
+            "inherited",
+            "ambiguous",
+            "missing",
+            "not_found",
+        }
+        if self.status not in valid_statuses:
+            raise ValueError(f"unsupported exhibit resolution status: {self.status}")
+        if self.status in {"explicit", "inherited"} and not self.exhibit_id:
+            raise ValueError(f"{self.status} resolution requires an exhibit_id")
+
+
+@dataclass(frozen=True)
 class ExhibitContext:
     museum_id: str
     museum_name: str
@@ -62,3 +85,6 @@ class AnswerResult:
     evidence: EvidenceSnapshot | None
     retrieval_ms: int
     composition_ms: int
+    coarse_intent: str = ""
+    fine_intent: str = ""
+    intent_confidence: float = 0.0

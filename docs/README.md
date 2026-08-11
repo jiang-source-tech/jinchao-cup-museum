@@ -2,16 +2,23 @@
 
 这里是金潮杯博物馆项目唯一有效的文档中心。2026 年 8 月 9 日以前从旧学生陪伴项目继承的内容已经删除或明确标记为历史资料，不再作为当前需求、部署或验收依据。
 
+## 项目控制
+
+- [需求追踪与交付看板](requirements/index.html)
+- [需求数据与维护说明](requirements/README.md)
+
 ## 阅读顺序
 
 1. [产品需求文档（PRD）](product/PRD.md)
-2. [业务层重建设计](architecture/business-rebuild.md)
-3. [当前服务端与固件运行链路审计](architecture/current-runtime-audit.md)
-4. [业务层重建实施方案](roadmap/business-rebuild-execution-plan.md)
-5. [领域数据模型](domain/data-model.md)
-6. [服务端与固件合同](protocol/server-firmware-contract.md)
-7. [2026 年 8 月实施路线](roadmap/2026-08-competition-plan.md)
-8. [`121.43.33.0` 博物馆服务部署方案](production-deployment-plan.md)
+2. [展品级可信语音 RAG 系统详细设计](architecture/exhibit-rag-design.md)
+3. [展品级语音 RAG 实施计划](roadmap/exhibit-rag-execution-plan.md)
+4. [业务层重建设计](architecture/business-rebuild.md)
+5. [当前服务端与固件运行链路审计](architecture/current-runtime-audit.md)
+6. [业务层重建实施方案](roadmap/business-rebuild-execution-plan.md)
+7. [领域数据模型](domain/data-model.md)
+8. [服务端与固件合同](protocol/server-firmware-contract.md)
+9. [2026 年 8 月实施路线](roadmap/2026-08-competition-plan.md)
+10. [`121.43.33.0` 博物馆服务部署方案](production-deployment-plan.md)
 
 ## 架构决策
 

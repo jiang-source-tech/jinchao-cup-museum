@@ -7,6 +7,10 @@ import json
 import re
 
 from core.museum.contracts import AnswerResult, EvidenceSnapshot
+from core.museum.query_understanding import (
+    QuestionUnderstanding,
+    understand_question,
+)
 from core.museum.store import MuseumStore
 
 
@@ -28,12 +32,16 @@ class GroundedAnswerService:
         social_intent = _local_social_intent(question)
         if not social_intent:
             return None
+        understanding = understand_question(question)
         return AnswerResult(
             knowledge_status="conversational",
             spoken_text=_conversational_reply(social_intent),
             evidence=None,
             retrieval_ms=0,
             composition_ms=_duration_ms(composition_started),
+            coarse_intent=understanding.coarse_intent,
+            fine_intent=understanding.fine_intent,
+            intent_confidence=understanding.confidence,
         )
 
     def answer(
@@ -45,8 +53,10 @@ class GroundedAnswerService:
         llm=None,
         session_id: str = "",
         history=(),
+        understanding: QuestionUnderstanding | None = None,
     ) -> AnswerResult:
         composition_started = perf_counter()
+        understanding = understanding or understand_question(question)
         conversational_answer = self.answer_conversational(question)
         if conversational_answer is not None:
             return conversational_answer
@@ -56,14 +66,17 @@ class GroundedAnswerService:
         retrieval_ms = _duration_ms(retrieval_started)
         composition_started = perf_counter()
 
-        decision = self._decide_with_llm(
-            exhibit_name=exhibit_name,
-            question=question,
-            candidates=candidates,
-            llm=llm,
-            session_id=session_id,
-            history=history,
-        )
+        decision = None
+        if understanding.coarse_intent != "comparison":
+            decision = self._decide_with_llm(
+                exhibit_name=exhibit_name,
+                question=question,
+                candidates=candidates,
+                llm=llm,
+                session_id=session_id,
+                history=history,
+                understanding=understanding,
+            )
         if decision is not None and decision.status == "conversational":
             return AnswerResult(
                 knowledge_status="conversational",
@@ -71,11 +84,18 @@ class GroundedAnswerService:
                 evidence=None,
                 retrieval_ms=retrieval_ms,
                 composition_ms=_duration_ms(composition_started),
+                coarse_intent=understanding.coarse_intent,
+                fine_intent=understanding.fine_intent,
+                intent_confidence=understanding.confidence,
             )
 
         evidence = None
         if decision is not None and decision.status == "grounded":
-            evidence = _select_evidence(candidates, decision.fact_ids)
+            evidence = _select_evidence(
+                candidates,
+                decision.fact_ids,
+                allowed_fact_types=understanding.fact_types,
+            )
             if evidence is None:
                 decision = None
         if decision is None:
@@ -83,6 +103,9 @@ class GroundedAnswerService:
             evidence = self._store.retrieve_evidence(
                 exhibit_id=exhibit_id,
                 question=question,
+                fact_types=understanding.fact_types,
+                query_terms=understanding.query_terms,
+                overview=understanding.fine_intent == "overview",
             )
             retrieval_ms += _duration_ms(fallback_started)
 
@@ -96,6 +119,9 @@ class GroundedAnswerService:
                 evidence=None,
                 retrieval_ms=retrieval_ms,
                 composition_ms=_duration_ms(composition_started),
+                coarse_intent=understanding.coarse_intent,
+                fine_intent=understanding.fine_intent,
+                intent_confidence=understanding.confidence,
             )
         deterministic_answer = self._compose_grounded_answer(evidence)
         spoken_text = deterministic_answer
@@ -110,6 +136,9 @@ class GroundedAnswerService:
             evidence=evidence,
             retrieval_ms=retrieval_ms,
             composition_ms=_duration_ms(composition_started),
+            coarse_intent=understanding.coarse_intent,
+            fine_intent=understanding.fine_intent,
+            intent_confidence=understanding.confidence,
         )
 
     @staticmethod
@@ -129,6 +158,7 @@ class GroundedAnswerService:
         llm,
         session_id,
         history,
+        understanding,
     ) -> _TurnDecision | None:
         if llm is None:
             return None
@@ -153,6 +183,8 @@ class GroundedAnswerService:
         )
         user_prompt = (
             f"当前展品：{exhibit_name}\n"
+            f"问题粗分类：{understanding.coarse_intent}\n"
+            f"问题细分类：{understanding.fine_intent}\n"
             f"最近对话：{recent_history}\n"
             f"游客本轮输入：{question}\n"
             f"当前发布且已审核的事实：\n{facts or '（无）'}"
@@ -233,11 +265,18 @@ def _parse_turn_decision(raw_decision) -> _TurnDecision | None:
 def _select_evidence(
     candidates: EvidenceSnapshot | None,
     fact_ids: tuple[str, ...],
+    *,
+    allowed_fact_types: tuple[str, ...] = (),
 ) -> EvidenceSnapshot | None:
     if candidates is None or not fact_ids:
         return None
     facts_by_id = {fact.id: fact for fact in candidates.facts}
     if any(fact_id not in facts_by_id for fact_id in fact_ids):
+        return None
+    if allowed_fact_types and any(
+        facts_by_id[fact_id].fact_type not in allowed_fact_types
+        for fact_id in fact_ids
+    ):
         return None
     return EvidenceSnapshot(
         exhibit_id=candidates.exhibit_id,
@@ -307,7 +346,7 @@ def _local_social_intent(question: str) -> str | None:
 def _conversational_reply(intent: str) -> str:
     return {
         "identity": (
-            "你好，我是金潮杯博物馆的现场语音讲解助手。"
+            "你好，我是小芯，金潮杯博物馆的现场语音讲解助手。"
             "你可以直接问我眼前这件展品，我会根据馆方审核资料回答。"
         ),
         "capability": (

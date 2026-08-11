@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from time import perf_counter
 
 from core.conversation_runtime import TurnOutcome, TurnRequest
 from core.museum.answering import GroundedAnswerService
-from core.museum.contracts import AnswerResult
+from core.museum.contracts import AnswerResult, ExhibitResolution
+from core.museum.exhibit_resolver import ExhibitResolver
+from core.museum.query_understanding import understand_question
 from core.museum.store import MuseumStore
 
 
@@ -14,10 +17,13 @@ class MuseumRuntime:
         store: MuseumStore,
         *,
         auto_assign_unknown_devices: bool = False,
+        exhibit_context_mode: str = "explicit",
     ):
         self._store = store
         self._answering = GroundedAnswerService(store)
         self._auto_assign_unknown_devices = auto_assign_unknown_devices
+        self._exhibit_context_mode = exhibit_context_mode
+        self._exhibit_resolver = ExhibitResolver(store)
 
     def open_session(self, request: TurnRequest) -> TurnOutcome:
         started = perf_counter()
@@ -71,11 +77,36 @@ class MuseumRuntime:
         context_started = perf_counter()
         resolved = self._resolve_context(request)
         context_ms = _duration_ms(context_started)
+        current_exhibit_id = resolved[0].current_exhibit_id if resolved else None
+        resolution = self._exhibit_resolver.resolve(
+            question=request.user_text,
+            current_exhibit_id=current_exhibit_id,
+        )
+        if resolution.status == "explicit":
+            resolved = self._resolve_context(
+                request,
+                explicit_exhibit_id=resolution.exhibit_id,
+                context_source="explicit_mention",
+            )
+        elif resolution.status == "inherited" and resolved is not None:
+            session, context = resolved
+            resolved = (
+                session,
+                replace(context, context_source="inherited_session"),
+            )
+        elif resolution.status != "inherited":
+            return self._missing_context_outcome(
+                request=request,
+                started=started,
+                reason="exhibit_reference_missing",
+                resolution=resolution,
+            )
         if resolved is None:
             return self._missing_context_outcome(
                 request=request,
                 started=started,
-                reason="current_exhibit_missing",
+                reason="exhibit_reference_missing",
+                resolution=resolution,
             )
 
         session, context = resolved
@@ -108,6 +139,9 @@ class MuseumRuntime:
             evidence=answer.evidence,
             answer_text=answer.spoken_text,
             unanswered_reason=unanswered_reason,
+            coarse_intent=answer.coarse_intent,
+            fine_intent=answer.fine_intent,
+            intent_confidence=answer.intent_confidence,
             guard_result=guard_result,
             stage_latency={
                 "context_ms": context_ms,
@@ -152,6 +186,9 @@ class MuseumRuntime:
                 "fact_ids": fact_ids,
                 "source_ids": source_ids,
                 "content_version": content_version,
+                "coarse_intent": answer.coarse_intent,
+                "fine_intent": answer.fine_intent,
+                "intent_confidence": answer.intent_confidence,
                 "duration_ms": duration_ms,
                 "stage_latency": {
                     "context_ms": context_ms,
@@ -162,18 +199,32 @@ class MuseumRuntime:
             },
         )
 
-    def _resolve_context(self, request: TurnRequest):
+    def _resolve_context(
+        self,
+        request: TurnRequest,
+        *,
+        explicit_exhibit_id: str | None = None,
+        context_source: str | None = None,
+    ):
         if not request.device_id:
             return None
-        if self._auto_assign_unknown_devices:
+        if self._auto_assign_unknown_devices and self._exhibit_context_mode == "demo_placement":
             self._store.ensure_demo_placement(request.device_id, request.occurred_at)
-        return self._store.resolve_or_create_session(
+        resolved = self._store.resolve_or_create_session(
             device_id=request.device_id,
             occurred_at=request.occurred_at,
             requested_session_id=request.visitor_session_id,
-            explicit_exhibit_id=_metadata_id(request, "selected_exhibit_id"),
+            explicit_exhibit_id=(
+                explicit_exhibit_id
+                or _metadata_id(request, "selected_exhibit_id")
+            ),
             route_exhibit_id=_metadata_id(request, "route_exhibit_id"),
+            allow_device_placement=self._exhibit_context_mode == "demo_placement",
         )
+        if resolved is None or context_source is None:
+            return resolved
+        session, context = resolved
+        return session, replace(context, context_source=context_source)
 
     @staticmethod
     def _build_state(
@@ -205,8 +256,8 @@ class MuseumRuntime:
                 "next_exhibit_name": "",
             },
             "prompt": {
-                "title": "像现代杯子的古代水晶杯",
-                "body": "观察杯口、杯壁和圈足，找找它与现代玻璃杯相似的地方。",
+                "title": context.exhibit_name,
+                "body": "你可以直接问我这件展品的年代、材质或制作方式。",
             },
             "grounding": {
                 "status": knowledge_status,
@@ -227,8 +278,15 @@ class MuseumRuntime:
         started: float,
         reason: str,
         record_trace: bool = True,
+        resolution: ExhibitResolution | None = None,
     ) -> TurnOutcome:
-        text = "我还不知道你现在站在哪件展品前，请先在设备上选择展品。"
+        if resolution is not None and resolution.status == "not_found":
+            text = "我还没有收录你说的那件展品。请换一个馆内展品名称，或者先说出完整展品名。"
+        elif resolution is not None and resolution.status == "ambiguous":
+            text = "这个称呼可能对应多件展品。请说出更完整的展品名称。"
+        else:
+            text = "你想了解哪件展品？请先说出展品名称，再问你想知道的内容。"
+        understanding = understand_question(request.user_text)
         duration_ms = _duration_ms(started)
         trace_id = self._store.record_interaction(
             request_id=request.request_id,
@@ -240,6 +298,9 @@ class MuseumRuntime:
             evidence=None,
             answer_text=text,
             unanswered_reason=reason,
+            coarse_intent=understanding.coarse_intent,
+            fine_intent=understanding.fine_intent,
+            intent_confidence=understanding.confidence,
             guard_result="missing_context",
             stage_latency={"total_ms": duration_ms},
             duration_ms=duration_ms,
@@ -254,7 +315,7 @@ class MuseumRuntime:
                 "museum_id": "",
                 "zone_id": "",
                 "exhibit_id": "",
-                "exhibit_name": "请先选择展品",
+                "exhibit_name": "请说出展品名称",
                 "source": "missing",
             },
             "visitor_mode": "general",
@@ -286,8 +347,16 @@ class MuseumRuntime:
             audit_record={
                 "trace_id": trace_id,
                 "knowledge_status": "missing_context",
+                "resolution_status": resolution.status if resolution else "missing",
+                "candidate_exhibit_ids": list(resolution.candidate_ids)
+                if resolution
+                else [],
+                "matched_exhibit_text": resolution.matched_text if resolution else None,
                 "fact_ids": [],
                 "source_ids": [],
+                "coarse_intent": understanding.coarse_intent,
+                "fine_intent": understanding.fine_intent,
+                "intent_confidence": understanding.confidence,
                 "duration_ms": duration_ms,
             },
             error_code=reason,
@@ -317,6 +386,9 @@ class MuseumRuntime:
             evidence=None,
             answer_text=answer.spoken_text,
             unanswered_reason=None,
+            coarse_intent=answer.coarse_intent,
+            fine_intent=answer.fine_intent,
+            intent_confidence=answer.intent_confidence,
             guard_result="conversational_scope",
             stage_latency={
                 "retrieval_ms": answer.retrieval_ms,
@@ -391,6 +463,9 @@ class MuseumRuntime:
                 "fact_ids": [],
                 "source_ids": [],
                 "content_version": content_version,
+                "coarse_intent": answer.coarse_intent,
+                "fine_intent": answer.fine_intent,
+                "intent_confidence": answer.intent_confidence,
                 "duration_ms": duration_ms,
             },
         )

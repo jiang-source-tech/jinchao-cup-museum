@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "description": "服务端文本层自然问法验收集，不包含真实麦克风、ASR、TTS或扬声器验证。",
+  "cases": [
+    {
+      "id": "canonical-material",
+      "turns": [
+        {
+          "text": "战国水晶杯是什么材质？",
+          "expected": {
+            "knowledge_status": "grounded",
+            "coarse_intent": "exhibit_knowledge",
+            "fine_intent": "material",
+            "fact_ids": ["fact-crystal-cup-material"],
+            "context_exhibit_id": "warring-states-crystal-cup",
+            "context_source": "explicit_mention"
+          }
+        }
+      ]
+    },
+    {
+      "id": "polite-alias-material",
+      "turns": [
+        {
+          "text": "请问水晶杯是用什么做成的？",
+          "expected": {
+            "knowledge_status": "grounded",
+            "fact_ids": ["fact-crystal-cup-material"],
+            "context_exhibit_id": "warring-states-crystal-cup",
+            "context_source": "explicit_mention"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pronoun-follow-ups",
+      "turns": [
+        {
+          "text": "战国水晶杯是什么材质？",
+          "expected": {"knowledge_status": "grounded"}
+        },
+        {
+          "text": "这个杯子是怎么做出来的？",
+          "expected": {
+            "knowledge_status": "grounded",
+            "fact_ids": ["fact-crystal-cup-craft-limit"],
+            "context_exhibit_id": "warring-states-crystal-cup",
+            "context_source": "inherited_session"
+          }
+        },
+        {
+          "text": "你能讲讲它的历史吗？",
+          "expected": {
+            "knowledge_status": "grounded",
+            "fact_ids": ["fact-crystal-cup-era"],
+            "context_exhibit_id": "warring-states-crystal-cup",
+            "context_source": "inherited_session"
+          }
+        },
+        {
+          "text": "它的制作工艺复杂吗？",
+          "expected": {
+            "knowledge_status": "grounded",
+            "fact_ids": ["fact-crystal-cup-craft-limit"],
+            "context_exhibit_id": "warring-states-crystal-cup",
+            "context_source": "inherited_session"
+          }
+        },
+        {
+          "text": "这么硬的水晶，当时的人是咋做出来的？",
+          "expected": {
+            "knowledge_status": "grounded",
+            "coarse_intent": "exhibit_knowledge",
+            "fine_intent": "craft",
+            "fact_ids": ["fact-crystal-cup-craft-limit"],
+            "context_exhibit_id": "warring-states-crystal-cup",
+            "context_source": "inherited_session"
+          }
+        }
+      ]
+    },
+    {
+      "id": "unsupported-fact-question",
+      "turns": [
+        {
+          "text": "战国水晶杯在战国时期卖了多少钱？",
+          "expected": {
+            "knowledge_status": "unsupported",
+            "coarse_intent": "exhibit_knowledge",
+            "fine_intent": "price",
+            "fact_ids": [],
+            "context_exhibit_id": "warring-states-crystal-cup"
+          }
+        }
+      ]
+    },
+    {
+      "id": "knowledge-coverage-gap-is-explicit",
+      "turns": [
+        {
+          "text": "战国水晶杯为什么这么透明？",
+          "expected": {
+            "knowledge_status": "unsupported",
+            "coarse_intent": "exhibit_knowledge",
+            "fine_intent": "appearance",
+            "fact_ids": [],
+            "context_exhibit_id": "warring-states-crystal-cup"
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-exhibit-switch",
+      "turns": [
+        {
+          "text": "战国水晶杯是什么材质？",
+          "expected": {"knowledge_status": "grounded"}
+        },
+        {
+          "text": "换成越王勾践剑，它是什么材质？",
+          "expected": {
+            "knowledge_status": "missing_context",
+            "coarse_intent": "exhibit_knowledge",
+            "fine_intent": "material",
+            "resolution_status": "not_found",
+            "contains": "没有收录",
+            "context_exhibit_id": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-exhibit-with-polite-prefix",
+      "turns": [
+        {
+          "text": "我想知道越王勾践剑是什么材质？",
+          "expected": {
+            "knowledge_status": "missing_context",
+            "resolution_status": "not_found",
+            "contains": "没有收录",
+            "context_exhibit_id": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing-first-context",
+      "turns": [
+        {
+          "text": "它为什么这么透明？",
+          "expected": {
+            "knowledge_status": "missing_context",
+            "resolution_status": "missing",
+            "context_exhibit_id": ""
+          }
+        }
+      ]
+    }
+  ]
+}
