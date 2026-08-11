@@ -133,12 +133,12 @@ build_evidence_snapshot(exhibit_id, question)
 
 ### MuseumAnswerPolicy
 
-把依据快照、游客模式和路线状态编译成模型输入。它规定：
+把依据快照、统一回答策略和路线状态编译成模型输入。它规定：
 
 - 默认 2 至 4 句；
 - 一轮最多一个观察任务或下一站建议；
-- 亲子模式降低语言难度，不修改事实；
-- 深度模式可以增加工艺和历史关联，但仍受依据快照限制；
+- 使用短句、具体词语和低术语密度；
+- 游客可以通过自然语言临时要求更简单或更详细，但仍受依据快照限制；
 - 禁止冒充历史人物或馆方；
 - 禁止把推测写成馆方结论。
 
@@ -150,7 +150,7 @@ build_evidence_snapshot(exhibit_id, question)
 - 回答长度和问题数量超限；
 - 具体年代、人物、地点、材质、工艺或用途未出现在依据快照；
 - 资料不足时仍使用确定语气补充事实；
-- 亲子模式出现不适合语音理解的长句；
+- 回答出现不适合语音理解的长句；
 - 模型声称已经切换或已经推进，但状态提交失败。
 
 守卫失败时最多修复一次；再次失败直接使用知识兜底，不无限重试。
@@ -175,7 +175,6 @@ request_id
 session_id
 device_id
 exhibit_id
-visitor_mode
 question
 fact_ids
 source_ids
@@ -225,7 +224,6 @@ business_runtime:
 museum:
   database_path: data/museum/museum.db
   admin_enabled: true
-  default_visitor_mode: general
   answer_max_chars: 180
   question_budget: 1
   save_raw_audio: false
@@ -270,7 +268,7 @@ museum:
 
 1. 已发布事实能够生成有依据回答；
 2. 未发布或不存在的事实触发知识兜底；
-3. 游客模式变化不改变事实 ID；
+3. 临时表达调整不改变事实 ID；
 4. 路线进度只有在显式提交后变化；
 5. 守卫失败不会把未验证回答交给 TTS。
 

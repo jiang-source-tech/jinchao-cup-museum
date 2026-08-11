@@ -21,7 +21,6 @@
     "exhibit_name": "战国水晶杯",
     "source": "device_placement"
   },
-  "visitor_mode": "general",
   "journey": {
     "route_id": "",
     "current_stop": 1,
@@ -71,7 +70,6 @@
 第一版允许的 `action`：
 
 - `select_exhibit`
-- `select_mode`
 - `start_route`
 - `next_stop`
 - `previous_stop`
