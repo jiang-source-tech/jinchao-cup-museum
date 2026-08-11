@@ -665,8 +665,8 @@
         <div class="metric-strip">
           <div class="metric metric--progress">
             <span class="metric-label">Acceptance completion</span>
-            <strong class="metric-value">55%</strong>
-            <span class="metric-note">42 / 77 条验收条件</span>
+            <strong class="metric-value">58%</strong>
+            <span class="metric-note">45 / 77 条验收条件</span>
           </div>
           <div class="metric">
             <span class="metric-label">Requirements</span>
@@ -675,12 +675,12 @@
           </div>
           <div class="metric">
             <span class="metric-label">Verified</span>
-            <strong class="metric-value">8</strong>
+            <strong class="metric-value">10</strong>
             <span class="metric-note">全部条件有证据</span>
           </div>
           <div class="metric">
             <span class="metric-label">In progress</span>
-            <strong class="metric-value">5</strong>
+            <strong class="metric-value">3</strong>
             <span class="metric-note">已有部分交付</span>
           </div>
           <div class="metric metric--blocked">
@@ -751,8 +751,8 @@
           </article>
           <article class="phase-node" data-phase="audit">
             <div class="phase-node-top"><span class="phase-number">03</span><strong>审计与设备状态</strong></div>
-            <div class="phase-line" aria-label="审计与设备状态完成度 58%"><span style="width: 58%"></span></div>
-            <p>7 / 12 条验收 · 3 条需求</p>
+            <div class="phase-line" aria-label="审计与设备状态完成度 83%"><span style="width: 83%"></span></div>
+            <p>10 / 12 条验收 · 3 条需求</p>
           </article>
           <article class="phase-node" data-phase="content">
             <div class="phase-node-top"><span class="phase-number">04</span><strong>内容运营</strong></div>
@@ -1389,7 +1389,7 @@
               </div>
             </div>
           </details>
-          <details class="requirement" data-status="in_progress" data-priority="P0" data-phase="audit" data-search="req-009 交互审计能够解释每轮结果 任意一轮交互都能回答“为何绑定该展品、用了哪些事实和来源、守卫结果是什么、各阶段耗时多少”。 服务端 / 运营 audit 审计与设备状态 审计 可追溯 延迟">
+          <details class="requirement" data-status="done" data-priority="P0" data-phase="audit" data-search="req-009 交互审计能够解释每轮结果 任意一轮交互都能回答“为何绑定该展品、用了哪些事实和来源、守卫结果是什么、各阶段耗时多少”。 服务端 / 运营 audit 审计与设备状态 审计 可追溯 延迟">
             <summary aria-label="REQ-009 交互审计能够解释每轮结果">
               <div class="req-order"><span class="order-rule"></span><span class="order-number">090</span></div>
               <div class="req-main">
@@ -1399,13 +1399,13 @@
               </div>
               <div class="req-phase phase-cell">审计与设备状态<small>阶段 03</small></div>
               <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
-              <div class="req-status status-cell"><span class="status-dot status-dot--in_progress" aria-hidden="true"></span><span class="status-label">进行中</span></div>
-              <div class="req-completion completion-cell"><strong>50%</strong><span>2 / 4</span><div class="mini-progress" aria-label="完成度 50%"><span style="width: 50%"></span></div></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--done" aria-hidden="true"></span><span class="status-label">已完成</span></div>
+              <div class="req-completion completion-cell"><strong>100%</strong><span>4 / 4</span><div class="mini-progress" aria-label="完成度 100%"><span style="width: 100%"></span></div></div>
               <span class="summary-caret" aria-hidden="true"></span>
             </summary>
             <div class="req-detail">
               <section class="detail-section">
-                <h4>验收条件 <span>2 / 4</span></h4>
+                <h4>验收条件 <span>4 / 4</span></h4>
                 <ul class="criterion-list">
                   <li class="criterion criterion-done">
                     <span class="criterion-mark" aria-hidden="true">✓</span>
@@ -1417,15 +1417,15 @@
                     <span>保存粗意图、细意图和置信度。</span>
                     <span class="criterion-status">已完成</span>
                   </li>
-                  <li class="criterion criterion-pending">
-                    <span class="criterion-mark" aria-hidden="true">○</span>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
                     <span>持久化解析状态、上下文来源、匹配文本和候选展品 ID。</span>
-                    <span class="criterion-status">未开始</span>
+                    <span class="criterion-status">已完成</span>
                   </li>
-                  <li class="criterion criterion-pending">
-                    <span class="criterion-mark" aria-hidden="true">○</span>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
                     <span>运营人员可按请求 ID 一次性查看完整审计记录。</span>
-                    <span class="criterion-status">未开始</span>
+                    <span class="criterion-status">已完成</span>
                   </li>
                 </ul>
               </section>
@@ -1434,11 +1434,11 @@
                 <ul class="evidence-list">
                   <li class="evidence-item">
                     <span class="evidence-kind">代码</span>
-<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/store.py">interaction_trace 数据模型 <span>↗</span></a>                    <p class="evidence-note">当前已保存依据、意图、守卫和延迟，解析证据仍需补齐。</p>
+<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/store.py">interaction_trace 数据模型 <span>↗</span></a>                    <p class="evidence-note">已保存依据、意图、守卫、延迟和展品解析证据，并支持按请求 ID 查询。</p>
                   </li>
                   <li class="evidence-item">
                     <span class="evidence-kind">测试</span>
-<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_museum_runtime.py">审计断言 <span>↗</span></a>                    <p class="evidence-note">已验证 grounded 与 missing_context 的部分记录。</p>
+<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_museum_audit.py">审计断言 <span>↗</span></a>                    <p class="evidence-note">已验证显式命中、继承、缺少上下文、知识兜底和社交回复的审计记录。</p>
                   </li>
                 </ul>
               </section>
@@ -1453,7 +1453,7 @@
               <div class="detail-bottom">
                 <section>
                   <h4>下一动作</h4>
-                  <p class="next-action">扩展 interaction_trace schema，并为 grounded、unsupported、missing_context 建立完整审计断言。</p>
+                  <p class="next-action">后续新增解析或回答分支时同步写入同一审计结构，并保持 request_id 查询回归测试。</p>
                 </section>
                 <section>
                   <h4>状态说明</h4>
@@ -1462,23 +1462,23 @@
               </div>
             </div>
           </details>
-          <details class="requirement" data-status="in_progress" data-priority="P0" data-phase="audit" data-search="req-010 museum_state 服务端与固件状态一致 服务端下发完整、版本化的 museum_state；固件严格校验并区分等待、查阅、有依据、资料不足和缺少展品上下文。 服务端 / 固件 audit 审计与设备状态 协议 固件 屏幕状态">
+          <details class="requirement" data-status="done" data-priority="P0" data-phase="audit" data-search="req-010 museum_state 服务端与固件状态一致 服务端下发完整、版本化的 museum_state；固件严格校验并区分等待、查阅、有依据、资料不足和缺少展品上下文。 服务端 / 固件 audit 审计与设备状态 协议 固件 屏幕状态">
             <summary aria-label="REQ-010 museum_state 服务端与固件状态一致">
               <div class="req-order"><span class="order-rule"></span><span class="order-number">100</span></div>
               <div class="req-main">
                 <div class="req-title-row"><span class="req-id">REQ-010</span><h3>museum_state 服务端与固件状态一致</h3></div>
                 <p>服务端下发完整、版本化的 museum_state；固件严格校验并区分等待、查阅、有依据、资料不足和缺少展品上下文。</p>
-                <div class="req-meta"><span>服务端 / 固件</span><span>3 项证据</span><span>置信度 中</span></div>
+                <div class="req-meta"><span>服务端 / 固件</span><span>5 项证据</span><span>置信度 中</span></div>
               </div>
               <div class="req-phase phase-cell">审计与设备状态<small>阶段 03</small></div>
               <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
-              <div class="req-status status-cell"><span class="status-dot status-dot--in_progress" aria-hidden="true"></span><span class="status-label">进行中</span></div>
-              <div class="req-completion completion-cell"><strong>75%</strong><span>3 / 4</span><div class="mini-progress" aria-label="完成度 75%"><span style="width: 75%"></span></div></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--done" aria-hidden="true"></span><span class="status-label">已完成</span></div>
+              <div class="req-completion completion-cell"><strong>100%</strong><span>4 / 4</span><div class="mini-progress" aria-label="完成度 100%"><span style="width: 100%"></span></div></div>
               <span class="summary-caret" aria-hidden="true"></span>
             </summary>
             <div class="req-detail">
               <section class="detail-section">
-                <h4>验收条件 <span>3 / 4</span></h4>
+                <h4>验收条件 <span>4 / 4</span></h4>
                 <ul class="criterion-list">
                   <li class="criterion criterion-done">
                     <span class="criterion-mark" aria-hidden="true">✓</span>
@@ -1495,15 +1495,15 @@
                     <span>目标板已有独立博物馆状态显示路径。</span>
                     <span class="criterion-status">已完成</span>
                   </li>
-                  <li class="criterion criterion-pending">
-                    <span class="criterion-mark" aria-hidden="true">○</span>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
                     <span>固件协议冒烟测试和目标板构建结果写入可复核记录。</span>
-                    <span class="criterion-status">未开始</span>
+                    <span class="criterion-status">已完成</span>
                   </li>
                 </ul>
               </section>
               <section class="detail-section">
-                <h4>证据链 <span>3 项</span></h4>
+                <h4>证据链 <span>5 项</span></h4>
                 <ul class="evidence-list">
                   <li class="evidence-item">
                     <span class="evidence-kind">代码</span>
@@ -1514,8 +1514,16 @@
 <span class="evidence-ref">固件状态解析器</span>                    <p class="evidence-note">严格校验版本、枚举和缺失上下文。</p>
                   </li>
                   <li class="evidence-item">
+                    <span class="evidence-kind">测试</span>
+<span class="evidence-ref">固件协议冒烟测试</span>                    <p class="evidence-note">提交 f4e3291；编译真实 museum_state.cc 与 ESP-IDF cJSON，覆盖 grounded、missing_context、非法版本和非法状态枚举。</p>
+                  </li>
+                  <li class="evidence-item">
                     <span class="evidence-kind">外部仓库</span>
-<span class="evidence-ref">1.46 英寸目标板显示</span>                    <p class="evidence-note">已存在博物馆状态层，尚缺本轮可复核构建记录。</p>
+<span class="evidence-ref">1.46 英寸目标板显示</span>                    <p class="evidence-note">目标板独立显示路径参与本轮 ESP-IDF 构建。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="ac-010-4-firmware-verification.md">AC-010-4 固件验证记录 <span>↗</span></a>                    <p class="evidence-note">记录测试命令、目标配置、构建产物、提交号和未覆盖的真机范围。</p>
                   </li>
                 </ul>
               </section>
@@ -1530,7 +1538,7 @@
               <div class="detail-bottom">
                 <section>
                   <h4>下一动作</h4>
-                  <p class="next-action">运行固件协议测试与目标板构建，并记录提交号、命令和完整结果。</p>
+                  <p class="next-action">保持服务端与固件状态枚举兼容；协议字段变更时先更新测试和验证记录，再重新构建目标板。</p>
                 </section>
                 <section>
                   <h4>状态说明</h4>
@@ -1539,12 +1547,12 @@
               </div>
             </div>
           </details>
-          <details class="requirement" data-status="in_progress" data-priority="P0" data-phase="rag" data-search="req-011 普通、亲子和深度三种游客模式 三种模式只改变回答长度、术语密度和表达方式，不得改变事实集合、确定性或资料边界。 产品 / 服务端 / 内容 rag 可信回答 游客模式 儿童表达 人工评测">
-            <summary aria-label="REQ-011 普通、亲子和深度三种游客模式">
+          <details class="requirement" data-status="in_progress" data-priority="P0" data-phase="rag" data-search="req-011 统一回答策略 系统使用统一的儿童友好短讲解策略；游客可以通过自然语言临时要求更简单或更详细，但不得改变事实集合、确定性或资料边界。 产品 / 服务端 / 内容 rag 可信回答 统一回答策略 儿童表达 人工评测">
+            <summary aria-label="REQ-011 统一回答策略">
               <div class="req-order"><span class="order-rule"></span><span class="order-number">110</span></div>
               <div class="req-main">
-                <div class="req-title-row"><span class="req-id">REQ-011</span><h3>普通、亲子和深度三种游客模式</h3></div>
-                <p>三种模式只改变回答长度、术语密度和表达方式，不得改变事实集合、确定性或资料边界。</p>
+                <div class="req-title-row"><span class="req-id">REQ-011</span><h3>统一回答策略</h3></div>
+                <p>系统使用统一的儿童友好短讲解策略；游客可以通过自然语言临时要求更简单或更详细，但不得改变事实集合、确定性或资料边界。</p>
                 <div class="req-meta"><span>产品 / 服务端 / 内容</span><span>2 项证据</span><span>置信度 中</span></div>
               </div>
               <div class="req-phase phase-cell">可信回答<small>阶段 02</small></div>
@@ -1559,22 +1567,22 @@
                 <ul class="criterion-list">
                   <li class="criterion criterion-done">
                     <span class="criterion-mark" aria-hidden="true">✓</span>
-                    <span>会话模型支持 general、family 和 deep 三种模式。</span>
+                    <span>默认回答为 2 至 4 句，适合儿童和普通游客理解并直接语音播报。</span>
                     <span class="criterion-status">已完成</span>
                   </li>
                   <li class="criterion criterion-done">
                     <span class="criterion-mark" aria-hidden="true">✓</span>
-                    <span>模式变化不会扩大允许检索的事实范围。</span>
+                    <span>临时表达调整不会扩大允许检索的事实范围。</span>
                     <span class="criterion-status">已完成</span>
                   </li>
                   <li class="criterion criterion-pending">
                     <span class="criterion-mark" aria-hidden="true">○</span>
-                    <span>三种模式具有稳定、可测试的表达差异。</span>
+                    <span>回答长度、语言难度和事实边界具有稳定、可测试的约束。</span>
                     <span class="criterion-status">未开始</span>
                   </li>
                   <li class="criterion criterion-pending">
                     <span class="criterion-mark" aria-hidden="true">○</span>
-                    <span>儿童理解度和语言流畅度通过独立人工评审。</span>
+                    <span>儿童理解度和语言流畅度通过独立人工评审，游客不需要选择模式。</span>
                     <span class="criterion-status">未开始</span>
                   </li>
                 </ul>
@@ -1584,11 +1592,11 @@
                 <ul class="evidence-list">
                   <li class="evidence-item">
                     <span class="evidence-kind">代码</span>
-<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/store.py">游客会话模型 <span>↗</span></a>                    <p class="evidence-note">visitor_mode 枚举已存在。</p>
+<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/store.py">游客会话模型 <span>↗</span></a>                    <p class="evidence-note">当前会话不保存游客模式；回答策略由服务端统一配置。</p>
                   </li>
                   <li class="evidence-item">
                     <span class="evidence-kind">文档</span>
-<a class="evidence-link" href="../product/PRD.md">PRD 游客模式要求 <span>↗</span></a>                    <p class="evidence-note">模式只能改变表达，不改变事实。</p>
+<a class="evidence-link" href="../product/PRD.md">PRD 统一回答策略要求 <span>↗</span></a>                    <p class="evidence-note">临时表达调整只能改变篇幅和措辞，不改变事实。</p>
                   </li>
                 </ul>
               </section>
@@ -1598,12 +1606,12 @@
 <li><code>REQ-006</code></li><li><code>REQ-008</code></li>                </ul>
                 <div style="height: 16px"></div>
                 <div class="compact-list" aria-label="需求标签">
-<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 游客模式</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 儿童表达</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 人工评测</span>                </div>
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 统一回答策略</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 儿童表达</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 人工评测</span>                </div>
               </section>
               <div class="detail-bottom">
                 <section>
                   <h4>下一动作</h4>
-                  <p class="next-action">固定三组表达合同和人工评分表，再补自动化与人工验收记录。</p>
+                  <p class="next-action">固定回答长度、语言难度和事实边界，再补自动化与人工验收记录。</p>
                 </section>
                 <section>
                   <h4>状态说明</h4>
@@ -1735,7 +1743,7 @@
                 <ul class="evidence-list">
                   <li class="evidence-item">
                     <span class="evidence-kind">文档</span>
-<a class="evidence-link" href="../roadmap/exhibit-rag-execution-plan.md">内容发布实施计划 <span>↗</span></a>                    <p class="evidence-note">RAG-40 与 RAG-41 尚未实现。</p>
+<a class="evidence-link" href="rag-execution-plan.md">内容发布实施计划 <span>↗</span></a>                    <p class="evidence-note">RAG-NEXT-01 至 RAG-NEXT-03 已明确输入、修改文件、事务边界、验收条件和完成证据。</p>
                   </li>
                 </ul>
               </section>
@@ -1808,7 +1816,7 @@
                   </li>
                   <li class="evidence-item">
                     <span class="evidence-kind">文档</span>
-<a class="evidence-link" href="../roadmap/exhibit-rag-execution-plan.md">未命中导出计划 <span>↗</span></a>                    <p class="evidence-note">RAG-42 待实现。</p>
+<a class="evidence-link" href="rag-execution-plan.md">未命中导出计划 <span>↗</span></a>                    <p class="evidence-note">RAG-NEXT-06 定义了原因分类、导出字段、CLI 和追溯验收。</p>
                   </li>
                 </ul>
               </section>
@@ -2043,7 +2051,7 @@
                 <ul class="evidence-list">
                   <li class="evidence-item">
                     <span class="evidence-kind">文档</span>
-<a class="evidence-link" href="../roadmap/exhibit-rag-execution-plan.md">扩容阶段计划 <span>↗</span></a>                    <p class="evidence-note">明确要求阶段 5 通过后再扩展内容。</p>
+<a class="evidence-link" href="rag-execution-plan.md">扩容阶段计划 <span>↗</span></a>                    <p class="evidence-note">RAG-NEXT-09 明确要求发布闭环和自然问法评测通过后再扩展到 20 至 30 件展品。</p>
                   </li>
                 </ul>
               </section>
@@ -2116,7 +2124,7 @@
                   </li>
                   <li class="evidence-item">
                     <span class="evidence-kind">文档</span>
-<a class="evidence-link" href="../roadmap/exhibit-rag-execution-plan.md">阶段 6 约束 <span>↗</span></a>                    <p class="evidence-note">阶段 5 通过后才能启动可选能力。</p>
+<a class="evidence-link" href="rag-execution-plan.md">阶段 6 约束 <span>↗</span></a>                    <p class="evidence-note">RAG-NEXT-08 定义了向量召回的量化决策门和不得绕过的事实边界。</p>
                   </li>
                 </ul>
               </section>
@@ -2151,7 +2159,7 @@
     <footer class="footer">
       <div class="footer-inner">
         <p>需求追踪与交付看板 · 源文件 <code>docs/requirements/requirements.yaml</code></p>
-        <p>YAML digest <code>aba0b527d3ad</code> · 27 passed in 2.13s</p>
+        <p>YAML digest <code>be4980313459</code> · 27 passed in 2.13s</p>
       </div>
     </footer>
   </div>

@@ -364,7 +364,7 @@ requirements:
     title: 交互审计能够解释每轮结果
     kind: non_functional
     priority: P0
-    status: in_progress
+    status: done
     phase: audit
     owner: 服务端 / 运营
     confidence: medium
@@ -379,29 +379,29 @@ requirements:
         status: done
       - id: AC-009-3
         text: 持久化解析状态、上下文来源、匹配文本和候选展品 ID。
-        status: pending
+        status: done
       - id: AC-009-4
         text: 运营人员可按请求 ID 一次性查看完整审计记录。
-        status: pending
+        status: done
     evidence:
       - kind: code
         label: interaction_trace 数据模型
         path: ../../main/xiaozhi-server/core/museum/store.py
-        note: 当前已保存依据、意图、守卫和延迟，解析证据仍需补齐。
+        note: 已保存依据、意图、守卫、延迟和展品解析证据，并支持按请求 ID 查询。
       - kind: test
         label: 审计断言
-        path: ../../main/xiaozhi-server/tests/test_museum_runtime.py
-        note: 已验证 grounded 与 missing_context 的部分记录。
+        path: ../../main/xiaozhi-server/tests/test_museum_audit.py
+        note: 已验证显式命中、继承、缺少上下文、知识兜底和社交回复的审计记录。
     dependencies: [REQ-005, REQ-006, REQ-007]
     tags: [审计, 可追溯, 延迟]
-    next_action: 扩展 interaction_trace schema，并为 grounded、unsupported、missing_context 建立完整审计断言。
+    next_action: 后续新增解析或回答分支时同步写入同一审计结构，并保持 request_id 查询回归测试。
 
   - id: REQ-010
     sequence: 100
     title: museum_state 服务端与固件状态一致
     kind: interface
     priority: P0
-    status: in_progress
+    status: done
     phase: audit
     owner: 服务端 / 固件
     confidence: medium
@@ -419,7 +419,7 @@ requirements:
         status: done
       - id: AC-010-4
         text: 固件协议冒烟测试和目标板构建结果写入可复核记录。
-        status: pending
+        status: done
     evidence:
       - kind: code
         label: 服务端 museum_state
@@ -429,17 +429,25 @@ requirements:
         label: 固件状态解析器
         reference: museum-firmwire/main/museum_state.cc
         note: 严格校验版本、枚举和缺失上下文。
+      - kind: test
+        label: 固件协议冒烟测试
+        reference: museum-firmwire/tests/museum_state_contract_test.py
+        note: 提交 f4e3291；编译真实 museum_state.cc 与 ESP-IDF cJSON，覆盖 grounded、missing_context、非法版本和非法状态枚举。
       - kind: external_code
         label: 1.46 英寸目标板显示
         reference: museum-firmwire/main/boards/waveshare/esp32-s3-touch-lcd-1.46/esp32-s3-touch-lcd-1.46.cc
-        note: 已存在博物馆状态层，尚缺本轮可复核构建记录。
+        note: 目标板独立显示路径参与本轮 ESP-IDF 构建。
+      - kind: document
+        label: AC-010-4 固件验证记录
+        path: ac-010-4-firmware-verification.md
+        note: 记录测试命令、目标配置、构建产物、提交号和未覆盖的真机范围。
     dependencies: [REQ-009]
     tags: [协议, 固件, 屏幕状态]
-    next_action: 运行固件协议测试与目标板构建，并记录提交号、命令和完整结果。
+    next_action: 保持服务端与固件状态枚举兼容；协议字段变更时先更新测试和验证记录，再重新构建目标板。
 
   - id: REQ-011
     sequence: 110
-    title: 普通、亲子和深度三种游客模式
+    title: 统一回答策略
     kind: functional
     priority: P0
     status: in_progress
@@ -447,32 +455,32 @@ requirements:
     owner: 产品 / 服务端 / 内容
     confidence: medium
     summary: >-
-      三种模式只改变回答长度、术语密度和表达方式，不得改变事实集合、确定性或资料边界。
+      系统使用统一的儿童友好短讲解策略；游客可以通过自然语言临时要求更简单或更详细，但不得改变事实集合、确定性或资料边界。
     acceptance:
       - id: AC-011-1
-        text: 会话模型支持 general、family 和 deep 三种模式。
+        text: 默认回答为 2 至 4 句，适合儿童和普通游客理解并直接语音播报。
         status: done
       - id: AC-011-2
-        text: 模式变化不会扩大允许检索的事实范围。
+        text: 临时表达调整不会扩大允许检索的事实范围。
         status: done
       - id: AC-011-3
-        text: 三种模式具有稳定、可测试的表达差异。
+        text: 回答长度、语言难度和事实边界具有稳定、可测试的约束。
         status: pending
       - id: AC-011-4
-        text: 儿童理解度和语言流畅度通过独立人工评审。
+        text: 儿童理解度和语言流畅度通过独立人工评审，游客不需要选择模式。
         status: pending
     evidence:
       - kind: code
         label: 游客会话模型
         path: ../../main/xiaozhi-server/core/museum/store.py
-        note: visitor_mode 枚举已存在。
+        note: 当前会话不保存游客模式；回答策略由服务端统一配置。
       - kind: document
-        label: PRD 游客模式要求
+        label: PRD 统一回答策略要求
         path: ../product/PRD.md
-        note: 模式只能改变表达，不改变事实。
+        note: 临时表达调整只能改变篇幅和措辞，不改变事实。
     dependencies: [REQ-006, REQ-008]
-    tags: [游客模式, 儿童表达, 人工评测]
-    next_action: 固定三组表达合同和人工评分表，再补自动化与人工验收记录。
+    tags: [统一回答策略, 儿童表达, 人工评测]
+    next_action: 固定回答长度、语言难度和事实边界，再补自动化与人工验收记录。
 
   - id: REQ-012
     sequence: 120
@@ -541,8 +549,8 @@ requirements:
     evidence:
       - kind: document
         label: 内容发布实施计划
-        path: ../roadmap/exhibit-rag-execution-plan.md
-        note: RAG-40 与 RAG-41 尚未实现。
+        path: rag-execution-plan.md
+        note: RAG-NEXT-01 至 RAG-NEXT-03 已明确输入、修改文件、事务边界、验收条件和完成证据。
     dependencies: [REQ-006, REQ-009]
     tags: [内容导入, 发布, 回滚]
     next_action: 先实现 CLI 和事务校验，不提前建设大而全运营后台。
@@ -578,8 +586,8 @@ requirements:
         note: interaction_trace 已包含 unanswered_reason。
       - kind: document
         label: 未命中导出计划
-        path: ../roadmap/exhibit-rag-execution-plan.md
-        note: RAG-42 待实现。
+        path: rag-execution-plan.md
+        note: RAG-NEXT-06 定义了原因分类、导出字段、CLI 和追溯验收。
     dependencies: [REQ-009, REQ-013]
     tags: [未命中, 运营, 内容缺口]
     next_action: 实现只读导出 CLI 和聚合测试，先用文件报告验证运营闭环。
@@ -703,8 +711,8 @@ requirements:
     evidence:
       - kind: document
         label: 扩容阶段计划
-        path: ../roadmap/exhibit-rag-execution-plan.md
-        note: 明确要求阶段 5 通过后再扩展内容。
+        path: rag-execution-plan.md
+        note: RAG-NEXT-09 明确要求发布闭环和自然问法评测通过后再扩展到 20 至 30 件展品。
     dependencies: [REQ-013, REQ-015]
     tags: [多展品, 内容规模, 评测集]
     next_action: 保持待办，真机核心闭环通过前不投入批量内容生产。
@@ -740,8 +748,8 @@ requirements:
         note: 路线、地图和通用能力不属于当前主线。
       - kind: document
         label: 阶段 6 约束
-        path: ../roadmap/exhibit-rag-execution-plan.md
-        note: 阶段 5 通过后才能启动可选能力。
+        path: rag-execution-plan.md
+        note: RAG-NEXT-08 定义了向量召回的量化决策门和不得绕过的事实边界。
     dependencies: [REQ-016]
     tags: [后置, 路线, 图片, 多语言, 离线]
     next_action: 保持 deferred；只有真机和运营数据给出明确需求时再立项。
