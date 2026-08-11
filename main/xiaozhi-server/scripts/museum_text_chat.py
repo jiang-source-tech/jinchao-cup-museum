@@ -119,15 +119,48 @@ class MuseumTextChatSession:
         self.last_outcome = None
         self.turn_number = 0
 
+    def audit(self, request_id: str | None = None) -> dict[str, Any] | None:
+        """Read one persisted audit record, defaulting to the latest turn."""
+        explicit_request_id = request_id is not None
+        if request_id is None and self.last_outcome is not None:
+            request_id = self.last_outcome.audit_record.get("request_id")
+        if request_id:
+            getter = getattr(
+                self.runtime,
+                "get_interaction_trace_by_request_id",
+                None,
+            )
+            if callable(getter):
+                trace = getter(str(request_id))
+                if trace is not None:
+                    return dict(trace)
+                if explicit_request_id:
+                    return None
+        if explicit_request_id:
+            return None
+        if self.last_outcome is None:
+            return None
+        return dict(self.last_outcome.audit_record)
+
 
 def outcome_payload(outcome: TurnOutcome) -> dict[str, Any]:
     context = outcome.display_state.get("context", {})
     return {
         "answer": outcome.spoken_text or "",
+        "request_id": outcome.audit_record.get("request_id", ""),
         "knowledge_status": outcome.knowledge_status,
         "exhibit_id": context.get("exhibit_id", ""),
         "exhibit_name": context.get("exhibit_name", ""),
-        "context_source": context.get("source", ""),
+        "context_source": outcome.audit_record.get(
+            "context_source", context.get("source", "")
+        ),
+        "resolution_status": outcome.audit_record.get("resolution_status", ""),
+        "matched_exhibit_text": outcome.audit_record.get(
+            "matched_exhibit_text"
+        ),
+        "candidate_exhibit_ids": outcome.audit_record.get(
+            "candidate_exhibit_ids", []
+        ),
         "coarse_intent": outcome.audit_record.get("coarse_intent", ""),
         "fine_intent": outcome.audit_record.get("fine_intent", ""),
         "intent_confidence": outcome.audit_record.get("intent_confidence", 0),
@@ -228,7 +261,15 @@ def run_console(args: argparse.Namespace) -> int:
             session.reset()
             print("会话已重置。")
             continue
-        if text == "/audit":
+        if text == "/audit" or text.startswith("/audit "):
+            request_id = text.partition(" ")[2].strip()
+            audit = session.audit(request_id or None)
+            if audit is not None:
+                print(json.dumps(audit, ensure_ascii=False, indent=2))
+                continue
+            if request_id:
+                print("audit record not found")
+                continue
             if session.last_outcome is None:
                 print("还没有可显示的审计记录。")
             else:

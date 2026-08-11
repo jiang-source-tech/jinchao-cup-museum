@@ -25,6 +25,9 @@ class MuseumRuntime:
         self._exhibit_context_mode = exhibit_context_mode
         self._exhibit_resolver = ExhibitResolver(store)
 
+    def get_interaction_trace_by_request_id(self, request_id: str):
+        return self._store.get_interaction_trace_by_request_id(request_id)
+
     def open_session(self, request: TurnRequest) -> TurnOutcome:
         started = perf_counter()
         resolved = self._resolve_context(request)
@@ -61,11 +64,13 @@ class MuseumRuntime:
         )
         if conversational_answer is not None:
             resolved = self._resolve_context(request) if request.device_id else None
+            resolution = self._resolve_audit_resolution(request, resolved)
             return self._conversational_outcome(
                 request=request,
                 started=started,
                 answer=conversational_answer,
                 resolved=resolved,
+                resolution=resolution,
             )
         if not request.device_id:
             return self._missing_context_outcome(
@@ -151,6 +156,10 @@ class MuseumRuntime:
             },
             duration_ms=duration_ms,
             occurred_at=request.occurred_at,
+            resolution_status=resolution.status,
+            context_source=context.context_source,
+            matched_exhibit_text=resolution.matched_text,
+            candidate_exhibit_ids=resolution.candidate_ids,
         )
         fact_ids = list(answer.evidence.fact_ids) if answer.evidence else []
         source_ids = list(answer.evidence.source_ids) if answer.evidence else []
@@ -180,9 +189,14 @@ class MuseumRuntime:
             audit_id=trace_id,
             display_state=display_state,
             audit_record={
+                "request_id": request.request_id,
                 "trace_id": trace_id,
                 "visitor_session_id": session.id,
                 "knowledge_status": answer.knowledge_status,
+                "resolution_status": resolution.status,
+                "context_source": context.context_source,
+                "matched_exhibit_text": resolution.matched_text,
+                "candidate_exhibit_ids": list(resolution.candidate_ids),
                 "fact_ids": fact_ids,
                 "source_ids": source_ids,
                 "content_version": content_version,
@@ -305,6 +319,10 @@ class MuseumRuntime:
             stage_latency={"total_ms": duration_ms},
             duration_ms=duration_ms,
             occurred_at=request.occurred_at,
+            resolution_status=resolution.status if resolution else "missing",
+            context_source=resolution.context_source if resolution else "missing",
+            matched_exhibit_text=resolution.matched_text if resolution else None,
+            candidate_exhibit_ids=resolution.candidate_ids if resolution else (),
         ) if record_trace else None
         state = {
             "type": "museum_state",
@@ -345,9 +363,13 @@ class MuseumRuntime:
             audit_id=trace_id,
             display_state=state,
             audit_record={
+                "request_id": request.request_id,
                 "trace_id": trace_id,
                 "knowledge_status": "missing_context",
                 "resolution_status": resolution.status if resolution else "missing",
+                "context_source": resolution.context_source
+                if resolution
+                else "missing",
                 "candidate_exhibit_ids": list(resolution.candidate_ids)
                 if resolution
                 else [],
@@ -369,6 +391,7 @@ class MuseumRuntime:
         started: float,
         answer: AnswerResult,
         resolved,
+        resolution: ExhibitResolution | None,
     ) -> TurnOutcome:
         duration_ms = _duration_ms(started)
         session = None
@@ -397,6 +420,16 @@ class MuseumRuntime:
             },
             duration_ms=duration_ms,
             occurred_at=request.occurred_at,
+            resolution_status=resolution.status if resolution else "missing",
+            context_source=(
+                resolution.context_source
+                if resolution
+                else context.context_source
+                if context is not None
+                else "missing"
+            ),
+            matched_exhibit_text=resolution.matched_text if resolution else None,
+            candidate_exhibit_ids=resolution.candidate_ids if resolution else (),
         )
         if session is not None and context is not None:
             content_version = self._store.published_content_version(
@@ -457,9 +490,24 @@ class MuseumRuntime:
             audit_id=trace_id,
             display_state=display_state,
             audit_record={
+                "request_id": request.request_id,
                 "trace_id": trace_id,
                 "visitor_session_id": session.id if session is not None else None,
                 "knowledge_status": "conversational",
+                "resolution_status": resolution.status if resolution else "missing",
+                "context_source": (
+                    resolution.context_source
+                    if resolution
+                    else context.context_source
+                    if context is not None
+                    else "missing"
+                ),
+                "matched_exhibit_text": (
+                    resolution.matched_text if resolution else None
+                ),
+                "candidate_exhibit_ids": (
+                    list(resolution.candidate_ids) if resolution else []
+                ),
                 "fact_ids": [],
                 "source_ids": [],
                 "content_version": content_version,
@@ -468,6 +516,19 @@ class MuseumRuntime:
                 "intent_confidence": answer.intent_confidence,
                 "duration_ms": duration_ms,
             },
+        )
+
+    def _resolve_audit_resolution(
+        self,
+        request: TurnRequest,
+        resolved,
+    ) -> ExhibitResolution | None:
+        if not request.device_id:
+            return None
+        current_exhibit_id = resolved[0].current_exhibit_id if resolved else None
+        return self._exhibit_resolver.resolve(
+            question=request.user_text,
+            current_exhibit_id=current_exhibit_id,
         )
 
 

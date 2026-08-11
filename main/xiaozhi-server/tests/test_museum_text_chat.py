@@ -85,6 +85,20 @@ def test_separate_text_chat_instances_do_not_share_exhibit_context(tmp_path):
     assert outcome.display_state["context"]["exhibit_id"] == ""
 
 
+def test_text_chat_queries_complete_audit_by_request_id(tmp_path):
+    session = _session(tmp_path)
+    outcome = session.ask("战国水晶杯是什么材质？")
+    request_id = outcome.audit_record["request_id"]
+
+    trace = session.audit(request_id)
+
+    assert trace["id"] == outcome.audit_id
+    assert trace["request_id"] == request_id
+    assert trace["resolution_status"] == "explicit"
+    assert trace["context_source"] == "explicit_mention"
+    assert session.audit("missing-request-id") is None
+
+
 def test_llm_mode_is_explicit_and_can_be_required():
     config = {"selected_module": {}, "LLM": {}}
 

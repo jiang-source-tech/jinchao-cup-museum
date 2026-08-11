@@ -112,6 +112,10 @@ CREATE TABLE IF NOT EXISTS interaction_trace (
     visitor_session_id TEXT,
     device_id TEXT,
     exhibit_id TEXT,
+    resolution_status TEXT NOT NULL DEFAULT 'missing',
+    context_source TEXT NOT NULL DEFAULT 'missing',
+    matched_exhibit_text TEXT,
+    candidate_exhibit_ids_json TEXT NOT NULL DEFAULT '[]',
     user_text TEXT NOT NULL,
     grounding_status TEXT NOT NULL,
     evidence_json TEXT NOT NULL,
@@ -125,6 +129,9 @@ CREATE TABLE IF NOT EXISTS interaction_trace (
     duration_ms INTEGER NOT NULL,
     created_at TEXT NOT NULL
 );
+
+CREATE INDEX IF NOT EXISTS interaction_trace_by_request
+ON interaction_trace(request_id);
 """
 
 _DEMO_SOURCES = (
@@ -256,6 +263,30 @@ class MuseumStore:
                 "interaction_trace",
                 "intent_confidence",
                 "REAL NOT NULL DEFAULT 0",
+            )
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "resolution_status",
+                "TEXT NOT NULL DEFAULT 'missing'",
+            )
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "context_source",
+                "TEXT NOT NULL DEFAULT 'missing'",
+            )
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "matched_exhibit_text",
+                "TEXT",
+            )
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "candidate_exhibit_ids_json",
+                "TEXT NOT NULL DEFAULT '[]'",
             )
             fts_columns = {
                 row["name"]
@@ -758,6 +789,10 @@ class MuseumStore:
         stage_latency: dict[str, int],
         duration_ms: int,
         occurred_at: datetime,
+        resolution_status: str = "missing",
+        context_source: str = "missing",
+        matched_exhibit_text: str | None = None,
+        candidate_exhibit_ids: tuple[str, ...] = (),
     ) -> str:
         trace_id = uuid.uuid4().hex
         evidence_json = json.dumps(
@@ -776,11 +811,13 @@ class MuseumStore:
                 """
                 INSERT INTO interaction_trace(
                     id, request_id, visitor_session_id, device_id, exhibit_id,
+                    resolution_status, context_source, matched_exhibit_text,
+                    candidate_exhibit_ids_json,
                     user_text, grounding_status, evidence_json, answer_text,
                     unanswered_reason, coarse_intent, fine_intent,
                     intent_confidence, guard_result, stage_latency_json,
                     duration_ms, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     trace_id,
@@ -788,6 +825,10 @@ class MuseumStore:
                     visitor_session_id,
                     device_id,
                     exhibit_id,
+                    resolution_status,
+                    context_source,
+                    matched_exhibit_text,
+                    json.dumps(list(candidate_exhibit_ids), ensure_ascii=False),
                     user_text,
                     grounding_status,
                     evidence_json,
@@ -809,6 +850,22 @@ class MuseumStore:
             return connection.execute(
                 "SELECT * FROM interaction_trace WHERE id = ?",
                 (trace_id,),
+            ).fetchone()
+
+    def get_interaction_trace_by_request_id(
+        self, request_id: str
+    ) -> sqlite3.Row | None:
+        """Return the latest complete audit record for one transport request."""
+        with self.connection() as connection:
+            return connection.execute(
+                """
+                SELECT *
+                FROM interaction_trace
+                WHERE request_id = ?
+                ORDER BY created_at DESC, id DESC
+                LIMIT 1
+                """,
+                (request_id,),
             ).fetchone()
 
 
