@@ -249,13 +249,14 @@
 
 ### 6.3 会话规则
 
-1. 会话创建时允许没有当前展品。
-2. 只有 `explicit` 解析结果可以首次建立或切换当前展品。
-3. `inherited` 只能沿用仍然活动且有发布版本的当前展品。
-4. `ambiguous`、`missing` 和 `not_found` 不改变当前展品。
-5. 会话过期后，旧展品上下文不得继续使用。
-6. 新的明确展品指称立即覆盖旧展品上下文。
-7. 不保存长期游客画像。
+1. 尚未确认展品时只保留请求级 `missing_context`，不创建可继承的 `visitor_session`。
+2. 首次 `explicit` 解析成功后创建会话，并绑定非空 `current_exhibit_id`。
+3. 只有 `explicit` 解析结果可以首次建立或切换当前展品。
+4. `inherited` 只能沿用仍然活动且有发布版本的当前展品。
+5. `ambiguous`、`missing` 和 `not_found` 不改变当前展品。
+6. 会话过期后，旧展品上下文不得继续使用。
+7. 新的明确展品指称立即覆盖旧展品上下文。
+8. 不保存长期游客画像。
 
 ## 7. 总体架构
 
@@ -470,12 +471,12 @@ class EvidenceRetriever:
 
 ### 9.2 visitor_session
 
-需要调整：
+比赛版采用懒创建，不做 `current_exhibit_id` 可空迁移：
 
-- `current_exhibit_id` 允许为空；
-- 增加 `current_exhibit_confirmed_at`；
-- 可选增加 `current_exhibit_source`，值为 `explicit_mention` 或 `inherited_session`；
-- 会话创建不再要求 `device_placement.default_exhibit_id`。
+- `visitor_session` 只在首次明确展品后创建；
+- `current_exhibit_id` 保持非空外键；
+- 首轮无展品请求使用 `request_id`、`device_id` 和 `interaction_trace` 记录；
+- 会话创建不要求 `device_placement.default_exhibit_id`，也不得用设备点位静默绑定展品。
 
 ### 9.3 interaction_trace
 
@@ -815,8 +816,8 @@ class EvidenceRetriever:
 
 1. 增加 `ExhibitResolver`。
 2. 从现有 `exhibit.name` 和 `aliases_json` 构建解析索引。
-3. 允许创建没有当前展品的游客会话。
-4. 第一轮显式指称建立当前展品。
+3. 首轮没有展品时保持等待状态，不创建可继承游客会话。
+4. 第一轮显式指称创建会话并建立当前展品。
 5. 追问继承和显式切换。
 6. 删除生产模式下自动分配演示展品的依赖。
 
@@ -866,7 +867,7 @@ class EvidenceRetriever:
 ### 必须调整
 
 - `MuseumRuntime._resolve_context()` 不能再把设备点位作为生产主入口；
-- `visitor_session.current_exhibit_id` 需要允许为空；
+- 会话创建必须与首次明确展品绑定，保持 `visitor_session.current_exhibit_id` 非空；
 - 增加用户问题到展品 ID 的解析模块；
 - 明确区分显式展品、会话继承、歧义和缺失；
 - `interaction_trace` 增加展品解析证据；
@@ -902,7 +903,7 @@ class EvidenceRetriever:
 - PRD 中把设备点位作为当前展品主要来源的表述；
 - PRD 中把参观路线、路线推进和现场回顾列为比赛产品主流程的表述；
 - 领域模型中“当前展品不得由问题解析确定”的不变量；
-- 当前运行链路审计中“根据设备点位解析当前展品”的现状描述；
+- 当前运行链路审计中“Hello 后立即创建会话”的旧表述；
 - 服务端与固件合同中路线字段作为目标界面核心信息的表述。
 
 修订时必须区分：历史实现事实、已经否定的产品假设和新的目标设计。不得把本文目标能力提前写成已经完成。

@@ -34,7 +34,7 @@ def test_statuses_match_acceptance_completion() -> None:
     data = load_requirements(SOURCE)
     by_id = {item["id"]: item for item in data["requirements"]}
     assert by_id["REQ-003"]["status"] == "done"
-    assert by_id["REQ-004"]["status"] == "in_progress"
+    assert by_id["REQ-004"]["status"] == "done"
     assert by_id["REQ-015"]["status"] == "blocked"
     assert by_id["REQ-018"]["status"] == "deferred"
 

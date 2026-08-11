@@ -38,7 +38,7 @@ ESP32 麦克风
 
 ### 2.1 启动与连接
 
-`app.py` 启动 WebSocket 和 HTTP/OTA 服务，不再创建旧控制运行时。`ConnectionHandler` 使用设备请求头中的 `device-id` 作为稳定设备标识，并在 Hello 后创建或恢复临时游客会话、下发初始 `museum_state`。
+`app.py` 启动 WebSocket 和 HTTP/OTA 服务，不再创建旧控制运行时。`ConnectionHandler` 使用设备请求头中的 `device-id` 作为稳定设备标识；Hello 只建立传输连接，首次明确展品的问题才创建或恢复临时游客会话。
 
 当前唯一正式路径为 `/museum/v1/` 和 `/museum/ota/`。WebSocket 握手拒绝其他路径，OTA 不注册旧项目路径、activation 别名或文件名固件下载接口；旧小程序控制接口也不属于比赛运行面。
 
@@ -48,8 +48,8 @@ ESP32 麦克风
 
 `MuseumRuntime` 负责：
 
-- 根据设备点位解析当前展品；
-- 创建或恢复 30 分钟临时游客会话；
+- 根据游客明确说出的展品名称或别名解析当前展品；
+- 首次明确展品后创建或恢复 30 分钟临时游客会话；
 - 只检索当前发布版本且绑定来源的事实；
 - 对命中问题返回 `grounded`；
 - 对资料外问题返回 `unsupported`，不回退到通用聊天；

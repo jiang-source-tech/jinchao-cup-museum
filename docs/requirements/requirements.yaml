@@ -161,28 +161,28 @@ requirements:
 
   - id: REQ-004
     sequence: 40
-    title: 显式上下文与可空游客会话
+    title: 显式上下文与懒创建游客会话
     kind: functional
     priority: P0
-    status: in_progress
+    status: done
     phase: context
     owner: 服务端
-    confidence: medium
+    confidence: high
     summary: >-
-      生产默认不得用设备点位猜测当前展品；会话可以在尚未确认展品时创建，并在游客明确说出展品后建立上下文。
+      生产默认不得用设备点位猜测当前展品；游客尚未明确说出展品时只记录请求级缺少上下文，首次明确展品后才创建绑定展品的临时会话。
     acceptance:
       - id: AC-004-1
         text: 生产默认 exhibit_context_mode=explicit，未知设备不自动分配展品。
         status: done
       - id: AC-004-2
-        text: 首轮无展品问题返回 missing_context，不进入通用 LLM 回退。
+        text: 首轮无展品问题返回 missing_context，不进入通用 LLM 回退，也不创建 visitor_session。
         status: done
       - id: AC-004-3
         text: 无设备点位时，首轮明确展品问题仍能建立上下文。
         status: done
       - id: AC-004-4
-        text: 旧数据库到可空 current_exhibit_id 的迁移具备事务回滚和重复执行测试。
-        status: pending
+        text: 首轮未确认展品时不创建可继承会话；首次明确展品后创建唯一会话并绑定 current_exhibit_id。
+        status: done
     evidence:
       - kind: code
         label: 运行模式配置
@@ -195,10 +195,10 @@ requirements:
       - kind: test
         label: 显式模式运行时测试
         path: ../../main/xiaozhi-server/tests/test_museum_runtime.py
-        note: 覆盖首轮、继承、切换、未收录和无点位场景。
+        note: 覆盖首轮无展品不落会话、首次明确展品后建会话、继承、切换、未收录和无点位场景。
     dependencies: [REQ-003]
-    tags: [会话, 显式上下文, 数据迁移]
-    next_action: 增加旧 SQLite 样本的幂等迁移、失败回滚和过期会话测试。
+    tags: [会话, 懒创建, 显式上下文]
+    next_action: 在设备重置和连续演示验收中保持首轮无展品不创建可继承会话。
 
   - id: REQ-005
     sequence: 50

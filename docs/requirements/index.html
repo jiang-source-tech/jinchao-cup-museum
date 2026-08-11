@@ -665,8 +665,8 @@
         <div class="metric-strip">
           <div class="metric metric--progress">
             <span class="metric-label">Acceptance completion</span>
-            <strong class="metric-value">53%</strong>
-            <span class="metric-note">41 / 77 条验收条件</span>
+            <strong class="metric-value">55%</strong>
+            <span class="metric-note">42 / 77 条验收条件</span>
           </div>
           <div class="metric">
             <span class="metric-label">Requirements</span>
@@ -675,12 +675,12 @@
           </div>
           <div class="metric">
             <span class="metric-label">Verified</span>
-            <strong class="metric-value">7</strong>
+            <strong class="metric-value">8</strong>
             <span class="metric-note">全部条件有证据</span>
           </div>
           <div class="metric">
             <span class="metric-label">In progress</span>
-            <strong class="metric-value">6</strong>
+            <strong class="metric-value">5</strong>
             <span class="metric-note">已有部分交付</span>
           </div>
           <div class="metric metric--blocked">
@@ -741,8 +741,8 @@
           </article>
           <article class="phase-node" data-phase="context">
             <div class="phase-node-top"><span class="phase-number">01</span><strong>展品上下文</strong></div>
-            <div class="phase-line" aria-label="展品上下文完成度 92%"><span style="width: 92%"></span></div>
-            <p>11 / 12 条验收 · 3 条需求</p>
+            <div class="phase-line" aria-label="展品上下文完成度 100%"><span style="width: 100%"></span></div>
+            <p>12 / 12 条验收 · 3 条需求</p>
           </article>
           <article class="phase-node" data-phase="rag">
             <div class="phase-node-top"><span class="phase-number">02</span><strong>可信回答</strong></div>
@@ -1007,23 +1007,23 @@
               </div>
             </div>
           </details>
-          <details class="requirement" data-status="in_progress" data-priority="P0" data-phase="context" data-search="req-004 显式上下文与可空游客会话 生产默认不得用设备点位猜测当前展品；会话可以在尚未确认展品时创建，并在游客明确说出展品后建立上下文。 服务端 context 展品上下文 会话 显式上下文 数据迁移">
-            <summary aria-label="REQ-004 显式上下文与可空游客会话">
+          <details class="requirement" data-status="done" data-priority="P0" data-phase="context" data-search="req-004 显式上下文与懒创建游客会话 生产默认不得用设备点位猜测当前展品；游客尚未明确说出展品时只记录请求级缺少上下文，首次明确展品后才创建绑定展品的临时会话。 服务端 context 展品上下文 会话 懒创建 显式上下文">
+            <summary aria-label="REQ-004 显式上下文与懒创建游客会话">
               <div class="req-order"><span class="order-rule"></span><span class="order-number">040</span></div>
               <div class="req-main">
-                <div class="req-title-row"><span class="req-id">REQ-004</span><h3>显式上下文与可空游客会话</h3></div>
-                <p>生产默认不得用设备点位猜测当前展品；会话可以在尚未确认展品时创建，并在游客明确说出展品后建立上下文。</p>
-                <div class="req-meta"><span>服务端</span><span>3 项证据</span><span>置信度 中</span></div>
+                <div class="req-title-row"><span class="req-id">REQ-004</span><h3>显式上下文与懒创建游客会话</h3></div>
+                <p>生产默认不得用设备点位猜测当前展品；游客尚未明确说出展品时只记录请求级缺少上下文，首次明确展品后才创建绑定展品的临时会话。</p>
+                <div class="req-meta"><span>服务端</span><span>3 项证据</span><span>置信度 高</span></div>
               </div>
               <div class="req-phase phase-cell">展品上下文<small>阶段 01</small></div>
               <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
-              <div class="req-status status-cell"><span class="status-dot status-dot--in_progress" aria-hidden="true"></span><span class="status-label">进行中</span></div>
-              <div class="req-completion completion-cell"><strong>75%</strong><span>3 / 4</span><div class="mini-progress" aria-label="完成度 75%"><span style="width: 75%"></span></div></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--done" aria-hidden="true"></span><span class="status-label">已完成</span></div>
+              <div class="req-completion completion-cell"><strong>100%</strong><span>4 / 4</span><div class="mini-progress" aria-label="完成度 100%"><span style="width: 100%"></span></div></div>
               <span class="summary-caret" aria-hidden="true"></span>
             </summary>
             <div class="req-detail">
               <section class="detail-section">
-                <h4>验收条件 <span>3 / 4</span></h4>
+                <h4>验收条件 <span>4 / 4</span></h4>
                 <ul class="criterion-list">
                   <li class="criterion criterion-done">
                     <span class="criterion-mark" aria-hidden="true">✓</span>
@@ -1032,7 +1032,7 @@
                   </li>
                   <li class="criterion criterion-done">
                     <span class="criterion-mark" aria-hidden="true">✓</span>
-                    <span>首轮无展品问题返回 missing_context，不进入通用 LLM 回退。</span>
+                    <span>首轮无展品问题返回 missing_context，不进入通用 LLM 回退，也不创建 visitor_session。</span>
                     <span class="criterion-status">已完成</span>
                   </li>
                   <li class="criterion criterion-done">
@@ -1040,10 +1040,10 @@
                     <span>无设备点位时，首轮明确展品问题仍能建立上下文。</span>
                     <span class="criterion-status">已完成</span>
                   </li>
-                  <li class="criterion criterion-pending">
-                    <span class="criterion-mark" aria-hidden="true">○</span>
-                    <span>旧数据库到可空 current_exhibit_id 的迁移具备事务回滚和重复执行测试。</span>
-                    <span class="criterion-status">未开始</span>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>首轮未确认展品时不创建可继承会话；首次明确展品后创建唯一会话并绑定 current_exhibit_id。</span>
+                    <span class="criterion-status">已完成</span>
                   </li>
                 </ul>
               </section>
@@ -1060,7 +1060,7 @@
                   </li>
                   <li class="evidence-item">
                     <span class="evidence-kind">测试</span>
-<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_museum_runtime.py">显式模式运行时测试 <span>↗</span></a>                    <p class="evidence-note">覆盖首轮、继承、切换、未收录和无点位场景。</p>
+<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_museum_runtime.py">显式模式运行时测试 <span>↗</span></a>                    <p class="evidence-note">覆盖首轮无展品不落会话、首次明确展品后建会话、继承、切换、未收录和无点位场景。</p>
                   </li>
                 </ul>
               </section>
@@ -1070,12 +1070,12 @@
 <li><code>REQ-003</code></li>                </ul>
                 <div style="height: 16px"></div>
                 <div class="compact-list" aria-label="需求标签">
-<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 会话</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 显式上下文</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 数据迁移</span>                </div>
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 会话</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 懒创建</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 显式上下文</span>                </div>
               </section>
               <div class="detail-bottom">
                 <section>
                   <h4>下一动作</h4>
-                  <p class="next-action">增加旧 SQLite 样本的幂等迁移、失败回滚和过期会话测试。</p>
+                  <p class="next-action">在设备重置和连续演示验收中保持首轮无展品不创建可继承会话。</p>
                 </section>
                 <section>
                   <h4>状态说明</h4>
@@ -2151,7 +2151,7 @@
     <footer class="footer">
       <div class="footer-inner">
         <p>需求追踪与交付看板 · 源文件 <code>docs/requirements/requirements.yaml</code></p>
-        <p>YAML digest <code>b78c5419bab9</code> · 27 passed in 2.13s</p>
+        <p>YAML digest <code>aba0b527d3ad</code> · 27 passed in 2.13s</p>
       </div>
     </footer>
   </div>

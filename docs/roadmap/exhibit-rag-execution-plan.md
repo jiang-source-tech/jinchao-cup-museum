@@ -52,7 +52,7 @@ ASR 文本
 ### 2.2 当前阻塞点
 
 1. `MuseumRuntime._resolve_context()` 依赖设备点位或外部展品 ID。
-2. `visitor_session.current_exhibit_id` 当前为非空字段，无法表达“刚开始还不知道展品”。
+2. 显式模式必须把“刚开始还不知道展品”作为请求级 `missing_context` 处理，不创建可继承会话；当前非空字段与这一懒创建策略一致。
 3. `MuseumStore.retrieve_evidence()` 需要先拿到展品 ID，当前没有问题到展品的解析模块。
 4. `interaction_trace` 没有记录展品解析状态、匹配文本和候选展品。
 5. 现有测试通过“演示设备默认展品”隐式建立上下文，不能证明真实硬件场景。
@@ -235,7 +235,7 @@ class ExhibitResolver:
 
 ## 6. 阶段 2：改造会话与运行时
 
-### RAG-20：允许空当前展品的会话
+### RAG-20：显式模式懒创建游客会话
 
 **修改文件**
 
@@ -245,28 +245,17 @@ class ExhibitResolver:
 
 **数据变化**
 
-目标设计允许会话先创建，再由首轮 `explicit` 解析建立展品。当前实现采用更保守的过渡方案：
-在 `exhibit_context_mode=explicit` 下，未解析出展品时不创建 `visitor_session`，直接返回
-`missing_context`；这样无需对现有 SQLite 表做破坏性迁移，也不会产生没有当前展品的可继承记录。
-
-将 `visitor_session.current_exhibit_id` 改为可空属于后续需要长期连接会话时的独立迁移任务，当前文本验收不以此为完成前提。
-
-不得直接对已有 SQLite 表执行可能破坏数据的 `ALTER COLUMN`。实现一个显式迁移步骤：
-
-1. 读取当前 schema 版本；
-2. 创建新表结构；
-3. 复制已有会话数据；
-4. 对仍有默认展品的旧会话保留其值；
-5. 新表替换旧表；
-6. 更新 `PRAGMA user_version`；
-7. 迁移失败回滚整个事务。
+比赛版采用懒创建策略：未解析出展品时不创建 `visitor_session`，直接返回
+`missing_context`；首次 `explicit` 解析成功后才创建绑定展品的会话。因此不进行
+`current_exhibit_id` 可空迁移，也不产生没有当前展品的可继承记录。
 
 **完成定义**
 
 - 显式模式首轮没有展品时不会创建可继承会话；
+- 首次明确展品后创建会话并绑定非空 `current_exhibit_id`；
 - 过期会话不会提供继承上下文；
 - 旧演示数据库可以继续读取；
-- 后续 nullable 迁移必须单独设计、备份并验证幂等性。
+- 不引入与当前产品边界无关的长期会话迁移。
 
 ### RAG-21：重排 MuseumRuntime 流程
 

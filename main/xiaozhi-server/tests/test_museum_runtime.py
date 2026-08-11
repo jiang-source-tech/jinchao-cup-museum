@@ -365,3 +365,25 @@ def test_missing_current_exhibit_is_handled_without_legacy_or_llm_fallback(tmp_p
     assert outcome.handled is True
     assert outcome.error_code == "exhibit_reference_missing"
     assert outcome.audit_record["knowledge_status"] == "missing_context"
+
+    store = MuseumStore(tmp_path / "museum.db")
+    with store.connection() as connection:
+        session = connection.execute(
+            "SELECT id FROM visitor_session WHERE device_id = ?",
+            ("unplaced-device",),
+        ).fetchone()
+    assert session is None
+
+    first_exhibit_turn = runtime.handle_turn(
+        _request(
+            text="战国水晶杯是什么材质？",
+            device_id="unplaced-device",
+        )
+    )
+    assert first_exhibit_turn.knowledge_status == "grounded"
+    with store.connection() as connection:
+        session = connection.execute(
+            "SELECT current_exhibit_id FROM visitor_session WHERE device_id = ?",
+            ("unplaced-device",),
+        ).fetchone()
+    assert session["current_exhibit_id"] == "warring-states-crystal-cup"
