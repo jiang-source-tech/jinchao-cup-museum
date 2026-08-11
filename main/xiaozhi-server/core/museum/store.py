@@ -3,11 +3,13 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+import unicodedata
 import uuid
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Iterator
+from typing import Any, Iterator
 
 from core.museum.contracts import (
     EvidenceFact,
@@ -232,6 +234,34 @@ _HIGH_PRIORITY_TYPES = {"price"}
 
 _INTRO_TERMS = ("介绍", "讲讲", "看看", "了解")
 _INTRO_TYPES = {"era": 30, "material": 29, "appearance": 28, "excavation": 20}
+_RETRIEVAL_FAILURE_STATUSES = {
+    "temporary_failure",
+    "retrieval_failure",
+    "system_error",
+}
+_RETRIEVAL_FAILURE_REASONS = {
+    "retrieval_failure",
+    "retrieval_timeout",
+    "retrieval_error",
+    "database_error",
+    "store_error",
+}
+
+
+@dataclass(frozen=True)
+class UnansweredIssue:
+    request_id: str
+    original_question: str
+    resolution_status: str
+    exhibit_id: str | None
+    unanswered_reason: str
+    recorded_unanswered_reason: str | None
+    coarse_intent: str
+    fine_intent: str
+    occurrence_count: int
+    last_occurred_at: str
+    fact_candidate_ids: tuple[str, ...]
+    guard_result: str
 
 
 class MuseumStore:
@@ -964,6 +994,113 @@ class MuseumStore:
                 (request_id,),
             ).fetchone()
 
+    def get_interaction_audit_by_request_id(
+        self, request_id: str
+    ) -> dict[str, Any] | None:
+        """Return one complete trace with JSON audit fields decoded."""
+        row = self.get_interaction_trace_by_request_id(request_id)
+        if row is None:
+            return None
+        audit = {key: row[key] for key in row.keys()}
+        audit["record_type"] = "interaction_trace"
+        audit["candidate_exhibit_ids"] = _json_list(
+            audit.pop("candidate_exhibit_ids_json", "[]")
+        )
+        audit["evidence"] = _json_object(audit.pop("evidence_json", "{}"))
+        audit["stage_latency"] = _json_object(
+            audit.pop("stage_latency_json", "{}")
+        )
+        audit["llm_response_summary"] = _json_object(
+            audit["llm_response_summary"]
+        )
+        audit["llm_invoked"] = bool(audit["llm_invoked"])
+        return audit
+
+    def list_unanswered_issues(self) -> tuple[UnansweredIssue, ...]:
+        """Return actionable unanswered questions grouped for content operations."""
+        exhibit_mentions = _exhibit_mentions(self.active_exhibits())
+        with self.connection() as connection:
+            rows = connection.execute(
+                """
+                SELECT *
+                FROM interaction_trace
+                WHERE unanswered_reason IS NOT NULL
+                   OR resolution_status IN ('not_found', 'ambiguous')
+                   OR grounding_status IN (
+                       'unsupported', 'temporary_failure',
+                       'retrieval_failure', 'system_error'
+                   )
+                ORDER BY created_at DESC, id DESC
+                """
+            ).fetchall()
+
+        seen_request_ids: set[str] = set()
+        groups: dict[tuple[str | None, str, str], dict] = {}
+        for row in rows:
+            request_id = str(row["request_id"])
+            if request_id in seen_request_ids:
+                continue
+            seen_request_ids.add(request_id)
+            reason = _classify_unanswered_trace(row, exhibit_mentions)
+            if reason is None:
+                continue
+            key = (
+                row["exhibit_id"],
+                reason,
+                _normalize_issue_question(str(row["user_text"])),
+            )
+            group = groups.setdefault(
+                key,
+                {
+                    "representative": row,
+                    "reason": reason,
+                    "count": 0,
+                },
+            )
+            group["count"] += 1
+
+        issues = []
+        for group in groups.values():
+            row = group["representative"]
+            evidence = _json_object(row["evidence_json"])
+            issues.append(
+                UnansweredIssue(
+                    request_id=str(row["request_id"]),
+                    original_question=str(row["user_text"]),
+                    resolution_status=str(row["resolution_status"]),
+                    exhibit_id=(
+                        str(row["exhibit_id"])
+                        if row["exhibit_id"] is not None
+                        else None
+                    ),
+                    unanswered_reason=str(group["reason"]),
+                    recorded_unanswered_reason=(
+                        str(row["unanswered_reason"])
+                        if row["unanswered_reason"] is not None
+                        else None
+                    ),
+                    coarse_intent=str(row["coarse_intent"]),
+                    fine_intent=str(row["fine_intent"]),
+                    occurrence_count=int(group["count"]),
+                    last_occurred_at=str(row["created_at"]),
+                    fact_candidate_ids=_string_tuple(evidence.get("fact_ids")),
+                    guard_result=str(row["guard_result"]),
+                )
+            )
+        return tuple(
+            sorted(
+                issues,
+                key=lambda issue: (
+                    -issue.occurrence_count,
+                    -_timestamp_value(issue.last_occurred_at),
+                    issue.exhibit_id or "",
+                    issue.unanswered_reason,
+                    issue.original_question,
+                ),
+                reverse=False,
+            )
+        )
+
 
 def _as_utc(value: datetime) -> datetime:
     if value.tzinfo is None:
@@ -981,6 +1118,135 @@ def _parse_datetime(value: str) -> datetime:
 
 def _normalize_text(value: str) -> str:
     return re.sub(r"[\s，。！？、；：,.!?;:]", "", value).lower()
+
+
+def _normalize_issue_question(value: str) -> str:
+    normalized = unicodedata.normalize("NFKC", value).casefold()
+    return re.sub(r"[\W_]+", "", normalized, flags=re.UNICODE)
+
+
+def _classify_unanswered_trace(
+    row: sqlite3.Row,
+    exhibit_mentions: tuple[str, ...],
+) -> str | None:
+    if (
+        row["grounding_status"] == "conversational"
+        or row["coarse_intent"] == "social"
+    ):
+        return None
+    grounding_status = str(row["grounding_status"] or "")
+    recorded_reason = str(row["unanswered_reason"] or "")
+    resolution_status = str(row["resolution_status"] or "")
+    if (
+        grounding_status in _RETRIEVAL_FAILURE_STATUSES
+        or recorded_reason in _RETRIEVAL_FAILURE_REASONS
+    ):
+        return "retrieval_failure"
+    if resolution_status == "ambiguous":
+        return "exhibit_ambiguous"
+    if resolution_status == "not_found":
+        if _is_asr_suspected(row["matched_exhibit_text"], exhibit_mentions):
+            return "asr_suspected"
+        return "exhibit_not_found"
+    if (
+        row["coarse_intent"] in {"comparison", "unsupported"}
+        or recorded_reason == "out_of_scope"
+    ):
+        return "out_of_scope"
+    if (
+        row["exhibit_id"] is not None
+        and grounding_status == "unsupported"
+        and recorded_reason == "no_published_fact_match"
+    ):
+        return "fact_not_covered"
+    return None
+
+
+def _exhibit_mentions(
+    exhibits: tuple[tuple[str, str, str], ...],
+) -> tuple[str, ...]:
+    mentions: list[str] = []
+    for _exhibit_id, name, aliases_json in exhibits:
+        values = [name]
+        try:
+            aliases = json.loads(aliases_json)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            aliases = []
+        if isinstance(aliases, list):
+            values.extend(str(alias) for alias in aliases)
+        for value in values:
+            normalized = _normalize_issue_question(value)
+            if normalized and normalized not in mentions:
+                mentions.append(normalized)
+    return tuple(mentions)
+
+
+def _is_asr_suspected(
+    matched_exhibit_text: object,
+    exhibit_mentions: tuple[str, ...],
+) -> bool:
+    reference = _normalize_issue_question(str(matched_exhibit_text or ""))
+    if len(reference) < 4:
+        return False
+    for mention in exhibit_mentions:
+        if reference == mention:
+            continue
+        max_length = max(len(reference), len(mention))
+        allowed_distance = 1 if max_length < 10 else 2
+        if abs(len(reference) - len(mention)) > allowed_distance:
+            continue
+        if _edit_distance(reference, mention) <= allowed_distance:
+            return True
+    return False
+
+
+def _edit_distance(left: str, right: str) -> int:
+    if len(left) < len(right):
+        left, right = right, left
+    previous = list(range(len(right) + 1))
+    for left_index, left_char in enumerate(left, start=1):
+        current = [left_index]
+        for right_index, right_char in enumerate(right, start=1):
+            current.append(
+                min(
+                    current[-1] + 1,
+                    previous[right_index] + 1,
+                    previous[right_index - 1] + (left_char != right_char),
+                )
+            )
+        previous = current
+    return previous[-1]
+
+
+def _json_object(value: object) -> dict:
+    try:
+        decoded = json.loads(str(value or "{}"))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return {}
+    return decoded if isinstance(decoded, dict) else {}
+
+
+def _json_list(value: object) -> list:
+    try:
+        decoded = json.loads(str(value or "[]"))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return []
+    return decoded if isinstance(decoded, list) else []
+
+
+def _string_tuple(value: object) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        return ()
+    return tuple(str(item) for item in value)
+
+
+def _timestamp_value(value: str) -> float:
+    normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return float("-inf")
+    return _as_utc(parsed).timestamp()
 
 
 def _ensure_column(
