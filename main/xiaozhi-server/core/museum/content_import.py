@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import re
@@ -123,6 +124,82 @@ class ContentImportResult:
     @property
     def source_count(self) -> int:
         return len(self.source_ids)
+
+
+@dataclass(frozen=True)
+class RevisionLifecycleResult:
+    revision_id: str
+    exhibit_id: str
+    revision_number: int
+    status: str
+    previous_published_revision_id: str | None = None
+
+
+@dataclass(frozen=True)
+class RevisionVersionSummary:
+    revision_id: str
+    revision_number: int
+    status: str
+    reviewed_by: str | None
+    reviewed_at: str | None
+    published_at: str | None
+    fact_count: int
+    source_count: int
+    fact_ids: tuple[str, ...]
+    added_fact_ids: tuple[str, ...]
+    removed_fact_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class RevisionLifecycleEvent:
+    event_id: int
+    revision_id: str
+    action: str
+    from_status: str
+    to_status: str
+    actor: str
+    reason: str
+    occurred_at: str
+
+
+@dataclass(frozen=True)
+class ExhibitVersionHistory:
+    exhibit_id: str
+    exhibit_name: str
+    current_published_revision_id: str | None
+    revisions: tuple[RevisionVersionSummary, ...]
+    events: tuple[RevisionLifecycleEvent, ...]
+
+
+@dataclass(frozen=True)
+class HistoricalFactEvidence:
+    fact_id: str
+    fact_type: str
+    statement: str
+    source_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class HistoricalSourceEvidence:
+    source_id: str
+    title: str
+    source_type: str
+    locator: str
+    rights_note: str
+
+
+@dataclass(frozen=True)
+class InteractionEvidenceAudit:
+    trace_id: str
+    request_id: str
+    exhibit_id: str | None
+    grounding_status: str
+    content_revision_id: str | None
+    content_version: int | None
+    facts: tuple[HistoricalFactEvidence, ...]
+    sources: tuple[HistoricalSourceEvidence, ...]
+    answer_text: str
+    created_at: str
 
 
 def load_content_package(path: str | Path) -> MuseumContentPackage:
@@ -249,6 +326,426 @@ def import_draft_content(
             for fact in exhibit.revision.facts
         ),
         source_ids=tuple(source.id for source in package.sources),
+    )
+
+
+def review_revision(
+    store: MuseumStore,
+    *,
+    revision_id: str,
+    reviewed_by: str,
+    reviewed_at: datetime,
+) -> RevisionLifecycleResult:
+    reviewer = _required_argument(reviewed_by, "reviewed_by")
+    occurred_at = _iso_timestamp(reviewed_at)
+    with store.connection() as connection:
+        revision = _revision_row(connection, revision_id)
+        if revision["status"] != "draft":
+            raise ContentPackageValidationError(
+                [f"内容版本 {revision_id} 当前状态不是 draft"]
+            )
+        connection.execute(
+            """
+            UPDATE content_revision
+            SET status = 'reviewed', reviewed_by = ?, reviewed_at = ?
+            WHERE id = ?
+            """,
+            (reviewer, occurred_at, revision_id),
+        )
+        _record_revision_event(
+            connection,
+            revision_id=revision_id,
+            exhibit_id=str(revision["exhibit_id"]),
+            action="review",
+            from_status="draft",
+            to_status="reviewed",
+            actor=reviewer,
+            reason="",
+            occurred_at=occurred_at,
+        )
+    return RevisionLifecycleResult(
+        revision_id=revision_id,
+        exhibit_id=str(revision["exhibit_id"]),
+        revision_number=int(revision["revision_no"]),
+        status="reviewed",
+    )
+
+
+def publish_revision(
+    store: MuseumStore,
+    *,
+    revision_id: str,
+    published_by: str,
+    published_at: datetime,
+) -> RevisionLifecycleResult:
+    publisher = _required_argument(published_by, "published_by")
+    occurred_at = _iso_timestamp(published_at)
+    with store.connection() as connection:
+        revision = _revision_row(connection, revision_id)
+        issues = _publication_issues(
+            connection,
+            revision,
+            expected_status="reviewed",
+        )
+        if issues:
+            raise ContentPackageValidationError(issues)
+        previous_published_revision_id = _activate_revision(
+            connection,
+            revision=revision,
+            action="publish",
+            from_status="reviewed",
+            actor=publisher,
+            reason="",
+            occurred_at=occurred_at,
+            require_newer=True,
+        )
+    return RevisionLifecycleResult(
+        revision_id=revision_id,
+        exhibit_id=str(revision["exhibit_id"]),
+        revision_number=int(revision["revision_no"]),
+        status="published",
+        previous_published_revision_id=previous_published_revision_id,
+    )
+
+
+def withdraw_revision(
+    store: MuseumStore,
+    *,
+    revision_id: str,
+    withdrawn_by: str,
+    withdrawn_at: datetime,
+    reason: str,
+) -> RevisionLifecycleResult:
+    actor = _required_argument(withdrawn_by, "withdrawn_by")
+    normalized_reason = _required_argument(reason, "reason")
+    occurred_at = _iso_timestamp(withdrawn_at)
+    with store.connection() as connection:
+        revision = _revision_row(connection, revision_id)
+        if revision["status"] != "published":
+            raise ContentPackageValidationError(
+                [f"内容版本 {revision_id} 当前状态不是 published"]
+            )
+        connection.execute(
+            "UPDATE content_revision SET status = 'withdrawn' WHERE id = ?",
+            (revision_id,),
+        )
+        _record_revision_event(
+            connection,
+            revision_id=revision_id,
+            exhibit_id=str(revision["exhibit_id"]),
+            action="withdraw",
+            from_status="published",
+            to_status="withdrawn",
+            actor=actor,
+            reason=normalized_reason,
+            occurred_at=occurred_at,
+        )
+    return RevisionLifecycleResult(
+        revision_id=revision_id,
+        exhibit_id=str(revision["exhibit_id"]),
+        revision_number=int(revision["revision_no"]),
+        status="withdrawn",
+    )
+
+
+def rollback_revision(
+    store: MuseumStore,
+    *,
+    revision_id: str,
+    rolled_back_by: str,
+    rolled_back_at: datetime,
+    reason: str,
+) -> RevisionLifecycleResult:
+    actor = _required_argument(rolled_back_by, "rolled_back_by")
+    normalized_reason = _required_argument(reason, "reason")
+    occurred_at = _iso_timestamp(rolled_back_at)
+    with store.connection() as connection:
+        revision = _revision_row(connection, revision_id)
+        issues = _publication_issues(
+            connection,
+            revision,
+            expected_status="withdrawn",
+        )
+        if issues:
+            raise ContentPackageValidationError(issues)
+        previous_published_revision_id = _activate_revision(
+            connection,
+            revision=revision,
+            action="rollback",
+            from_status="withdrawn",
+            actor=actor,
+            reason=normalized_reason,
+            occurred_at=occurred_at,
+            require_newer=False,
+        )
+    return RevisionLifecycleResult(
+        revision_id=revision_id,
+        exhibit_id=str(revision["exhibit_id"]),
+        revision_number=int(revision["revision_no"]),
+        status="published",
+        previous_published_revision_id=previous_published_revision_id,
+    )
+
+
+def show_exhibit_versions(
+    store: MuseumStore,
+    *,
+    exhibit_id: str,
+) -> ExhibitVersionHistory:
+    with store.connection() as connection:
+        exhibit = connection.execute(
+            "SELECT id, name FROM exhibit WHERE id = ?",
+            (exhibit_id,),
+        ).fetchone()
+        if exhibit is None:
+            raise ContentPackageValidationError([f"展品 {exhibit_id} 不存在"])
+        revision_rows = connection.execute(
+            """
+            SELECT cr.id, cr.revision_no, cr.status,
+                   cr.reviewed_by, cr.reviewed_at, cr.published_at,
+                   COUNT(DISTINCT f.id) AS fact_count,
+                   COUNT(DISTINCT fs.source_id) AS source_count,
+                   GROUP_CONCAT(DISTINCT f.id) AS fact_ids
+            FROM content_revision cr
+            LEFT JOIN exhibit_fact f ON f.revision_id = cr.id
+            LEFT JOIN fact_source fs ON fs.fact_id = f.id
+            WHERE cr.exhibit_id = ?
+            GROUP BY cr.id, cr.revision_no, cr.status,
+                     cr.reviewed_by, cr.reviewed_at, cr.published_at
+            ORDER BY cr.revision_no, cr.id
+            """,
+            (exhibit_id,),
+        ).fetchall()
+        event_rows = connection.execute(
+            """
+            SELECT id, revision_id, action, from_status, to_status,
+                   actor, reason, occurred_at
+            FROM content_revision_event
+            WHERE exhibit_id = ?
+            ORDER BY id
+            """,
+            (exhibit_id,),
+        ).fetchall()
+
+    revision_summaries: list[RevisionVersionSummary] = []
+    previous_fact_ids: set[str] = set()
+    for row in revision_rows:
+        fact_ids = tuple(
+            sorted(
+                str(row["fact_ids"]).split(",")
+                if row["fact_ids"] is not None
+                else ()
+            )
+        )
+        current_fact_ids = set(fact_ids)
+        revision_summaries.append(
+            RevisionVersionSummary(
+                revision_id=str(row["id"]),
+                revision_number=int(row["revision_no"]),
+                status=str(row["status"]),
+                reviewed_by=(
+                    str(row["reviewed_by"])
+                    if row["reviewed_by"] is not None
+                    else None
+                ),
+                reviewed_at=(
+                    str(row["reviewed_at"])
+                    if row["reviewed_at"] is not None
+                    else None
+                ),
+                published_at=(
+                    str(row["published_at"])
+                    if row["published_at"] is not None
+                    else None
+                ),
+                fact_count=int(row["fact_count"]),
+                source_count=int(row["source_count"]),
+                fact_ids=fact_ids,
+                added_fact_ids=tuple(sorted(current_fact_ids - previous_fact_ids)),
+                removed_fact_ids=tuple(sorted(previous_fact_ids - current_fact_ids)),
+            )
+        )
+        previous_fact_ids = current_fact_ids
+    revisions = tuple(revision_summaries)
+    return ExhibitVersionHistory(
+        exhibit_id=exhibit_id,
+        exhibit_name=str(exhibit["name"]),
+        current_published_revision_id=next(
+            (
+                revision.revision_id
+                for revision in revisions
+                if revision.status == "published"
+            ),
+            None,
+        ),
+        revisions=revisions,
+        events=tuple(
+            RevisionLifecycleEvent(
+                event_id=int(row["id"]),
+                revision_id=str(row["revision_id"]),
+                action=str(row["action"]),
+                from_status=str(row["from_status"]),
+                to_status=str(row["to_status"]),
+                actor=str(row["actor"]),
+                reason=str(row["reason"]),
+                occurred_at=str(row["occurred_at"]),
+            )
+            for row in event_rows
+        ),
+    )
+
+
+def audit_interaction_evidence(
+    store: MuseumStore,
+    *,
+    request_id: str,
+) -> InteractionEvidenceAudit:
+    with store.connection() as connection:
+        trace = connection.execute(
+            """
+            SELECT *
+            FROM interaction_trace
+            WHERE request_id = ?
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+            """,
+            (request_id,),
+        ).fetchone()
+        if trace is None:
+            raise ContentPackageValidationError(
+                [f"请求 {request_id} 不存在交互审计记录"]
+            )
+        try:
+            evidence = json.loads(str(trace["evidence_json"]))
+        except (TypeError, json.JSONDecodeError) as exc:
+            raise ContentPackageValidationError(
+                [f"请求 {request_id} 的依据快照无法解析"]
+            ) from exc
+        if not isinstance(evidence, Mapping):
+            raise ContentPackageValidationError(
+                [f"请求 {request_id} 的依据快照不是对象"]
+            )
+
+        revision_id = evidence.get("content_revision_id")
+        content_version = evidence.get("content_version")
+        fact_ids = _audit_id_tuple(
+            evidence.get("fact_ids", []),
+            field="fact_ids",
+            request_id=request_id,
+        )
+        source_ids = _audit_id_tuple(
+            evidence.get("source_ids", []),
+            field="source_ids",
+            request_id=request_id,
+        )
+        fact_rows: list[sqlite3.Row] = []
+        source_rows: list[sqlite3.Row] = []
+        if revision_id is not None:
+            if not isinstance(content_version, int) or isinstance(
+                content_version, bool
+            ):
+                raise ContentPackageValidationError(
+                    [f"请求 {request_id} 的历史内容版本号无效"]
+                )
+            revision = connection.execute(
+                """
+                SELECT id, revision_no
+                FROM content_revision
+                WHERE id = ?
+                """,
+                (revision_id,),
+            ).fetchone()
+            if revision is None:
+                raise ContentPackageValidationError(
+                    [f"历史内容版本 {revision_id} 已不存在，无法复核"]
+                )
+            if int(revision["revision_no"]) != int(content_version):
+                raise ContentPackageValidationError(
+                    [f"请求 {request_id} 的历史内容版本号不一致"]
+                )
+            if fact_ids:
+                placeholders = ", ".join("?" for _ in fact_ids)
+                fact_rows = connection.execute(
+                    f"""
+                    SELECT f.id, f.fact_type, f.statement,
+                           GROUP_CONCAT(fs.source_id) AS source_ids
+                    FROM exhibit_fact f
+                    JOIN fact_source fs ON fs.fact_id = f.id
+                    WHERE f.revision_id = ? AND f.id IN ({placeholders})
+                    GROUP BY f.id, f.fact_type, f.statement
+                    """,
+                    (revision_id, *fact_ids),
+                ).fetchall()
+            if source_ids:
+                placeholders = ", ".join("?" for _ in source_ids)
+                source_rows = connection.execute(
+                    f"""
+                    SELECT id, title, source_type, locator, rights_note
+                    FROM source_document
+                    WHERE id IN ({placeholders})
+                    """,
+                    source_ids,
+                ).fetchall()
+        elif content_version is not None or fact_ids or source_ids:
+            raise ContentPackageValidationError(
+                [f"请求 {request_id} 的依据快照缺少内容版本 ID"]
+            )
+
+    facts_by_id = {str(row["id"]): row for row in fact_rows}
+    sources_by_id = {str(row["id"]): row for row in source_rows}
+    missing_fact_ids = [fact_id for fact_id in fact_ids if fact_id not in facts_by_id]
+    missing_source_ids = [
+        source_id for source_id in source_ids if source_id not in sources_by_id
+    ]
+    issues = [f"历史事实 {fact_id} 已不存在，无法复核" for fact_id in missing_fact_ids]
+    issues.extend(
+        f"历史来源 {source_id} 已不存在，无法复核"
+        for source_id in missing_source_ids
+    )
+    actual_source_ids = {
+        source_id
+        for row in fact_rows
+        for source_id in str(row["source_ids"]).split(",")
+    }
+    if actual_source_ids != set(source_ids):
+        issues.append(f"请求 {request_id} 的历史事实与来源关联不一致")
+    if issues:
+        raise ContentPackageValidationError(issues)
+
+    return InteractionEvidenceAudit(
+        trace_id=str(trace["id"]),
+        request_id=str(trace["request_id"]),
+        exhibit_id=(
+            str(trace["exhibit_id"]) if trace["exhibit_id"] is not None else None
+        ),
+        grounding_status=str(trace["grounding_status"]),
+        content_revision_id=(str(revision_id) if revision_id is not None else None),
+        content_version=(
+            int(content_version) if content_version is not None else None
+        ),
+        facts=tuple(
+            HistoricalFactEvidence(
+                fact_id=fact_id,
+                fact_type=str(facts_by_id[fact_id]["fact_type"]),
+                statement=str(facts_by_id[fact_id]["statement"]),
+                source_ids=tuple(
+                    sorted(str(facts_by_id[fact_id]["source_ids"]).split(","))
+                ),
+            )
+            for fact_id in fact_ids
+        ),
+        sources=tuple(
+            HistoricalSourceEvidence(
+                source_id=source_id,
+                title=str(sources_by_id[source_id]["title"]),
+                source_type=str(sources_by_id[source_id]["source_type"]),
+                locator=str(sources_by_id[source_id]["locator"]),
+                rights_note=str(sources_by_id[source_id]["rights_note"]),
+            )
+            for source_id in source_ids
+        ),
+        answer_text=str(trace["answer_text"]),
+        created_at=str(trace["created_at"]),
     )
 
 
@@ -688,6 +1185,279 @@ def _row_exists(connection: sqlite3.Connection, table: str, row_id: str) -> bool
         ).fetchone()
         is not None
     )
+
+
+def _revision_row(
+    connection: sqlite3.Connection,
+    revision_id: str,
+) -> sqlite3.Row:
+    row = connection.execute(
+        """
+        SELECT id, exhibit_id, revision_no, status,
+               reviewed_by, reviewed_at, published_at
+        FROM content_revision
+        WHERE id = ?
+        """,
+        (revision_id,),
+    ).fetchone()
+    if row is None:
+        raise ContentPackageValidationError([f"内容版本 {revision_id} 不存在"])
+    return row
+
+
+def _record_revision_event(
+    connection: sqlite3.Connection,
+    *,
+    revision_id: str,
+    exhibit_id: str,
+    action: str,
+    from_status: str,
+    to_status: str,
+    actor: str,
+    reason: str,
+    occurred_at: str,
+) -> None:
+    connection.execute(
+        """
+        INSERT INTO content_revision_event(
+            revision_id, exhibit_id, action, from_status, to_status,
+            actor, reason, occurred_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            revision_id,
+            exhibit_id,
+            action,
+            from_status,
+            to_status,
+            actor,
+            reason,
+            occurred_at,
+        ),
+    )
+
+
+def _publication_issues(
+    connection: sqlite3.Connection,
+    revision: sqlite3.Row,
+    *,
+    expected_status: str,
+) -> list[str]:
+    revision_id = str(revision["id"])
+    issues: list[str] = []
+    if revision["status"] != expected_status:
+        issues.append(
+            f"内容版本 {revision_id} 当前状态不是 {expected_status}"
+        )
+    if not str(revision["reviewed_by"] or "").strip():
+        issues.append(f"内容版本 {revision_id} 缺少审核人")
+    if not str(revision["reviewed_at"] or "").strip():
+        issues.append(f"内容版本 {revision_id} 缺少审核时间")
+    issues.extend(_fact_publication_issues(connection, revision_id))
+    issues.extend(
+        _alias_publication_issues(connection, str(revision["exhibit_id"]))
+    )
+    return issues
+
+
+def _activate_revision(
+    connection: sqlite3.Connection,
+    *,
+    revision: sqlite3.Row,
+    action: str,
+    from_status: str,
+    actor: str,
+    reason: str,
+    occurred_at: str,
+    require_newer: bool,
+) -> str | None:
+    revision_id = str(revision["id"])
+    exhibit_id = str(revision["exhibit_id"])
+    previous = connection.execute(
+        """
+        SELECT id, revision_no
+        FROM content_revision
+        WHERE exhibit_id = ? AND status = 'published'
+        """,
+        (exhibit_id,),
+    ).fetchone()
+    previous_revision_id: str | None = None
+    if previous is not None:
+        if require_newer and int(revision["revision_no"]) <= int(
+            previous["revision_no"]
+        ):
+            raise ContentPackageValidationError(
+                [
+                    f"内容版本 {revision_id} 不是比当前发布版本更新的版本；"
+                    "恢复旧版本请使用 rollback"
+                ]
+            )
+        previous_revision_id = str(previous["id"])
+        connection.execute(
+            "UPDATE content_revision SET status = 'withdrawn' WHERE id = ?",
+            (previous_revision_id,),
+        )
+        operation_label = "发布" if action == "publish" else "回滚"
+        _record_revision_event(
+            connection,
+            revision_id=previous_revision_id,
+            exhibit_id=exhibit_id,
+            action="supersede",
+            from_status="published",
+            to_status="withdrawn",
+            actor=actor,
+            reason=f"由内容版本 {revision_id} {operation_label}自动替代",
+            occurred_at=occurred_at,
+        )
+    connection.execute(
+        """
+        UPDATE content_revision
+        SET status = 'published', published_at = ?
+        WHERE id = ?
+        """,
+        (occurred_at, revision_id),
+    )
+    _record_revision_event(
+        connection,
+        revision_id=revision_id,
+        exhibit_id=exhibit_id,
+        action=action,
+        from_status=from_status,
+        to_status="published",
+        actor=actor,
+        reason=reason,
+        occurred_at=occurred_at,
+    )
+    return previous_revision_id
+
+
+def _fact_publication_issues(
+    connection: sqlite3.Connection,
+    revision_id: str,
+) -> list[str]:
+    rows = connection.execute(
+        """
+        SELECT f.id, f.statement, COUNT(fs.source_id) AS source_count
+        FROM exhibit_fact f
+        LEFT JOIN fact_source fs ON fs.fact_id = f.id
+        WHERE f.revision_id = ?
+        GROUP BY f.id, f.statement
+        ORDER BY f.id
+        """,
+        (revision_id,),
+    ).fetchall()
+    if not rows:
+        return [f"内容版本 {revision_id} 没有可发布事实"]
+    issues: list[str] = []
+    for row in rows:
+        fact_id = str(row["id"])
+        if not str(row["statement"] or "").strip():
+            issues.append(f"事实 {fact_id} 的陈述为空")
+        if int(row["source_count"]) < 1:
+            issues.append(f"事实 {fact_id} 缺少来源")
+    return issues
+
+
+def _alias_publication_issues(
+    connection: sqlite3.Connection,
+    exhibit_id: str,
+) -> list[str]:
+    exhibit = connection.execute(
+        """
+        SELECT e.id, e.name, e.aliases_json, e.status AS exhibit_status,
+               m.status AS museum_status
+        FROM exhibit e
+        JOIN zone z ON z.id = e.zone_id
+        JOIN museum m ON m.id = z.museum_id
+        WHERE e.id = ?
+        """,
+        (exhibit_id,),
+    ).fetchone()
+    if exhibit is None:
+        return [f"展品 {exhibit_id} 不存在"]
+
+    issues: list[str] = []
+    if exhibit["exhibit_status"] != "active":
+        issues.append(f"展品 {exhibit_id} 当前不是 active")
+    if exhibit["museum_status"] != "active":
+        issues.append(f"展品 {exhibit_id} 所属博物馆当前不是 active")
+
+    mentions = (
+        str(exhibit["name"]),
+        *tuple(json.loads(str(exhibit["aliases_json"] or "[]"))),
+    )
+    normalized_mentions: dict[str, str] = {}
+    for mention in mentions:
+        normalized = _normalize_mention(mention)
+        if normalized in normalized_mentions:
+            issues.append(f"展品 {exhibit_id} 内部存在重复名称或别名 {mention}")
+        else:
+            normalized_mentions[normalized] = mention
+
+    rows = connection.execute(
+        """
+        SELECT e.id, e.name, e.aliases_json
+        FROM exhibit e
+        JOIN zone z ON z.id = e.zone_id
+        JOIN museum m ON m.id = z.museum_id
+        WHERE e.id <> ?
+          AND e.status = 'active'
+          AND m.status = 'active'
+          AND EXISTS (
+              SELECT 1 FROM content_revision cr
+              WHERE cr.exhibit_id = e.id
+                AND cr.status IN ('published', 'withdrawn')
+          )
+        """,
+        (exhibit_id,),
+    ).fetchall()
+    for row in rows:
+        other_mentions = (
+            str(row["name"]),
+            *tuple(json.loads(str(row["aliases_json"] or "[]"))),
+        )
+        for mention in other_mentions:
+            normalized = _normalize_mention(mention)
+            target_mention = normalized_mentions.get(normalized)
+            if target_mention is not None:
+                issues.append(
+                    "别名或名称冲突："
+                    f"{target_mention} 已属于可见展品 {row['id']}"
+                )
+    return issues
+
+
+def _required_argument(value: str, name: str) -> str:
+    normalized = str(value).strip()
+    if not normalized:
+        raise ContentPackageValidationError([f"{name} 不能为空"])
+    return normalized
+
+
+def _audit_id_tuple(value: Any, *, field: str, request_id: str) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        raise ContentPackageValidationError(
+            [f"请求 {request_id} 的 {field} 不是数组"]
+        )
+    result: list[str] = []
+    for item in value:
+        if not isinstance(item, str) or not item.strip():
+            raise ContentPackageValidationError(
+                [f"请求 {request_id} 的 {field} 包含无效 ID"]
+            )
+        normalized = item.strip()
+        if normalized in result:
+            raise ContentPackageValidationError(
+                [f"请求 {request_id} 的 {field} 包含重复 ID {normalized}"]
+            )
+        result.append(normalized)
+    return tuple(result)
+
+
+def _iso_timestamp(value: datetime) -> str:
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc).isoformat(timespec="seconds")
 
 
 def _mapping(value: Any, path: str, issues: list[str]) -> Mapping[str, Any]:

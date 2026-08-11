@@ -239,17 +239,95 @@ python scripts/import_museum_content.py import `
   --database data/museum.db
 ```
 
+### 8.4 审核草稿
+
+```powershell
+python scripts/import_museum_content.py review `
+  --database data/museum.db `
+  --revision-id fixture-bronze-bell-r1 `
+  --actor reviewer-id
+```
+
+只有 `draft` 可以进入 `reviewed`。审核操作同时保存审核人、审核时间和一条 `review` 生命周期事件。可用 `--occurred-at` 传入带时区的 ISO 8601 时间；未传时使用当前 UTC 时间。
+
+### 8.5 发布版本
+
+```powershell
+python scripts/import_museum_content.py publish `
+  --database data/museum.db `
+  --revision-id fixture-bronze-bell-r1 `
+  --actor publisher-id
+```
+
+发布前重新检查：
+
+- revision 状态必须为 `reviewed`；
+- 审核人和审核时间非空；
+- revision 至少包含一条非空事实；
+- 每条事实至少绑定一个来源；
+- 展品和博物馆处于 `active`；
+- 规范名称和别名不与其他已发布或已撤回活动展品冲突。
+
+发布成功时，同一展品原 `published` 版本在相同事务中变为 `withdrawn`，随后目标版本变为 `published`。任一步失败时，旧发布版本和生命周期事件全部保持不变。
+
+### 8.6 撤回与回滚
+
+```powershell
+python scripts/import_museum_content.py withdraw `
+  --database data/museum.db `
+  --revision-id fixture-bronze-bell-r1 `
+  --actor operator-id `
+  --reason "来源需要重新确认"
+
+python scripts/import_museum_content.py rollback `
+  --database data/museum.db `
+  --revision-id fixture-bronze-bell-r1 `
+  --actor operator-id `
+  --reason "恢复上一稳定版本"
+```
+
+`withdraw` 只接受当前 `published` 版本。撤回后展品名称仍可被识别，但新回答不能读取该版本事实。`rollback` 只接受 `withdrawn` 版本，并在同一事务中撤回当前发布版本、恢复目标旧版本。revision、fact、source 和旧 interaction trace 均不删除。
+
+### 8.7 查看版本差异
+
+```powershell
+python scripts/import_museum_content.py show `
+  --database data/museum.db `
+  --exhibit-id fixture-bronze-bell
+```
+
+输出当前发布版本、各 revision 状态、审核与发布时间、事实和来源数量、相对上一版本新增/删除的 fact ID，以及审核、发布、自动替代、撤回和回滚事件。
+
+### 8.8 复核历史回答
+
+```powershell
+python scripts/import_museum_content.py audit `
+  --database data/museum.db `
+  --request-id request-id-from-interaction-trace
+```
+
+`audit` 从历史 `interaction_trace.evidence_json` 读取当时使用的 `content_revision_id`、版本号、fact ID 和 source ID，再从保留的旧版本数据中还原事实陈述和来源元数据。版本、事实、来源或关联缺失时返回明确的审计失败，而不是使用当前发布版本替代。
+
 增加 `--json` 可输出单行结构化结果，供脚本或 CI 使用。成功结果写入标准输出；失败结果写入标准错误，并包含 `status`、`error`、`message` 和 `issues`。校验或数据库冲突时进程返回码为 `2`，成功返回 `0`。
 
-## 9. v1 明确未实现
+## 9. 生命周期审计
 
-- 将 draft 标记为 reviewed；
-- 发布新 revision；
-- 自动撤回旧发布版本；
-- 撤回和回滚；
-- 版本差异展示；
+`content_revision_event` 以追加事件记录内容状态变化：
+
+```text
+review
+publish
+supersede
+withdraw
+rollback
+```
+
+每条事件保存 revision、展品、原状态、目标状态、执行人、原因和发生时间。状态变更和事件写入使用同一 SQLite 事务，不允许出现“状态已变化但没有事件”或“事件存在但状态未变化”。
+
+## 10. v1 仍未实现
+
 - 独立别名表和别名类型元数据；
 - 内容管理后台；
 - 向量索引或外部向量数据库。
 
-这些能力属于 `RAG-NEXT-03` 及后续任务，不能因 draft 导入完成而把 `REQ-013` 整体标记为 done。
+`REQ-013 / AC-013-1` 至 `AC-013-5` 已形成完整自动化闭环；以上剩余能力属于后续独立需求，不影响 `REQ-013` 完成状态。

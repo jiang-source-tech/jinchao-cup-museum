@@ -57,6 +57,24 @@
 | `reviewed_at` | 审核时间 |
 | `published_at` | 发布时间 |
 
+### content_revision_event
+
+以追加事件记录内容版本生命周期，不覆盖旧事件。
+
+| 字段 | 含义 |
+| --- | --- |
+| `id` | 单调递增事件标识 |
+| `revision_id` | 被操作的内容版本 |
+| `exhibit_id` | 所属展品 |
+| `action` | `review`、`publish`、`supersede`、`withdraw` 或 `rollback` |
+| `from_status` | 操作前状态 |
+| `to_status` | 操作后状态 |
+| `actor` | 审核人、发布人或运营执行人 |
+| `reason` | 撤回、回滚或自动替代原因 |
+| `occurred_at` | 带时区的操作时间 |
+
+版本状态更新和对应事件写入必须处于同一事务。`supersede` 表示发布新版本或回滚旧版本时，当前发布版本被自动替代。
+
 ### exhibit_fact
 
 | 字段 | 含义 |

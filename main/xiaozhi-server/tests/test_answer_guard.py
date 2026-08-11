@@ -7,6 +7,10 @@ import pytest
 
 from core.business_runtime_factory import create_conversation_runtime
 from core.conversation_runtime import TurnRequest
+from core.museum.content_import import (
+    audit_interaction_evidence,
+    withdraw_revision,
+)
 from core.museum.store import MuseumStore
 
 
@@ -144,11 +148,13 @@ def test_withdrawn_revision_is_hidden_from_new_answers_but_old_trace_remains(
     assert first.knowledge_status == "grounded"
     assert old_trace["grounding_status"] == "grounded"
 
-    with store.connection() as connection:
-        connection.execute(
-            "UPDATE content_revision SET status = 'withdrawn' WHERE id = ?",
-            ("warring-states-crystal-cup-r1",),
-        )
+    withdrawn = withdraw_revision(
+        store,
+        revision_id="warring-states-crystal-cup-r1",
+        withdrawn_by="fixture-operator",
+        withdrawn_at=datetime.now().astimezone(),
+        reason="测试撤回",
+    )
 
     second = runtime.handle_turn(
         _request(
@@ -157,8 +163,13 @@ def test_withdrawn_revision_is_hidden_from_new_answers_but_old_trace_remains(
         )
     )
     new_trace = store.get_interaction_trace(second.audit_id)
+    historical = audit_interaction_evidence(
+        store,
+        request_id="before-withdrawal",
+    )
 
     assert second.knowledge_status == "unsupported"
+    assert withdrawn.status == "withdrawn"
     assert second.fact_ids == ()
     assert "一整块天然水晶" not in second.spoken_text
     assert new_trace["grounding_status"] == "unsupported"
@@ -170,3 +181,10 @@ def test_withdrawn_revision_is_hidden_from_new_answers_but_old_trace_remains(
     assert json.loads(old_trace["evidence_json"])["content_revision_id"] == (
         "warring-states-crystal-cup-r1"
     )
+    assert historical.content_revision_id == "warring-states-crystal-cup-r1"
+    assert historical.facts[0].fact_id == "fact-crystal-cup-material"
+    assert "一整块天然水晶" in historical.facts[0].statement
+    assert {source.source_id for source in historical.sources} == {
+        "source-hangzhou-portal-2020",
+        "source-people-daily-2026",
+    }

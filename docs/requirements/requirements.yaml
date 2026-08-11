@@ -524,7 +524,7 @@ requirements:
     title: 内容导入、发布校验与版本回滚
     kind: operational
     priority: P1
-    status: in_progress
+    status: done
     phase: content
     owner: 内容 / 服务端
     confidence: high
@@ -539,26 +539,34 @@ requirements:
         status: done
       - id: AC-013-3
         text: 发布前拒绝无来源事实、别名冲突和缺失审核信息。
-        status: pending
+        status: done
       - id: AC-013-4
         text: 发布后新会话使用新版本，撤回后新回答不可见。
-        status: pending
+        status: done
       - id: AC-013-5
         text: 历史交互仍可复核旧内容版本。
-        status: pending
+        status: done
     evidence:
       - kind: code
         label: 内容包解析与事务导入
         path: ../../main/xiaozhi-server/core/museum/content_import.py
-        note: 支持 YAML/JSON、聚合校验、数据库冲突检查、draft 导入和 FTS 同事务写入。
+        note: 支持 YAML/JSON、草稿事务、审核、发布校验、唯一版本切换、撤回、回滚、版本差异和历史依据复核。
+      - kind: code
+        label: 内容版本生命周期审计
+        path: ../../main/xiaozhi-server/core/museum/store.py
+        note: content_revision_event 保存审核、发布、自动替代、撤回和回滚事件，状态变更与事件写入处于同一事务。
       - kind: code
         label: 内容导入 CLI
         path: ../../main/xiaozhi-server/scripts/import_museum_content.py
-        note: 提供 validate、可选数据库冲突检查和 import --database 命令。
+        note: 提供 validate、import、review、publish、withdraw、rollback、show 和 audit 命令及 JSON 输出。
       - kind: test
         label: 内容导入回归测试
         path: ../../main/xiaozhi-server/tests/test_museum_content_import.py
-        note: 覆盖三展品草稿导入、错误聚合和数据库中途失败整批回滚。
+        note: 覆盖发布门、事务失败回滚、唯一发布版本、新会话切换、生命周期事件、CLI 和旧依据复核。
+      - kind: test
+        label: 撤回后回答与旧 trace 回归
+        path: ../../main/xiaozhi-server/tests/test_answer_guard.py
+        note: 证明撤回后新回答不可见，同时旧 request_id 仍可还原原 revision、事实和来源。
       - kind: document
         label: 内容包合同 v1
         path: museum-content-contract.md
@@ -569,7 +577,7 @@ requirements:
         note: RAG-NEXT-01 至 RAG-NEXT-03 已明确输入、修改文件、事务边界、验收条件和完成证据。
     dependencies: [REQ-006, REQ-009]
     tags: [内容导入, 发布, 回滚]
-    next_action: 实现审核、发布、撤回和回滚命令，保持历史依据可复核；不提前建设大而全运营后台。
+    next_action: 进入 RAG-NEXT-04，验证多展品事实检索、FTS 版本一致性和跨展品隔离。
 
   - id: REQ-014
     sequence: 140

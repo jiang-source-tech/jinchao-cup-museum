@@ -70,6 +70,23 @@ CREATE TABLE IF NOT EXISTS content_revision (
 CREATE UNIQUE INDEX IF NOT EXISTS one_published_revision_per_exhibit
 ON content_revision(exhibit_id) WHERE status = 'published';
 
+CREATE TABLE IF NOT EXISTS content_revision_event (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    revision_id TEXT NOT NULL REFERENCES content_revision(id),
+    exhibit_id TEXT NOT NULL REFERENCES exhibit(id),
+    action TEXT NOT NULL CHECK (
+        action IN ('review', 'publish', 'supersede', 'withdraw', 'rollback')
+    ),
+    from_status TEXT NOT NULL,
+    to_status TEXT NOT NULL,
+    actor TEXT NOT NULL,
+    reason TEXT NOT NULL DEFAULT '',
+    occurred_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS revision_event_by_exhibit
+ON content_revision_event(exhibit_id, id);
+
 CREATE TABLE IF NOT EXISTS exhibit_fact (
     id TEXT PRIMARY KEY,
     revision_id TEXT NOT NULL REFERENCES content_revision(id),
