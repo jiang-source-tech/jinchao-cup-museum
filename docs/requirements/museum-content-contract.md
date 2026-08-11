@@ -2,7 +2,7 @@
 
 ## 1. 用途
 
-内容包用于在不修改 Python 代码的情况下，将博物馆、展区、展品、别名、资料来源、内容版本和事实导入 SQLite。v1 只负责完整校验和事务化导入 `draft`，不执行审核、发布、撤回或回滚。
+内容包用于在不修改 Python 代码的情况下，将博物馆、展区、展品、别名、资料来源、内容版本和事实导入 SQLite。v1 内容包本身只允许事务化导入 `draft`；审核、发布、撤回和回滚继续由同一 CLI 的独立生命周期命令执行，不能通过文件字段绕过发布门。
 
 对应实现：
 
@@ -27,7 +27,7 @@
 | `sources` | array | 本批次事实引用的来源 |
 | `exhibits` | array | 需要导入的展品及其草稿版本 |
 
-完整示例位于 `main/xiaozhi-server/tests/fixtures/museum_content/valid-content.yaml`。
+自动化示例位于 `main/xiaozhi-server/tests/fixtures/museum_content/valid-content.yaml`。根据杭州馆方官网整理、可进入实际内容流程的 3 馆 5 藏品内容包位于 `main/xiaozhi-server/content/museum/`。
 
 ## 3. 标识符规则
 
@@ -209,6 +209,8 @@ museum
 
 - 内容人员可以在数据库中检查草稿；
 - FTS 行已准备好，后续发布不需要重新解析原文件；
+- FTS 行显式保存 `exhibit_id` 和 `revision_id`，检索在 SQL 层同时限定当前展品与当前发布版本；
+- 旧数据库的 FTS 表缺少展品或版本字段时，会从关系事实表自动重建，不沿用无法证明版本边界的旧索引；
 - 游客侧不会读取从未发布的纯草稿展品；曾发布后撤回的展品仍可被识别，但事实检索会返回资料不足；
 - `retrieve_evidence()` 仍只读取当前展品的 `published` revision；
 - 因此草稿不会通过展品解析或事实检索泄漏给游客。

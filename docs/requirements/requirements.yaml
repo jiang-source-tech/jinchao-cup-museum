@@ -269,14 +269,22 @@ requirements:
       - kind: code
         label: 内容与审计存储
         path: ../../main/xiaozhi-server/core/museum/store.py
-        note: 保存发布事实、来源和依据快照。
+        note: 保存发布事实、来源和依据快照；FTS 查询在 SQL 层绑定 exhibit_id 与当前发布 revision_id。
       - kind: test
         label: 有依据回答测试
         path: ../../main/xiaozhi-server/tests/test_museum_runtime.py
         note: 覆盖发布事实、越界问题和跨展品比较。
+      - kind: test
+        label: 多展品事实检索闭环
+        path: ../../main/xiaozhi-server/tests/test_museum_rag_multiexhibit.py
+        note: 覆盖 3 馆 5 藏品、跨馆切换、草稿与撤回、数字依据、旧 FTS 迁移及新旧版本隔离。
+      - kind: document
+        label: 杭州馆方藏品内容集
+        path: ../../main/xiaozhi-server/content/museum/README.md
+        note: 登记 5 件藏品、24 条事实和良渚博物院、杭州西湖博物馆总馆、中国丝绸博物馆官方来源。
     dependencies: [REQ-003]
     tags: [RAG, 审核事实, 依据快照]
-    next_action: 内容规模扩大时保持事实级边界，不因技术标签提前引入全馆向量召回。
+    next_action: 进入 RAG-NEXT-05，用真实自然问法评测当前事实级召回；没有量化缺口前不引入全馆向量召回。
 
   - id: REQ-007
     sequence: 70
@@ -355,9 +363,13 @@ requirements:
         label: 独立回答守卫测试
         path: ../../main/xiaozhi-server/tests/test_answer_guard.py
         note: 覆盖非法事实 ID、虚构人物、虚构地点、额外数字、超长回答和撤回版本。
+      - kind: test
+        label: 多展品无命中与隔离测试
+        path: ../../main/xiaozhi-server/tests/test_museum_rag_multiexhibit.py
+        note: 已知意图无事实时直接 unsupported 且不调用 LLM，切换展品后不复用上一展品事实。
     dependencies: [REQ-006, REQ-007]
     tags: [知识兜底, 幻觉防护, 守卫]
-    next_action: 继续把真实 LLM 回归样本加入回答守卫测试，保持模型输出始终受发布事实边界约束。
+    next_action: 执行 RAG-NEXT-05，把 deepseek-v4-flash 的真实失败样本加入回答守卫回归。
 
   - id: REQ-009
     sequence: 90
@@ -574,10 +586,10 @@ requirements:
       - kind: document
         label: 内容发布实施计划
         path: rag-execution-plan.md
-        note: RAG-NEXT-01 至 RAG-NEXT-03 已明确输入、修改文件、事务边界、验收条件和完成证据。
+        note: RAG-NEXT-01 至 RAG-NEXT-04 已完成内容契约、导入发布、版本回滚和多展品检索闭环。
     dependencies: [REQ-006, REQ-009]
     tags: [内容导入, 发布, 回滚]
-    next_action: 进入 RAG-NEXT-04，验证多展品事实检索、FTS 版本一致性和跨展品隔离。
+    next_action: 保持内容发布门和历史复核不变，项目进入 RAG-NEXT-05 的真实自然问法评测。
 
   - id: REQ-014
     sequence: 140

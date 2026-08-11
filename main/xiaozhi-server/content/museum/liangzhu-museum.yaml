@@ -1,0 +1,116 @@
+schema_version: 1
+
+museum:
+  id: liangzhu-museum
+  name: 良渚博物院
+  status: active
+
+zones:
+  - id: liangzhu-official-collection
+    name: 馆藏精品
+    sort_order: 1
+
+sources:
+  - id: source-liangzhu-jade-yue-combination-201910913103
+    title: 良渚博物院馆藏精品：玉钺组合
+    source_type: official_museum_webpage
+    locator: "https://www.lzmuseum.cn/YuQi/201910913103.html"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+  - id: source-liangzhu-jade-yue-overview-2019611219610
+    title: 良渚博物院馆藏精品：玉钺
+    source_type: official_museum_webpage
+    locator: "https://www.lzmuseum.cn/YuQi/2019611219610.html"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+  - id: source-liangzhu-jade-trident-2019393530
+    title: 良渚博物院馆藏精品：玉三叉形器
+    source_type: official_museum_webpage
+    locator: "https://www.lzmuseum.cn/YuQi/2019393530.html"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+  - id: source-liangzhu-trident-overview-20198121782
+    title: 良渚博物院典藏精品：三叉形器
+    source_type: official_museum_webpage
+    locator: "https://www.lzmuseum.cn/YuQi/20198121782.html"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+
+exhibits:
+  - id: liangzhu-jade-yue-set
+    zone_id: liangzhu-official-collection
+    name: 玉钺组合
+    aliases: [玉钺, 反山M14玉钺组合]
+    status: active
+    revision:
+      id: liangzhu-jade-yue-set-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-liangzhu-yue-excavation
+          type: excavation
+          statement: 这组玉钺、玉钺冠饰和玉钺端饰均出土于1986年发掘的反山遗址M14。
+          keywords: [反山遗址, M14, 1986年, 出土]
+          confidence: official_museum_webpage
+          sources: [source-liangzhu-jade-yue-combination-201910913103]
+        - id: fact-liangzhu-yue-composition
+          type: appearance
+          statement: 这套玉钺组合由冠饰、钺和端饰三部分组成。
+          keywords: [组成, 冠饰, 钺, 端饰]
+          confidence: official_museum_webpage
+          sources: [source-liangzhu-jade-yue-overview-2019611219610]
+        - id: fact-liangzhu-yue-dimensions
+          type: dimensions
+          statement: 其中玉钺长14.1厘米，上端宽9.3厘米，刃部宽11厘米，最厚约0.9厘米。
+          keywords: [尺寸, 长, 上端宽, 刃部宽, 厚]
+          confidence: official_museum_webpage
+          sources: [source-liangzhu-jade-yue-combination-201910913103]
+        - id: fact-liangzhu-yue-craft
+          type: craft
+          statement: 玉钺上端保留双向片切割痕迹，补缺玉件与台阶状缺口吻合，相关切割面经过打磨。
+          keywords: [工艺, 双向片切割, 补缺, 台阶状缺口, 打磨]
+          confidence: official_museum_webpage
+          sources: [source-liangzhu-jade-yue-combination-201910913103]
+        - id: fact-liangzhu-yue-usage
+          type: usage
+          statement: 馆方资料说明，玉钺是军事指挥权的象征，也是显贵者特定身份地位的玉质标志。
+          keywords: [用途, 军事指挥权, 显贵者, 身份, 地位]
+          confidence: official_museum_webpage
+          sources: [source-liangzhu-jade-yue-overview-2019611219610]
+
+  - id: liangzhu-jade-trident
+    zone_id: liangzhu-official-collection
+    name: 玉三叉形器
+    aliases: [三叉形器, 瑶山M7玉三叉形器]
+    status: active
+    revision:
+      id: liangzhu-jade-trident-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-liangzhu-trident-excavation
+          type: excavation
+          statement: 这件玉三叉形器出土于1987年发掘的瑶山遗址M7。
+          keywords: [瑶山遗址, M7, 1987年, 出土]
+          confidence: official_museum_webpage
+          sources: [source-liangzhu-jade-trident-2019393530]
+        - id: fact-liangzhu-trident-dimensions
+          type: dimensions
+          statement: 玉三叉形器高4.8厘米、宽8.5厘米、厚0.8厘米。
+          keywords: [尺寸, 高, 宽, 厚]
+          confidence: official_museum_webpage
+          sources: [source-liangzhu-jade-trident-2019393530]
+        - id: fact-liangzhu-trident-material
+          type: material
+          statement: 这件玉三叉形器为南瓜黄色玉器。
+          keywords: [材质, 玉器, 南瓜黄]
+          confidence: official_museum_webpage
+          sources: [source-liangzhu-jade-trident-2019393530]
+        - id: fact-liangzhu-trident-craft
+          type: craft
+          statement: 器物一面有精美刻纹，左右两叉刻相向的神人头像，中叉上端饰五组羽状纹，下端阴线刻兽面纹。
+          keywords: [工艺, 神人头像, 羽状纹, 阴线刻, 兽面纹]
+          confidence: official_museum_webpage
+          sources: [source-liangzhu-jade-trident-2019393530]
+        - id: fact-liangzhu-trident-usage
+          type: usage
+          statement: 三叉形器出土时位于墓主人头部，应属冠帽饰物；使用时中叉通常与玉管相接。
+          keywords: [用途, 冠帽, 饰物, 头部, 中叉, 玉管]
+          confidence: official_museum_webpage
+          sources: [source-liangzhu-trident-overview-20198121782]

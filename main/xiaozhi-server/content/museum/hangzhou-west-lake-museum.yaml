@@ -1,0 +1,100 @@
+schema_version: 1
+
+museum:
+  id: hangzhou-west-lake-museum
+  name: 杭州西湖博物馆总馆
+  status: active
+
+zones:
+  - id: west-lake-official-collection
+    name: 馆藏精品
+    sort_order: 1
+
+sources:
+  - id: source-west-lake-zun-incense-burner-850
+    title: 杭州西湖博物馆总馆馆藏精品：南宋官窑青瓷樽式炉
+    source_type: official_museum_webpage
+    locator: "https://westlakemuseum.com/index.php/gcjp/jpzs2/850-gcjp-004.html"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+  - id: source-west-lake-bagua-lid-849
+    title: 杭州西湖博物馆总馆馆藏精品：南宋官窑青瓷八卦熏炉盖
+    source_type: official_museum_webpage
+    locator: "https://westlakemuseum.com/index.php/gcjp/jpzs2/849-gcjp-003.html"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+
+exhibits:
+  - id: southern-song-guan-zun-incense-burner
+    zone_id: west-lake-official-collection
+    name: 南宋官窑青瓷樽式炉
+    aliases: [青瓷樽式炉, 官窑樽式炉, 樽式炉]
+    status: active
+    revision:
+      id: southern-song-guan-zun-incense-burner-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-west-lake-zun-era
+          type: era
+          statement: 这件青瓷樽式炉烧造于南宋时期。
+          keywords: [年代, 南宋, 时期]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-zun-incense-burner-850]
+        - id: fact-west-lake-zun-dimensions
+          type: dimensions
+          statement: 南宋官窑青瓷樽式炉高8.8厘米、口径12.5厘米、底径10.3厘米。
+          keywords: [尺寸, 高, 口径, 底径]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-zun-incense-burner-850]
+        - id: fact-west-lake-zun-appearance
+          type: appearance
+          statement: 这件樽式炉口部微敞、折沿平口、腹部呈直筒形、下承圈足，外壁饰七道凸弦纹。
+          keywords: [外形, 直筒形, 圈足, 七道, 凸弦纹]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-zun-incense-burner-850]
+        - id: fact-west-lake-zun-material
+          type: material
+          statement: 器物为灰色胎，施青灰色釉，口沿和足沿露出紫褐色胎，釉面布满开片纹。
+          keywords: [材质, 灰色胎, 青灰色釉, 紫褐色胎, 开片]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-zun-incense-burner-850]
+
+  - id: southern-song-guan-bagua-incense-lid
+    zone_id: west-lake-official-collection
+    name: 南宋官窑青瓷八卦熏炉盖
+    aliases: [青瓷八卦熏炉盖, 官窑八卦熏炉盖, 八卦熏炉盖]
+    status: active
+    revision:
+      id: southern-song-guan-bagua-incense-lid-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-west-lake-bagua-era
+          type: era
+          statement: 这件青瓷八卦熏炉盖烧造于南宋时期。
+          keywords: [年代, 南宋, 时期]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-bagua-lid-849]
+        - id: fact-west-lake-bagua-dimensions
+          type: dimensions
+          statement: 南宋官窑青瓷八卦熏炉盖高2.6厘米、口径4.4厘米、底径4.8厘米。
+          keywords: [尺寸, 高, 口径, 底径]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-bagua-lid-849]
+        - id: fact-west-lake-bagua-appearance
+          type: appearance
+          statement: 炉盖内凸外凹，外侧镂阴阳八卦纹，内侧上下各有七个小孔，中心还有一个大圆孔。
+          keywords: [外形, 阴阳八卦纹, 小孔, 圆孔, 镂孔]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-bagua-lid-849]
+        - id: fact-west-lake-bagua-material
+          type: material
+          statement: 炉盖为紫灰色胎，施青灰色釉，釉面带有斑片纹。
+          keywords: [材质, 紫灰色胎, 青灰色釉, 斑片纹]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-bagua-lid-849]
+        - id: fact-west-lake-bagua-usage
+          type: usage
+          statement: 馆方将这件器物定名为熏炉盖，盖内外分布着大小不一的孔洞。
+          keywords: [用途, 熏炉盖, 炉盖, 孔洞]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-bagua-lid-849]

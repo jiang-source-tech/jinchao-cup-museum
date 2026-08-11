@@ -1145,11 +1145,14 @@ def _insert_package(
             connection.execute(
                 """
                 INSERT INTO exhibit_fact_fts(
-                    fact_id, exhibit_name, aliases, fact_type, statement, keywords
-                ) VALUES (?, ?, ?, ?, ?, ?)
+                    fact_id, exhibit_id, revision_id, exhibit_name,
+                    aliases, fact_type, statement, keywords
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     fact.id,
+                    exhibit.id,
+                    exhibit.revision.id,
                     exhibit.name,
                     " ".join(exhibit.aliases),
                     fact.fact_type,

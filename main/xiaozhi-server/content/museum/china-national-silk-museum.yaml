@@ -1,0 +1,60 @@
+schema_version: 1
+
+museum:
+  id: china-national-silk-museum
+  name: 中国丝绸博物馆
+  status: active
+
+zones:
+  - id: china-silk-official-collection
+    name: 馆藏精品
+    sort_order: 1
+
+sources:
+  - id: source-china-silk-butterfly-robe-2639
+    title: 中国丝绸博物馆藏品撷英：清玄色地团花蝴蝶纹袍料
+    source_type: official_museum_webpage
+    locator: "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=2639"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+
+exhibits:
+  - id: qing-butterfly-medallion-robe-fabric
+    zone_id: china-silk-official-collection
+    name: 清玄色地团花蝴蝶纹袍料
+    aliases: [团花蝴蝶纹袍料, 蝴蝶纹袍料]
+    status: active
+    revision:
+      id: qing-butterfly-medallion-robe-fabric-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-china-silk-butterfly-era
+          type: era
+          statement: 馆方将这件团花蝴蝶纹袍料定为清代藏品。
+          keywords: [年代, 清代, 时期]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-butterfly-robe-2639]
+        - id: fact-china-silk-butterfly-dimensions
+          type: dimensions
+          statement: 这件袍料的馆方登记尺寸为154厘米乘286厘米。
+          keywords: [尺寸, 154厘米, 286厘米]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-butterfly-robe-2639]
+        - id: fact-china-silk-butterfly-material
+          type: material
+          statement: 这件袍料的馆方登记质地为丝。
+          keywords: [材质, 丝, 丝绸]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-butterfly-robe-2639]
+        - id: fact-china-silk-butterfly-appearance
+          type: appearance
+          statement: 袍料以玄色为地，上绣圆形团花，白蓝相间的花苞枝蔓之间穿插彩翼粉蝶。
+          keywords: [外形, 玄色, 圆形团花, 花苞, 枝蔓, 彩翼粉蝶]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-butterfly-robe-2639]
+        - id: fact-china-silk-butterfly-craft
+          type: craft
+          statement: 纹样采用刺绣手法表现，袍料下摆还绣有山石波浪纹。
+          keywords: [工艺, 刺绣, 下摆, 山石, 波浪纹]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-butterfly-robe-2639]

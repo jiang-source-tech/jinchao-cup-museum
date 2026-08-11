@@ -8,11 +8,11 @@
 | 适用范围 | `REQ-003` 至 `REQ-009` 已有能力之后的 RAG 落地 |
 | 直接关联需求 | `REQ-006`、`REQ-008`、`REQ-009`、`REQ-013`、`REQ-014`、`REQ-017`、`REQ-018` |
 | 当前结论 | 先把事实级 RAG 做成可导入、可发布、可评测的多展品闭环，再根据评测缺口决定是否引入向量召回 |
-| 下一项实施需求 | `RAG-NEXT-04`：多展品事实级检索闭环 |
+| 下一项实施需求 | `RAG-NEXT-05`：自然问法、真实 LLM 和多轮评测 |
 
 这不是“未来愿景”或技术名词清单，而是一份可以逐项执行、验收和归档的任务单。每个任务都写明输入、修改边界、验收条件和完成证据。完成状态仍以 `docs/requirements/requirements.yaml` 为准。
 
-当前执行状态：`RAG-NEXT-01`、`RAG-NEXT-02` 和 `RAG-NEXT-03` 已于 2026-08-11 实现；下一项是 `RAG-NEXT-04` 多展品事实级检索闭环。
+当前执行状态：`RAG-NEXT-01` 至 `RAG-NEXT-04` 已于 2026-08-11 实现；下一项是 `RAG-NEXT-05` 自然问法、真实 LLM 和多轮评测。
 
 ## 1. 先明确当前基线
 
@@ -71,7 +71,7 @@
 | 1 | RAG-NEXT-01 内容包契约与 3 至 5 件展品 fixture | REQ-006/017 | 00 | 可版本控制的展品、别名、事实、来源和评测输入 |
 | 2 | RAG-NEXT-02 内容导入 CLI | REQ-013 AC-013-1/2 | 01 | 不改 Python 代码即可校验并导入草稿 |
 | 3 | RAG-NEXT-03 发布、撤回和回滚 | REQ-013 AC-013-3/4/5 | 02 | 发布版本唯一、事务完整、历史依据可复核 |
-| 4 | RAG-NEXT-04 多展品检索闭环 | REQ-006/008 | 03 | 当前展品和发布版本内的事实级检索稳定工作 |
+| 4 | RAG-NEXT-04 多展品检索闭环（已完成） | REQ-006/008 | 03 | 当前展品和发布版本内的事实级检索稳定工作 |
 | 5 | RAG-NEXT-05 自然问法和真实 LLM 评测 | REQ-007/008/011/017 | 04 | 随机换问法、多轮、切换、诱导编造均有结果记录 |
 | 6 | RAG-NEXT-06 未命中回收导出 | REQ-014 | 05 | 运营可按原因和展品回收问题 |
 | 7 | RAG-NEXT-07 真机前置检查 | REQ-010/012/015 | 05 | 服务端状态、固件状态和真实链路验收脚本对齐 |
@@ -252,6 +252,15 @@ python scripts/import_museum_content.py import --input tests/fixtures/museum_con
 - 回答中的数字和事实均能回指 `EvidenceSnapshot`；
 - 内容发布后 FTS 与事实版本一致。
 
+**完成证据**：
+
+- `main/xiaozhi-server/content/museum/` 保存良渚博物院、杭州西湖博物馆总馆和中国丝绸博物馆 5 件藏品、24 条事实及官方来源定位；
+- `exhibit_fact_fts` 增加 `exhibit_id` 和 `revision_id`，旧六列索引初始化时从关系表重建；
+- `GroundedAnswerService` 对已知意图先执行受限检索，无候选时直接返回 `unsupported`，不调用 LLM；
+- `main/xiaozhi-server/tests/test_museum_rag_multiexhibit.py` 覆盖跨馆切换、跨展品隔离、草稿和撤回、数字依据快照、旧 FTS 迁移及新旧版本隔离。
+
+**状态**：已完成。聚焦验收 8 项全部通过，现有博物馆运行时、回答守卫、内容发布和展品解析回归保持通过。
+
 ### RAG-NEXT-05：自然问法、真实 LLM 和多轮评测
 
 **关联**：`REQ-007 / REQ-008 / REQ-011 / REQ-017`。
@@ -378,8 +387,8 @@ python scripts/import_museum_content.py import --input tests/fixtures/museum_con
 1. `RAG-NEXT-01` 已完成：建立 3 件展品的最小内容 fixture 和内容契约；
 2. `RAG-NEXT-02` 已完成：导入 CLI、完整校验和草稿事务；
 3. `RAG-NEXT-03` 已完成：发布、撤回、回滚、生命周期事件和历史版本复核；
-4. 下一步执行 `RAG-NEXT-04`：确认 FTS5 + 事实类型约束没有跨展品泄漏；
-5. 再接真实 `deepseek-v4-flash` 配置，执行 `RAG-NEXT-05` 的自由、多轮、随机问法验收；
+4. `RAG-NEXT-04` 已完成：FTS5 在 SQL 层绑定展品和发布版本，5 件馆方藏品未发生跨展品泄漏；
+5. 下一步接真实 `deepseek-v4-flash` 配置，执行 `RAG-NEXT-05` 的自由、多轮、随机问法验收；
 6. 把失败样本接入 `RAG-NEXT-06`，让内容补录由数据驱动；
 7. 硬件接入后执行 `RAG-NEXT-07`，再判断是否启动 `RAG-NEXT-08`；
 8. 最后才批量扩展到 `RAG-NEXT-09`。

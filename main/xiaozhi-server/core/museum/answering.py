@@ -63,16 +63,33 @@ class GroundedAnswerService:
             return conversational_answer
 
         retrieval_started = perf_counter()
-        candidates = self._store.published_evidence(exhibit_id)
+        retrieved_evidence = self._store.retrieve_evidence(
+            exhibit_id=exhibit_id,
+            question=question,
+            fact_types=understanding.fact_types,
+            query_terms=understanding.query_terms,
+            overview=understanding.fine_intent == "overview",
+        )
+        llm_candidates = retrieved_evidence
+        if (
+            llm_candidates is None
+            and llm is not None
+            and understanding.coarse_intent == "exhibit_knowledge"
+            and understanding.fine_intent == "unknown"
+        ):
+            llm_candidates = self._store.published_evidence(exhibit_id)
         retrieval_ms = _duration_ms(retrieval_started)
         composition_started = perf_counter()
 
         decision = None
-        if understanding.coarse_intent != "comparison":
+        if (
+            llm_candidates is not None
+            and understanding.coarse_intent != "comparison"
+        ):
             decision = self._decide_with_llm(
                 exhibit_name=exhibit_name,
                 question=question,
-                candidates=candidates,
+                candidates=llm_candidates,
                 llm=llm,
                 session_id=session_id,
                 history=history,
@@ -95,7 +112,7 @@ class GroundedAnswerService:
         guard_result = "published_facts_only"
         if decision is not None and decision.status == "grounded":
             evidence = _select_evidence(
-                candidates,
+                llm_candidates,
                 decision.fact_ids,
                 allowed_fact_types=understanding.fact_types,
             )
@@ -105,15 +122,7 @@ class GroundedAnswerService:
         elif decision is not None and decision.status == "unsupported":
             guard_result = "model_unsupported_fallback"
         if decision is None:
-            fallback_started = perf_counter()
-            evidence = self._store.retrieve_evidence(
-                exhibit_id=exhibit_id,
-                question=question,
-                fact_types=understanding.fact_types,
-                query_terms=understanding.query_terms,
-                overview=understanding.fine_intent == "overview",
-            )
-            retrieval_ms += _duration_ms(fallback_started)
+            evidence = retrieved_evidence
 
         if evidence is None:
             return AnswerResult(

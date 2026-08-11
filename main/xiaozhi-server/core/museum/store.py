@@ -314,18 +314,25 @@ class MuseumStore:
             }
             expected_fts_columns = {
                 "fact_id",
+                "exhibit_id",
+                "revision_id",
                 "exhibit_name",
                 "aliases",
                 "fact_type",
                 "statement",
                 "keywords",
             }
-            if fts_columns and not expected_fts_columns.issubset(fts_columns):
+            rebuild_fts = not fts_columns or not expected_fts_columns.issubset(
+                fts_columns
+            )
+            if fts_columns and rebuild_fts:
                 connection.execute("DROP TABLE exhibit_fact_fts")
             connection.execute(
                 """
                 CREATE VIRTUAL TABLE IF NOT EXISTS exhibit_fact_fts USING fts5(
                     fact_id UNINDEXED,
+                    exhibit_id UNINDEXED,
+                    revision_id UNINDEXED,
                     exhibit_name,
                     aliases,
                     fact_type,
@@ -335,6 +342,8 @@ class MuseumStore:
                 )
                 """
             )
+            if rebuild_fts:
+                _rebuild_exhibit_fact_fts(connection)
 
     def seed_demo_content(self) -> None:
         published_at = "2026-08-09T00:00:00+00:00"
@@ -423,11 +432,14 @@ class MuseumStore:
                 connection.execute(
                     """
                     INSERT INTO exhibit_fact_fts(
-                        fact_id, exhibit_name, aliases, fact_type, statement, keywords
-                    ) VALUES (?, ?, ?, ?, ?, ?)
+                        fact_id, exhibit_id, revision_id, exhibit_name,
+                        aliases, fact_type, statement, keywords
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         fact_id,
+                        DEMO_EXHIBIT_ID,
+                        DEMO_REVISION_ID,
                         "战国水晶杯",
                         "水晶杯 战国时期水晶杯",
                         fact_type,
@@ -640,7 +652,13 @@ class MuseumStore:
             ).fetchall()
             if not rows:
                 return None
-            fts_ids = self._fts_candidate_ids(connection, rows, question)
+            fts_ids = self._fts_candidate_ids(
+                connection,
+                exhibit_id=exhibit_id,
+                revision_id=str(revision["id"]),
+                rows=rows,
+                question=question,
+            )
 
         normalized = _normalize_text(
             question + " " + " ".join(query_terms)
@@ -767,6 +785,9 @@ class MuseumStore:
     @staticmethod
     def _fts_candidate_ids(
         connection: sqlite3.Connection,
+        *,
+        exhibit_id: str,
+        revision_id: str,
         rows: list[sqlite3.Row],
         question: str,
     ) -> set[str]:
@@ -786,8 +807,14 @@ class MuseumStore:
         query = " OR ".join(f'"{term.replace(chr(34), chr(34) * 2)}"' for term in terms)
         try:
             matches = connection.execute(
-                "SELECT fact_id FROM exhibit_fact_fts WHERE exhibit_fact_fts MATCH ?",
-                (query,),
+                """
+                SELECT fact_id
+                FROM exhibit_fact_fts
+                WHERE exhibit_fact_fts MATCH ?
+                  AND exhibit_id = ?
+                  AND revision_id = ?
+                """,
+                (query, exhibit_id, revision_id),
             ).fetchall()
         except sqlite3.OperationalError:
             return set()
@@ -924,3 +951,39 @@ def _ensure_column(
         connection.execute(
             f"ALTER TABLE {table_name} ADD COLUMN {column_name} {declaration}"
         )
+
+
+def _rebuild_exhibit_fact_fts(connection: sqlite3.Connection) -> None:
+    rows = connection.execute(
+        """
+        SELECT f.id AS fact_id, f.revision_id, cr.exhibit_id,
+               e.name AS exhibit_name, e.aliases_json,
+               f.fact_type, f.statement, f.keywords_json
+        FROM exhibit_fact f
+        JOIN content_revision cr ON cr.id = f.revision_id
+        JOIN exhibit e ON e.id = cr.exhibit_id
+        ORDER BY f.id
+        """
+    ).fetchall()
+    connection.execute("DELETE FROM exhibit_fact_fts")
+    connection.executemany(
+        """
+        INSERT INTO exhibit_fact_fts(
+            fact_id, exhibit_id, revision_id, exhibit_name,
+            aliases, fact_type, statement, keywords
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            (
+                str(row["fact_id"]),
+                str(row["exhibit_id"]),
+                str(row["revision_id"]),
+                str(row["exhibit_name"]),
+                " ".join(json.loads(str(row["aliases_json"] or "[]"))),
+                str(row["fact_type"]),
+                str(row["statement"]),
+                " ".join(json.loads(str(row["keywords_json"] or "[]"))),
+            )
+            for row in rows
+        ),
+    )

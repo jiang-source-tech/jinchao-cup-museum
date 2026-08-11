@@ -1163,7 +1163,7 @@
               <div class="req-main">
                 <div class="req-title-row"><span class="req-id">REQ-006</span><h3>受审核事实检索与依据快照</h3></div>
                 <p>每轮回答只能检索当前展品已发布版本中的审核事实，并保存事实、来源和内容版本组成的依据快照。</p>
-                <div class="req-meta"><span>服务端 / 内容</span><span>3 项证据</span><span>置信度 高</span></div>
+                <div class="req-meta"><span>服务端 / 内容</span><span>5 项证据</span><span>置信度 高</span></div>
               </div>
               <div class="req-phase phase-cell">可信回答<small>阶段 02</small></div>
               <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
@@ -1198,7 +1198,7 @@
                 </ul>
               </section>
               <section class="detail-section">
-                <h4>证据链 <span>3 项</span></h4>
+                <h4>证据链 <span>5 项</span></h4>
                 <ul class="evidence-list">
                   <li class="evidence-item">
                     <span class="evidence-kind">代码</span>
@@ -1206,11 +1206,19 @@
                   </li>
                   <li class="evidence-item">
                     <span class="evidence-kind">代码</span>
-<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/store.py">内容与审计存储 <span>↗</span></a>                    <p class="evidence-note">保存发布事实、来源和依据快照。</p>
+<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/store.py">内容与审计存储 <span>↗</span></a>                    <p class="evidence-note">保存发布事实、来源和依据快照；FTS 查询在 SQL 层绑定 exhibit_id 与当前发布 revision_id。</p>
                   </li>
                   <li class="evidence-item">
                     <span class="evidence-kind">测试</span>
 <a class="evidence-link" href="../../main/xiaozhi-server/tests/test_museum_runtime.py">有依据回答测试 <span>↗</span></a>                    <p class="evidence-note">覆盖发布事实、越界问题和跨展品比较。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">测试</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_museum_rag_multiexhibit.py">多展品事实检索闭环 <span>↗</span></a>                    <p class="evidence-note">覆盖 3 馆 5 藏品、跨馆切换、草稿与撤回、数字依据、旧 FTS 迁移及新旧版本隔离。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/content/museum/README.md">杭州馆方藏品内容集 <span>↗</span></a>                    <p class="evidence-note">登记 5 件藏品、24 条事实和良渚博物院、杭州西湖博物馆总馆、中国丝绸博物馆官方来源。</p>
                   </li>
                 </ul>
               </section>
@@ -1225,7 +1233,7 @@
               <div class="detail-bottom">
                 <section>
                   <h4>下一动作</h4>
-                  <p class="next-action">内容规模扩大时保持事实级边界，不因技术标签提前引入全馆向量召回。</p>
+                  <p class="next-action">进入 RAG-NEXT-05，用真实自然问法评测当前事实级召回；没有量化缺口前不引入全馆向量召回。</p>
                 </section>
                 <section>
                   <h4>状态说明</h4>
@@ -1313,7 +1321,7 @@
               <div class="req-main">
                 <div class="req-title-row"><span class="req-id">REQ-008</span><h3>知识兜底与回答守卫</h3></div>
                 <p>展品不明确或资料不足时必须明确停止，不得由模型常识补齐；对模型新增事实、错误事实 ID、跨展品引用和超长回答执行回退。</p>
-                <div class="req-meta"><span>服务端 / 测试</span><span>3 项证据</span><span>置信度 中</span></div>
+                <div class="req-meta"><span>服务端 / 测试</span><span>4 项证据</span><span>置信度 中</span></div>
               </div>
               <div class="req-phase phase-cell">可信回答<small>阶段 02</small></div>
               <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
@@ -1353,7 +1361,7 @@
                 </ul>
               </section>
               <section class="detail-section">
-                <h4>证据链 <span>3 项</span></h4>
+                <h4>证据链 <span>4 项</span></h4>
                 <ul class="evidence-list">
                   <li class="evidence-item">
                     <span class="evidence-kind">代码</span>
@@ -1366,6 +1374,10 @@
                   <li class="evidence-item">
                     <span class="evidence-kind">测试</span>
 <a class="evidence-link" href="../../main/xiaozhi-server/tests/test_answer_guard.py">独立回答守卫测试 <span>↗</span></a>                    <p class="evidence-note">覆盖非法事实 ID、虚构人物、虚构地点、额外数字、超长回答和撤回版本。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">测试</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_museum_rag_multiexhibit.py">多展品无命中与隔离测试 <span>↗</span></a>                    <p class="evidence-note">已知意图无事实时直接 unsupported 且不调用 LLM，切换展品后不复用上一展品事实。</p>
                   </li>
                 </ul>
               </section>
@@ -1380,7 +1392,7 @@
               <div class="detail-bottom">
                 <section>
                   <h4>下一动作</h4>
-                  <p class="next-action">继续把真实 LLM 回归样本加入回答守卫测试，保持模型输出始终受发布事实边界约束。</p>
+                  <p class="next-action">执行 RAG-NEXT-05，把 deepseek-v4-flash 的真实失败样本加入回答守卫回归。</p>
                 </section>
                 <section>
                   <h4>状态说明</h4>
@@ -1767,7 +1779,7 @@
                   </li>
                   <li class="evidence-item">
                     <span class="evidence-kind">文档</span>
-<a class="evidence-link" href="rag-execution-plan.md">内容发布实施计划 <span>↗</span></a>                    <p class="evidence-note">RAG-NEXT-01 至 RAG-NEXT-03 已明确输入、修改文件、事务边界、验收条件和完成证据。</p>
+<a class="evidence-link" href="rag-execution-plan.md">内容发布实施计划 <span>↗</span></a>                    <p class="evidence-note">RAG-NEXT-01 至 RAG-NEXT-04 已完成内容契约、导入发布、版本回滚和多展品检索闭环。</p>
                   </li>
                 </ul>
               </section>
@@ -1782,7 +1794,7 @@
               <div class="detail-bottom">
                 <section>
                   <h4>下一动作</h4>
-                  <p class="next-action">进入 RAG-NEXT-04，验证多展品事实检索、FTS 版本一致性和跨展品隔离。</p>
+                  <p class="next-action">保持内容发布门和历史复核不变，项目进入 RAG-NEXT-05 的真实自然问法评测。</p>
                 </section>
                 <section>
                   <h4>状态说明</h4>
@@ -2183,7 +2195,7 @@
     <footer class="footer">
       <div class="footer-inner">
         <p>需求追踪与交付看板 · 源文件 <code>docs/requirements/requirements.yaml</code></p>
-        <p>YAML digest <code>951becb27fb0</code> · 27 passed in 2.13s</p>
+        <p>YAML digest <code>e5a6bbfb57b8</code> · 27 passed in 2.13s</p>
       </div>
     </footer>
   </div>
