@@ -49,6 +49,7 @@ ESP32 语音输入
 ## 文档
 
 - [文档中心](docs/README.md)
+- [需求追踪与交付看板](docs/requirements/index.html)
 - [产品需求文档（PRD）](docs/product/PRD.md)
 - [业务层重建设计](docs/architecture/business-rebuild.md)
 - [领域数据模型](docs/domain/data-model.md)

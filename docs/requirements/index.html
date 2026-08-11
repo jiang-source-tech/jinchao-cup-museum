@@ -1,0 +1,2217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="需求追踪与交付看板：金潮杯博物馆展品语音讲解伙伴">
+  <title>需求追踪与交付看板 · 金潮杯博物馆展品语音讲解伙伴</title>
+  <style>
+    :root {
+      --ink: #15201e;
+      --muted: #65716e;
+      --quiet: #87928f;
+      --paper: #f4f7f6;
+      --panel: #ffffff;
+      --line: #d9e3df;
+      --line-strong: #b9c9c4;
+      --jade: #0f766e;
+      --jade-soft: #e1f2ee;
+      --cinnabar: #b94732;
+      --cinnabar-soft: #f8e7e3;
+      --blue: #255ca8;
+      --blue-soft: #e6eefb;
+      --brass: #986b18;
+      --brass-soft: #faf0d4;
+      --gray: #68736f;
+      --gray-soft: #edf1ef;
+      --shadow: 0 14px 38px rgba(21, 32, 30, 0.08);
+      color-scheme: light;
+      font-family: "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    button, input, select { font: inherit; }
+    button, select { cursor: pointer; }
+    a { color: inherit; }
+    :focus-visible { outline: 3px solid rgba(37, 92, 168, 0.36); outline-offset: 3px; }
+
+    .app-shell { min-height: 100vh; }
+
+    .topbar {
+      border-bottom: 1px solid var(--line-strong);
+      background: var(--panel);
+    }
+
+    .topbar-inner,
+    main,
+    .footer-inner {
+      width: min(1440px, calc(100% - 64px));
+      margin: 0 auto;
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 48px;
+      min-height: 272px;
+      padding: 48px 0 42px;
+    }
+
+    .brand-lockup { max-width: 880px; }
+
+    .eyebrow,
+    .kicker,
+    .mono,
+    .req-id,
+    .order-number,
+    .phase-number,
+    .data-label,
+    .ledger-columns,
+    .metric-label,
+    .section-index {
+      font-family: Consolas, "SFMono-Regular", monospace;
+      letter-spacing: 0;
+    }
+
+    .kicker,
+    .eyebrow,
+    .section-index {
+      margin: 0;
+      color: var(--jade);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      max-width: 900px;
+      margin: 14px 0 16px;
+      font-family: "STSong", "Songti SC", "Noto Serif CJK SC", serif;
+      font-size: 44px;
+      line-height: 1.16;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .lede {
+      max-width: 840px;
+      margin-bottom: 22px;
+      color: #465653;
+      font-size: 16px;
+    }
+
+    .header-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 24px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .header-meta strong { color: var(--ink); font-weight: 700; }
+
+    .artifact-seal {
+      position: relative;
+      flex: 0 0 150px;
+      align-self: center;
+      width: 150px;
+      height: 150px;
+      border: 1px solid var(--line-strong);
+      border-radius: 50%;
+      color: var(--jade);
+    }
+
+    .artifact-seal::before,
+    .artifact-seal::after {
+      position: absolute;
+      content: "";
+      background: var(--line-strong);
+    }
+
+    .artifact-seal::before { top: 17px; bottom: 17px; left: 50%; width: 1px; }
+    .artifact-seal::after { top: 50%; right: 17px; left: 17px; height: 1px; }
+
+    .cup-shape {
+      position: absolute;
+      top: 38px;
+      left: 50%;
+      width: 48px;
+      height: 45px;
+      border: 3px solid currentColor;
+      border-top: 0;
+      border-radius: 0 0 18px 18px;
+      transform: translateX(-50%);
+    }
+
+    .cup-shape::before {
+      position: absolute;
+      top: -8px;
+      left: -7px;
+      width: 56px;
+      height: 11px;
+      border: 3px solid currentColor;
+      border-radius: 50%;
+      content: "";
+    }
+
+    .cup-shape::after {
+      position: absolute;
+      bottom: -21px;
+      left: 50%;
+      width: 3px;
+      height: 20px;
+      background: currentColor;
+      content: "";
+      transform: translateX(-50%);
+    }
+
+    .seal-caption {
+      position: absolute;
+      right: 0;
+      bottom: 17px;
+      left: 0;
+      color: var(--muted);
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    main { padding: 34px 0 80px; }
+
+    .control-slab {
+      border-top: 1px solid var(--ink);
+      border-bottom: 1px solid var(--line-strong);
+      background: var(--panel);
+    }
+
+    .metric-strip {
+      display: grid;
+      grid-template-columns: 1.35fr repeat(4, 1fr);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .metric {
+      min-height: 108px;
+      padding: 22px 24px;
+      border-right: 1px solid var(--line);
+    }
+
+    .metric:last-child { border-right: 0; }
+
+    .metric-label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      display: block;
+      font-family: "STSong", "Songti SC", serif;
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .metric-note { color: var(--muted); font-size: 12px; }
+    .metric--progress .metric-value { color: var(--jade); }
+    .metric--blocked .metric-value { color: var(--cinnabar); }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: 16px;
+      padding: 20px 24px;
+    }
+
+    .filter-field { display: grid; gap: 6px; min-width: 150px; }
+    .filter-field--search { flex: 1 1 300px; min-width: 230px; }
+
+    .filter-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .search-wrap { position: relative; }
+
+    .search-wrap::before {
+      position: absolute;
+      top: 50%;
+      left: 13px;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--quiet);
+      border-radius: 50%;
+      content: "";
+      transform: translateY(-60%);
+    }
+
+    .search-wrap::after {
+      position: absolute;
+      top: 57%;
+      left: 25px;
+      width: 6px;
+      height: 2px;
+      background: var(--quiet);
+      content: "";
+      transform: rotate(45deg);
+    }
+
+    input[type="search"], select {
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      color: var(--ink);
+      background: var(--panel);
+    }
+
+    input[type="search"] { padding-left: 38px; }
+    input[type="search"]::placeholder { color: var(--quiet); }
+    input[type="search"]:focus, select:focus { border-color: var(--blue); outline: none; }
+
+    .segment-control { display: flex; min-height: 42px; }
+
+    .segment-control button,
+    .toolbar-button {
+      min-height: 42px;
+      padding: 9px 14px;
+      border: 1px solid var(--line-strong);
+      border-right-width: 0;
+      color: var(--muted);
+      background: var(--panel);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .segment-control button:first-child { border-radius: 4px 0 0 4px; }
+    .segment-control button:last-child { border-right-width: 1px; border-radius: 0 4px 4px 0; }
+    .segment-control button:hover { color: var(--ink); background: var(--paper); }
+    .segment-control button.is-active { color: var(--jade); background: var(--jade-soft); }
+
+    .filter-actions { display: flex; gap: 8px; margin-left: auto; }
+
+    .toolbar-button {
+      border-right-width: 1px;
+      border-radius: 4px;
+      color: var(--ink);
+    }
+
+    .toolbar-button:hover { border-color: var(--blue); color: var(--blue); }
+
+    .phase-rail {
+      padding: 46px 0 40px;
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    .section-head,
+    .ledger-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      margin: 7px 0 0;
+      font-family: "STSong", "Songti SC", serif;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    .section-note { max-width: 420px; margin: 0; color: var(--muted); font-size: 12px; text-align: right; }
+
+    .phase-track {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(138px, 1fr));
+      border-top: 1px solid var(--line-strong);
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    .phase-node {
+      position: relative;
+      min-height: 126px;
+      padding: 16px 16px 14px;
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .phase-node:last-child { border-right: 0; }
+
+    .phase-node-top { display: flex; align-items: baseline; gap: 9px; }
+    .phase-number { color: var(--quiet); font-size: 11px; }
+    .phase-node strong { font-size: 13px; }
+    .phase-node p { margin: 9px 0 0; color: var(--muted); font-size: 11px; }
+
+    .phase-line {
+      height: 5px;
+      margin-top: 17px;
+      background: var(--gray-soft);
+      overflow: hidden;
+    }
+
+    .phase-line span { display: block; height: 100%; background: var(--jade); }
+
+    .ledger { padding-top: 42px; }
+
+    .ledger-count { margin: 0; color: var(--muted); font-size: 12px; }
+
+    .ledger-columns {
+      display: grid;
+      grid-template-columns: 90px minmax(300px, 1fr) 145px 112px 118px 120px;
+      gap: 20px;
+      padding: 12px 20px;
+      border-top: 1px solid var(--ink);
+      border-bottom: 1px solid var(--line-strong);
+      color: var(--quiet);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .requirement-list { background: var(--panel); }
+
+    .requirement {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .requirement[hidden] { display: none; }
+    .requirement:hover { background: #fbfcfc; }
+
+    .requirement > summary {
+      display: grid;
+      grid-template-columns: 90px minmax(300px, 1fr) 145px 112px 118px 120px;
+      gap: 20px;
+      align-items: center;
+      min-height: 112px;
+      padding: 18px 20px;
+      list-style: none;
+      cursor: pointer;
+    }
+
+    .requirement > summary::-webkit-details-marker { display: none; }
+
+    .req-order {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+    }
+
+    .order-rule { width: 20px; height: 1px; background: var(--jade); }
+    .order-number { font-size: 13px; font-weight: 700; }
+
+    .req-title-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .req-id { color: var(--jade); font-size: 11px; font-weight: 700; }
+    .req-main h3 { display: inline; margin: 0; font-size: 16px; line-height: 1.35; }
+    .req-main p { max-width: 720px; margin: 7px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+
+    .req-meta { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-top: 9px; color: var(--quiet); font-size: 11px; }
+    .req-meta span + span::before { margin-right: 12px; color: var(--line-strong); content: "/"; }
+
+    .phase-cell { color: var(--ink); font-size: 12px; font-weight: 700; }
+    .phase-cell small { display: block; margin-top: 3px; color: var(--quiet); font-size: 10px; font-weight: 400; }
+
+    .pill,
+    .status-label,
+    .confidence-badge {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 24px;
+      padding: 3px 8px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .priority-P0 { color: var(--cinnabar); background: var(--cinnabar-soft); border-color: #efc8bf; }
+    .priority-P1 { color: var(--brass); background: var(--brass-soft); border-color: #ead9a9; }
+    .priority-P2 { color: var(--blue); background: var(--blue-soft); border-color: #c4d6f2; }
+
+    .status-cell { display: flex; align-items: center; gap: 7px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray); }
+    .status-dot--done { background: var(--jade); }
+    .status-dot--in_progress { background: var(--blue); }
+    .status-dot--pending { background: var(--gray); }
+    .status-dot--blocked { background: var(--cinnabar); }
+    .status-dot--deferred { background: var(--brass); }
+    .status-label { padding: 0; border: 0; color: var(--muted); background: transparent; }
+
+    .completion-cell strong { display: block; font-family: Consolas, "SFMono-Regular", monospace; font-size: 14px; }
+    .completion-cell span { display: block; margin-top: 2px; color: var(--quiet); font-size: 10px; }
+    .mini-progress { height: 4px; margin-top: 9px; background: var(--gray-soft); }
+    .mini-progress span { display: block; height: 100%; background: var(--jade); }
+    .requirement[data-status="blocked"] .mini-progress span { background: var(--cinnabar); }
+    .requirement[data-status="in_progress"] .mini-progress span { background: var(--blue); }
+    .requirement[data-status="deferred"] .mini-progress span { background: var(--brass); }
+
+    .summary-caret {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      justify-self: end;
+      border: 1px solid var(--line-strong);
+      border-radius: 50%;
+    }
+
+    .summary-caret::before,
+    .summary-caret::after {
+      position: absolute;
+      top: 8px;
+      left: 4px;
+      width: 8px;
+      height: 1px;
+      background: var(--muted);
+      content: "";
+    }
+
+    .summary-caret::after { transform: rotate(90deg); }
+    details[open] .summary-caret::after { display: none; }
+
+    .req-detail {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.95fr) minmax(330px, 1.4fr) minmax(240px, 0.9fr);
+      gap: 28px;
+      padding: 8px 20px 30px 130px;
+      background: #fbfcfc;
+    }
+
+    .detail-section { min-width: 0; }
+    .detail-section h4 { margin: 0 0 11px; font-size: 12px; }
+    .detail-section h4 span { margin-left: 7px; color: var(--quiet); font-family: Consolas, "SFMono-Regular", monospace; font-size: 10px; font-weight: 400; }
+    .detail-copy { margin: 0; color: #465653; font-size: 12px; }
+
+    .criterion-list,
+    .evidence-list,
+    .compact-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+    .criterion {
+      display: grid;
+      grid-template-columns: 18px 1fr auto;
+      gap: 8px;
+      align-items: start;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    .criterion:last-child { border-bottom: 0; }
+    .criterion-mark { font-family: Consolas, "SFMono-Regular", monospace; font-weight: 700; }
+    .criterion-done .criterion-mark { color: var(--jade); }
+    .criterion-pending .criterion-mark { color: var(--gray); }
+    .criterion-blocked .criterion-mark { color: var(--cinnabar); }
+    .criterion-status { color: var(--quiet); font-size: 10px; white-space: nowrap; }
+
+    .evidence-item { padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .evidence-item:last-child { border-bottom: 0; }
+    .evidence-link { display: inline-flex; gap: 6px; color: var(--blue); font-size: 12px; font-weight: 700; text-decoration: none; }
+    .evidence-link:hover { text-decoration: underline; }
+    .evidence-link span { font-family: Consolas, "SFMono-Regular", monospace; font-size: 11px; }
+    .evidence-ref { color: var(--ink); font-family: Consolas, "SFMono-Regular", monospace; font-size: 11px; }
+    .evidence-kind { display: block; margin-bottom: 2px; color: var(--quiet); font-size: 10px; }
+    .evidence-note { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+
+    .compact-list li { display: flex; gap: 8px; align-items: baseline; color: var(--muted); font-size: 11px; }
+    .compact-list li::before { color: var(--line-strong); content: "—"; }
+    .compact-list code { padding: 2px 5px; color: var(--jade); background: var(--jade-soft); font-family: Consolas, "SFMono-Regular", monospace; font-size: 10px; }
+
+    .detail-bottom { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; padding-top: 10px; border-top: 1px solid var(--line-strong); }
+    .next-action { margin: 0; color: var(--ink); font-size: 12px; font-weight: 700; }
+    .blocker-list li { color: var(--cinnabar); }
+
+    .empty-state {
+      padding: 60px 24px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .empty-state strong { display: block; margin-bottom: 6px; color: var(--ink); font-size: 16px; }
+    .empty-state p { margin: 0; font-size: 12px; }
+
+    .footer {
+      border-top: 1px solid var(--line-strong);
+      background: var(--panel);
+    }
+
+    .footer-inner { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px; padding: 22px 0 30px; color: var(--muted); font-size: 11px; }
+    .footer-inner p { margin: 0; }
+    .footer-inner code { color: var(--ink); font-family: Consolas, "SFMono-Regular", monospace; }
+
+    @media (max-width: 1120px) {
+      .topbar-inner, main, .footer-inner { width: min(100% - 40px, 960px); }
+      .topbar-inner { min-height: 0; }
+      .artifact-seal { flex-basis: 120px; width: 120px; height: 120px; }
+      .cup-shape { top: 29px; transform: translateX(-50%) scale(0.84); }
+      .phase-track { overflow-x: auto; grid-template-columns: repeat(7, 160px); }
+      .ledger-columns, .requirement > summary { grid-template-columns: 70px minmax(260px, 1fr) 120px 96px 100px 96px; gap: 14px; }
+      .req-detail { padding-left: 104px; }
+    }
+
+    @media (max-width: 760px) {
+      .topbar-inner, main, .footer-inner { width: calc(100% - 28px); }
+      .topbar-inner { display: block; padding: 30px 0 28px; }
+      .artifact-seal { display: none; }
+      h1 { font-size: 32px; }
+      .lede { font-size: 14px; }
+      .metric-strip { grid-template-columns: repeat(2, 1fr); }
+      .metric { min-height: 92px; padding: 17px 15px; }
+      .metric:first-child { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid var(--line); }
+      .metric:nth-child(2) { border-bottom: 1px solid var(--line); }
+      .metric:nth-child(3) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .metric:nth-child(4) { border-bottom: 0; }
+      .metric:nth-child(5) { border-right: 0; }
+      .metric-value { font-size: 25px; }
+      .filter-bar { display: grid; grid-template-columns: 1fr 1fr; padding: 16px; }
+      .filter-field--search { grid-column: 1 / -1; min-width: 0; }
+      .filter-field { min-width: 0; }
+      .filter-actions { grid-column: 1 / -1; margin-left: 0; }
+      .filter-actions button { flex: 1; }
+      .section-head, .ledger-head { display: block; }
+      .section-note { margin-top: 9px; text-align: left; }
+      .ledger-columns { display: none; }
+      .requirement > summary { display: grid; grid-template-columns: 52px 1fr 24px; gap: 12px; min-height: 0; padding: 17px 14px; }
+      .req-order { align-self: start; gap: 6px; }
+      .order-rule { width: 12px; }
+      .order-number { font-size: 11px; }
+      .req-main h3 { font-size: 14px; }
+      .req-main p { font-size: 11px; }
+      .req-phase, .req-priority, .req-status, .req-completion { grid-column: 2 / -1; }
+      .req-phase { display: inline-flex; gap: 8px; align-items: baseline; margin-top: 8px; }
+      .req-phase::before { color: var(--quiet); content: "阶段"; font-size: 10px; }
+      .req-priority, .req-status, .req-completion { display: inline-flex; align-items: center; gap: 8px; }
+      .req-priority { grid-row: 3; }
+      .req-status { grid-row: 4; }
+      .req-completion { grid-row: 5; width: 100%; }
+      .req-completion .mini-progress { flex: 1; margin-top: 0; }
+      .summary-caret { grid-column: 3; grid-row: 1; }
+      .req-detail { display: block; padding: 4px 14px 26px 78px; }
+      .detail-section + .detail-section { margin-top: 24px; }
+      .detail-bottom { display: block; margin-top: 24px; }
+      .detail-bottom > * + * { margin-top: 20px; }
+      .footer-inner { display: block; }
+      .footer-inner p + p { margin-top: 7px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .filter-bar, .filter-actions, .summary-caret { display: none; }
+      .topbar-inner, main, .footer-inner { width: 100%; }
+      .topbar-inner { min-height: 0; padding: 24px 0; }
+      .phase-rail { break-inside: avoid; }
+      .requirement > summary { break-inside: avoid; }
+      .requirement:not([open]) .req-detail { display: block; }
+      .req-detail { break-inside: avoid; }
+      a { text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand-lockup">
+          <p class="kicker">Requirements / delivery control plane</p>
+          <h1>金潮杯博物馆展品语音讲解伙伴</h1>
+          <p class="lede">让游客主动说出展品并提问，系统以馆方审核事实完成可追溯的短语音讲解， 支持自然追问、显式切换展品和资料不足兜底，并在真实 ESP32 设备上形成可复核闭环。</p>
+          <div class="header-meta">
+            <span>看板版本 <strong>0.1.0</strong></span>
+            <span>更新日期 <strong>2026-08-11</strong></span>
+            <span>状态规则 <strong>证据优先</strong></span>
+          </div>
+        </div>
+        <div class="artifact-seal" aria-label="博物馆展品标记" role="img">
+          <div class="cup-shape"></div>
+          <span class="seal-caption">catalog / museum</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="control-slab" aria-labelledby="overview-heading">
+        <h2 id="overview-heading" class="visually-hidden" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);">交付概览</h2>
+        <div class="metric-strip">
+          <div class="metric metric--progress">
+            <span class="metric-label">Acceptance completion</span>
+            <strong class="metric-value">53%</strong>
+            <span class="metric-note">41 / 77 条验收条件</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Requirements</span>
+            <strong class="metric-value">18</strong>
+            <span class="metric-note">当前追踪条目</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Verified</span>
+            <strong class="metric-value">7</strong>
+            <span class="metric-note">全部条件有证据</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">In progress</span>
+            <strong class="metric-value">6</strong>
+            <span class="metric-note">已有部分交付</span>
+          </div>
+          <div class="metric metric--blocked">
+            <span class="metric-label">Blocked</span>
+            <strong class="metric-value">2</strong>
+            <span class="metric-note">需要外部证据或决策</span>
+          </div>
+        </div>
+        <div class="filter-bar" aria-label="需求筛选">
+          <label class="filter-field filter-field--search">
+            <span class="filter-label">搜索需求、负责人或标签</span>
+            <span class="search-wrap">
+              <input id="search-input" type="search" placeholder="例如：展品解析、真机、审计" autocomplete="off">
+            </span>
+          </label>
+          <div class="filter-field">
+            <span class="filter-label">优先级</span>
+            <div class="segment-control" role="group" aria-label="按优先级筛选">
+              <button type="button" class="is-active" data-priority-filter="all">全部</button>
+              <button type="button" data-priority-filter="P0">P0</button>
+              <button type="button" data-priority-filter="P1">P1</button>
+              <button type="button" data-priority-filter="P2">P2</button>
+            </div>
+          </div>
+          <label class="filter-field">
+            <span class="filter-label">状态</span>
+            <select id="status-filter">
+              <option value="all">全部状态</option>
+<option value="done">已完成</option><option value="in_progress">进行中</option><option value="pending">未开始</option><option value="blocked">受阻</option><option value="deferred">已后置</option>            </select>
+          </label>
+          <label class="filter-field">
+            <span class="filter-label">实施阶段</span>
+            <select id="phase-filter">
+              <option value="all">全部阶段</option>
+<option value="scope">范围冻结</option><option value="context">展品上下文</option><option value="rag">可信回答</option><option value="audit">审计与设备状态</option><option value="content">内容运营</option><option value="device">真机验收</option><option value="expansion">规模扩展</option>            </select>
+          </label>
+          <div class="filter-actions">
+            <button type="button" id="expand-all" class="toolbar-button" title="展开全部需求详情">＋ 展开</button>
+            <button type="button" id="collapse-all" class="toolbar-button" title="收起全部需求详情">－ 收起</button>
+            <button type="button" id="clear-filters" class="toolbar-button" title="清除所有筛选">× 清除</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="phase-rail" aria-labelledby="phase-heading">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Delivery spine</p>
+            <h2 id="phase-heading">实施序列</h2>
+          </div>
+          <p class="section-note">按阶段推进，先闭环证据，再扩展规模。阶段进度按验收条件计算。</p>
+        </div>
+        <div class="phase-track">
+          <article class="phase-node" data-phase="scope">
+            <div class="phase-node-top"><span class="phase-number">00</span><strong>范围冻结</strong></div>
+            <div class="phase-line" aria-label="范围冻结完成度 100%"><span style="width: 100%"></span></div>
+            <p>7 / 7 条验收 · 2 条需求</p>
+          </article>
+          <article class="phase-node" data-phase="context">
+            <div class="phase-node-top"><span class="phase-number">01</span><strong>展品上下文</strong></div>
+            <div class="phase-line" aria-label="展品上下文完成度 92%"><span style="width: 92%"></span></div>
+            <p>11 / 12 条验收 · 3 条需求</p>
+          </article>
+          <article class="phase-node" data-phase="rag">
+            <div class="phase-node-top"><span class="phase-number">02</span><strong>可信回答</strong></div>
+            <div class="phase-line" aria-label="可信回答完成度 88%"><span style="width: 88%"></span></div>
+            <p>15 / 17 条验收 · 4 条需求</p>
+          </article>
+          <article class="phase-node" data-phase="audit">
+            <div class="phase-node-top"><span class="phase-number">03</span><strong>审计与设备状态</strong></div>
+            <div class="phase-line" aria-label="审计与设备状态完成度 58%"><span style="width: 58%"></span></div>
+            <p>7 / 12 条验收 · 3 条需求</p>
+          </article>
+          <article class="phase-node" data-phase="content">
+            <div class="phase-node-top"><span class="phase-number">04</span><strong>内容运营</strong></div>
+            <div class="phase-line" aria-label="内容运营完成度 11%"><span style="width: 11%"></span></div>
+            <p>1 / 9 条验收 · 2 条需求</p>
+          </article>
+          <article class="phase-node" data-phase="device">
+            <div class="phase-node-top"><span class="phase-number">05</span><strong>真机验收</strong></div>
+            <div class="phase-line" aria-label="真机验收完成度 0%"><span style="width: 0%"></span></div>
+            <p>0 / 12 条验收 · 2 条需求</p>
+          </article>
+          <article class="phase-node" data-phase="expansion">
+            <div class="phase-node-top"><span class="phase-number">06</span><strong>规模扩展</strong></div>
+            <div class="phase-line" aria-label="规模扩展完成度 0%"><span style="width: 0%"></span></div>
+            <p>0 / 8 条验收 · 2 条需求</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="ledger" aria-labelledby="ledger-heading">
+        <div class="ledger-head">
+          <div>
+            <p class="eyebrow">Requirement ledger</p>
+            <h2 id="ledger-heading">需求台账</h2>
+          </div>
+          <p id="result-count" class="ledger-count">显示 18 条需求</p>
+        </div>
+
+        <div class="ledger-columns" aria-hidden="true">
+          <span>序号</span>
+          <span>需求与边界</span>
+          <span>阶段</span>
+          <span>优先级</span>
+          <span>状态</span>
+          <span>完成度</span>
+        </div>
+
+        <div id="requirement-list" class="requirement-list">
+          <details class="requirement" data-status="done" data-priority="P0" data-phase="scope" data-search="req-001 锁定产品范围与验收口径 prd 是产品范围、用户体验和验收标准的上位依据；路线导览、设备自动定位和通用聊天不得回流为比赛主线。 产品 / 架构 scope 范围冻结 范围 prd 决策">
+            <summary aria-label="REQ-001 锁定产品范围与验收口径">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">010</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-001</span><h3>锁定产品范围与验收口径</h3></div>
+                <p>PRD 是产品范围、用户体验和验收标准的上位依据；路线导览、设备自动定位和通用聊天不得回流为比赛主线。</p>
+                <div class="req-meta"><span>产品 / 架构</span><span>2 项证据</span><span>置信度 高</span></div>
+              </div>
+              <div class="req-phase phase-cell">范围冻结<small>阶段 00</small></div>
+              <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--done" aria-hidden="true"></span><span class="status-label">已完成</span></div>
+              <div class="req-completion completion-cell"><strong>100%</strong><span>3 / 3</span><div class="mini-progress" aria-label="完成度 100%"><span style="width: 100%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>3 / 3</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>PRD 已标记为 accepted，并给出 P0、P1、P2 范围。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>明确列出不在当前范围内的旧陪伴能力和路线假设。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>文档规则区分现状、目标和真实验收证据。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>2 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="../product/PRD.md">产品需求文档 <span>↗</span></a>                    <p class="evidence-note">v1.1，状态 accepted。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="../README.md">文档中心状态规则 <span>↗</span></a>                    <p class="evidence-note">规定目标不得写成已完成，验收必须可复核。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+<p class="detail-copy">无前置需求。</p>                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 范围</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># PRD</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 决策</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">任何实现计划变更先回查 PRD，禁止用路线图反向扩张范围。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="done" data-priority="P0" data-phase="scope" data-search="req-002 建立结构化需求追踪基线 使用版本化 yaml 保存编号、优先级、阶段、状态、验收条件、依赖和证据，并生成可离线打开的 html 看板。 工程管理 scope 范围冻结 需求管理 docs-as-code 看板">
+            <summary aria-label="REQ-002 建立结构化需求追踪基线">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">020</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-002</span><h3>建立结构化需求追踪基线</h3></div>
+                <p>使用版本化 YAML 保存编号、优先级、阶段、状态、验收条件、依赖和证据，并生成可离线打开的 HTML 看板。</p>
+                <div class="req-meta"><span>工程管理</span><span>3 项证据</span><span>置信度 高</span></div>
+              </div>
+              <div class="req-phase phase-cell">范围冻结<small>阶段 00</small></div>
+              <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--done" aria-hidden="true"></span><span class="status-label">已完成</span></div>
+              <div class="req-completion completion-cell"><strong>100%</strong><span>4 / 4</span><div class="mini-progress" aria-label="完成度 100%"><span style="width: 100%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>4 / 4</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>YAML 是需求状态的唯一事实来源。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>每条需求具有唯一 ID、稳定序号、优先级和阶段。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>完成度由验收条件状态计算，不手工填写百分比。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>HTML 支持搜索、状态、优先级和阶段筛选。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>3 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">数据</span>
+<a class="evidence-link" href="requirements.yaml">需求数据源 <span>↗</span></a>                    <p class="evidence-note">结构化需求与验收状态。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">代码</span>
+<a class="evidence-link" href="render_requirements.py">校验与渲染器 <span>↗</span></a>                    <p class="evidence-note">负责一致性校验和确定性 HTML 生成。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">代码</span>
+<a class="evidence-link" href="template.html">看板模板 <span>↗</span></a>                    <p class="evidence-note">离线响应式界面与筛选交互。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-001</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 需求管理</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># Docs-as-Code</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 看板</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">每次需求状态变化后更新 YAML、附上证据并重新生成 HTML。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="done" data-priority="P0" data-phase="context" data-search="req-003 显式展品指称解析 从游客问题中的规范名称或审核别名解析唯一展品；歧义、缺失和未收录必须是独立状态，禁止模型自由猜测展品 id。 服务端 context 展品上下文 展品解析 别名 上下文">
+            <summary aria-label="REQ-003 显式展品指称解析">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">030</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-003</span><h3>显式展品指称解析</h3></div>
+                <p>从游客问题中的规范名称或审核别名解析唯一展品；歧义、缺失和未收录必须是独立状态，禁止模型自由猜测展品 ID。</p>
+                <div class="req-meta"><span>服务端</span><span>2 项证据</span><span>置信度 高</span></div>
+              </div>
+              <div class="req-phase phase-cell">展品上下文<small>阶段 01</small></div>
+              <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--done" aria-hidden="true"></span><span class="status-label">已完成</span></div>
+              <div class="req-completion completion-cell"><strong>100%</strong><span>4 / 4</span><div class="mini-progress" aria-label="完成度 100%"><span style="width: 100%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>4 / 4</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>规范名称和唯一别名均可解析为 explicit。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>共享别名返回 ambiguous，不随机绑定展品。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>未收录的新展品返回 not_found，不继承旧展品。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>标点、空格和英文大小写变化不改变匹配结果。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>2 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">代码</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/exhibit_resolver.py">ExhibitResolver <span>↗</span></a>                    <p class="evidence-note">规则化名称、别名、歧义、继承和未收录处理。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">测试</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_exhibit_resolver.py">展品解析单元测试 <span>↗</span></a>                    <p class="evidence-note">5 个解析场景测试已通过。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-001</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 展品解析</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 别名</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 上下文</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">真机采集 ASR 误识别文本后，按来源和审核状态扩充语音别名。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="in_progress" data-priority="P0" data-phase="context" data-search="req-004 显式上下文与可空游客会话 生产默认不得用设备点位猜测当前展品；会话可以在尚未确认展品时创建，并在游客明确说出展品后建立上下文。 服务端 context 展品上下文 会话 显式上下文 数据迁移">
+            <summary aria-label="REQ-004 显式上下文与可空游客会话">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">040</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-004</span><h3>显式上下文与可空游客会话</h3></div>
+                <p>生产默认不得用设备点位猜测当前展品；会话可以在尚未确认展品时创建，并在游客明确说出展品后建立上下文。</p>
+                <div class="req-meta"><span>服务端</span><span>3 项证据</span><span>置信度 中</span></div>
+              </div>
+              <div class="req-phase phase-cell">展品上下文<small>阶段 01</small></div>
+              <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--in_progress" aria-hidden="true"></span><span class="status-label">进行中</span></div>
+              <div class="req-completion completion-cell"><strong>75%</strong><span>3 / 4</span><div class="mini-progress" aria-label="完成度 75%"><span style="width: 75%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>3 / 4</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>生产默认 exhibit_context_mode=explicit，未知设备不自动分配展品。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>首轮无展品问题返回 missing_context，不进入通用 LLM 回退。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>无设备点位时，首轮明确展品问题仍能建立上下文。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>旧数据库到可空 current_exhibit_id 的迁移具备事务回滚和重复执行测试。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>3 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">代码</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/config.example.yaml">运行模式配置 <span>↗</span></a>                    <p class="evidence-note">explicit 为默认值，自动分配关闭。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">代码</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/runtime.py">MuseumRuntime 上下文入口 <span>↗</span></a>                    <p class="evidence-note">解析失败返回明确上下文状态。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">测试</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_museum_runtime.py">显式模式运行时测试 <span>↗</span></a>                    <p class="evidence-note">覆盖首轮、继承、切换、未收录和无点位场景。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-003</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 会话</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 显式上下文</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 数据迁移</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">增加旧 SQLite 样本的幂等迁移、失败回滚和过期会话测试。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="done" data-priority="P0" data-phase="context" data-search="req-005 连续追问与显式展品切换 首轮明确展品后，省略展品名称的追问继承当前上下文；游客明确说出另一展品时立即切换，旧展品事实不得泄漏。 服务端 context 展品上下文 多轮对话 追问 展品切换">
+            <summary aria-label="REQ-005 连续追问与显式展品切换">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">050</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-005</span><h3>连续追问与显式展品切换</h3></div>
+                <p>首轮明确展品后，省略展品名称的追问继承当前上下文；游客明确说出另一展品时立即切换，旧展品事实不得泄漏。</p>
+                <div class="req-meta"><span>服务端</span><span>2 项证据</span><span>置信度 高</span></div>
+              </div>
+              <div class="req-phase phase-cell">展品上下文<small>阶段 01</small></div>
+              <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--done" aria-hidden="true"></span><span class="status-label">已完成</span></div>
+              <div class="req-completion completion-cell"><strong>100%</strong><span>4 / 4</span><div class="mini-progress" aria-label="完成度 100%"><span style="width: 100%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>4 / 4</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>首轮 explicit 后的代词追问返回 inherited。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>同一会话明确提到新展品时正确切换。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>未收录的新展品不会继续回答旧展品内容。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>多种自然追问表达均有自动化回归测试。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>2 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">测试</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_museum_runtime.py">多轮上下文测试 <span>↗</span></a>                    <p class="evidence-note">覆盖建立、继承、切换和自然追问变体。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">测试</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_museum_conversation_eval.py">固定会话评测集 <span>↗</span></a>                    <p class="evidence-note">评测自然问法和跨轮行为。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-004</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 多轮对话</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 追问</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 展品切换</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">将真实 ASR 文本加入固定评测集，持续防止旧展品上下文泄漏。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="done" data-priority="P0" data-phase="rag" data-search="req-006 受审核事实检索与依据快照 每轮回答只能检索当前展品已发布版本中的审核事实，并保存事实、来源和内容版本组成的依据快照。 服务端 / 内容 rag 可信回答 rag 审核事实 依据快照">
+            <summary aria-label="REQ-006 受审核事实检索与依据快照">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">060</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-006</span><h3>受审核事实检索与依据快照</h3></div>
+                <p>每轮回答只能检索当前展品已发布版本中的审核事实，并保存事实、来源和内容版本组成的依据快照。</p>
+                <div class="req-meta"><span>服务端 / 内容</span><span>3 项证据</span><span>置信度 高</span></div>
+              </div>
+              <div class="req-phase phase-cell">可信回答<small>阶段 02</small></div>
+              <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--done" aria-hidden="true"></span><span class="status-label">已完成</span></div>
+              <div class="req-completion completion-cell"><strong>100%</strong><span>4 / 4</span><div class="mini-progress" aria-label="完成度 100%"><span style="width: 100%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>4 / 4</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>检索范围限定为当前展品。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>仅发布版本事实可以进入回答依据。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>审计记录包含 content_revision_id、fact_ids 和 source_ids。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>跨展品比较不会复用单展品事实伪造答案。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>3 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">代码</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/answering.py">回答与事实守卫 <span>↗</span></a>                    <p class="evidence-note">EvidenceSnapshot 是回答边界。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">代码</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/store.py">内容与审计存储 <span>↗</span></a>                    <p class="evidence-note">保存发布事实、来源和依据快照。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">测试</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_museum_runtime.py">有依据回答测试 <span>↗</span></a>                    <p class="evidence-note">覆盖发布事实、越界问题和跨展品比较。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-003</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># RAG</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 审核事实</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 依据快照</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">内容规模扩大时保持事实级边界，不因技术标签提前引入全馆向量召回。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="done" data-priority="P0" data-phase="rag" data-search="req-007 分层问题理解与事实类型约束 将问题分为社交、展品知识、比较和不明确等粗意图，并将材质、年代、工艺、尺寸、出土和价格等细意图映射到允许检索的事实类型。 服务端 rag 可信回答 问题理解 意图 事实类型">
+            <summary aria-label="REQ-007 分层问题理解与事实类型约束">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">070</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-007</span><h3>分层问题理解与事实类型约束</h3></div>
+                <p>将问题分为社交、展品知识、比较和不明确等粗意图，并将材质、年代、工艺、尺寸、出土和价格等细意图映射到允许检索的事实类型。</p>
+                <div class="req-meta"><span>服务端</span><span>2 项证据</span><span>置信度 高</span></div>
+              </div>
+              <div class="req-phase phase-cell">可信回答<small>阶段 02</small></div>
+              <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--done" aria-hidden="true"></span><span class="status-label">已完成</span></div>
+              <div class="req-completion completion-cell"><strong>100%</strong><span>4 / 4</span><div class="mini-progress" aria-label="完成度 100%"><span style="width: 100%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>4 / 4</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>社交问题与展品事实查询分开处理。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>具体事实意图优先于宽泛介绍词。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>价格等强意图不会被“时期”等弱词覆盖。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>粗意图、细意图和置信度写入交互审计。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>2 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">代码</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/query_understanding.py">QueryUnderstanding <span>↗</span></a>                    <p class="evidence-note">有界规则和事实类型映射。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">测试</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_query_understanding.py">问题理解测试 <span>↗</span></a>                    <p class="evidence-note">6 个意图优先级与映射测试已通过。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-006</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 问题理解</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 意图</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 事实类型</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">用真实游客问法扩展评测集，但保持分类集合有界且可审计。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="done" data-priority="P0" data-phase="rag" data-search="req-008 知识兜底与回答守卫 展品不明确或资料不足时必须明确停止，不得由模型常识补齐；对模型新增事实、错误事实 id、跨展品引用和超长回答执行回退。 服务端 / 测试 rag 可信回答 知识兜底 幻觉防护 守卫">
+            <summary aria-label="REQ-008 知识兜底与回答守卫">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">080</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-008</span><h3>知识兜底与回答守卫</h3></div>
+                <p>展品不明确或资料不足时必须明确停止，不得由模型常识补齐；对模型新增事实、错误事实 ID、跨展品引用和超长回答执行回退。</p>
+                <div class="req-meta"><span>服务端 / 测试</span><span>3 项证据</span><span>置信度 中</span></div>
+              </div>
+              <div class="req-phase phase-cell">可信回答<small>阶段 02</small></div>
+              <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--done" aria-hidden="true"></span><span class="status-label">已完成</span></div>
+              <div class="req-completion completion-cell"><strong>100%</strong><span>5 / 5</span><div class="mini-progress" aria-label="完成度 100%"><span style="width: 100%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>5 / 5</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>missing_context 不调用事实回答模型。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>资料不足返回 unsupported，并保存未命中原因。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>价格问题不能使用年代事实替代回答。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>模型捏造人物、数字、地点或不存在事实 ID 时有独立守卫测试。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>内容撤回后新回答不可见，历史依据仍可复核。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>3 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">代码</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/answering.py">回答守卫实现 <span>↗</span></a>                    <p class="evidence-note">现有证据边界和回退逻辑。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">测试</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_museum_runtime.py">资料不足与越界测试 <span>↗</span></a>                    <p class="evidence-note">已覆盖 unsupported、价格越界和比较问题。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">测试</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_answer_guard.py">独立回答守卫测试 <span>↗</span></a>                    <p class="evidence-note">覆盖非法事实 ID、虚构人物、虚构地点、额外数字、超长回答和撤回版本。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-006</code></li><li><code>REQ-007</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 知识兜底</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 幻觉防护</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 守卫</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">继续把真实 LLM 回归样本加入回答守卫测试，保持模型输出始终受发布事实边界约束。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="in_progress" data-priority="P0" data-phase="audit" data-search="req-009 交互审计能够解释每轮结果 任意一轮交互都能回答“为何绑定该展品、用了哪些事实和来源、守卫结果是什么、各阶段耗时多少”。 服务端 / 运营 audit 审计与设备状态 审计 可追溯 延迟">
+            <summary aria-label="REQ-009 交互审计能够解释每轮结果">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">090</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-009</span><h3>交互审计能够解释每轮结果</h3></div>
+                <p>任意一轮交互都能回答“为何绑定该展品、用了哪些事实和来源、守卫结果是什么、各阶段耗时多少”。</p>
+                <div class="req-meta"><span>服务端 / 运营</span><span>2 项证据</span><span>置信度 中</span></div>
+              </div>
+              <div class="req-phase phase-cell">审计与设备状态<small>阶段 03</small></div>
+              <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--in_progress" aria-hidden="true"></span><span class="status-label">进行中</span></div>
+              <div class="req-completion completion-cell"><strong>50%</strong><span>2 / 4</span><div class="mini-progress" aria-label="完成度 50%"><span style="width: 50%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>2 / 4</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>保存依据版本、事实 ID、来源 ID、守卫结果和总耗时。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>保存粗意图、细意图和置信度。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>持久化解析状态、上下文来源、匹配文本和候选展品 ID。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>运营人员可按请求 ID 一次性查看完整审计记录。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>2 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">代码</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/store.py">interaction_trace 数据模型 <span>↗</span></a>                    <p class="evidence-note">当前已保存依据、意图、守卫和延迟，解析证据仍需补齐。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">测试</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_museum_runtime.py">审计断言 <span>↗</span></a>                    <p class="evidence-note">已验证 grounded 与 missing_context 的部分记录。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-005</code></li><li><code>REQ-006</code></li><li><code>REQ-007</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 审计</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 可追溯</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 延迟</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">扩展 interaction_trace schema，并为 grounded、unsupported、missing_context 建立完整审计断言。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="in_progress" data-priority="P0" data-phase="audit" data-search="req-010 museum_state 服务端与固件状态一致 服务端下发完整、版本化的 museum_state；固件严格校验并区分等待、查阅、有依据、资料不足和缺少展品上下文。 服务端 / 固件 audit 审计与设备状态 协议 固件 屏幕状态">
+            <summary aria-label="REQ-010 museum_state 服务端与固件状态一致">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">100</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-010</span><h3>museum_state 服务端与固件状态一致</h3></div>
+                <p>服务端下发完整、版本化的 museum_state；固件严格校验并区分等待、查阅、有依据、资料不足和缺少展品上下文。</p>
+                <div class="req-meta"><span>服务端 / 固件</span><span>3 项证据</span><span>置信度 中</span></div>
+              </div>
+              <div class="req-phase phase-cell">审计与设备状态<small>阶段 03</small></div>
+              <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--in_progress" aria-hidden="true"></span><span class="status-label">进行中</span></div>
+              <div class="req-completion completion-cell"><strong>75%</strong><span>3 / 4</span><div class="mini-progress" aria-label="完成度 75%"><span style="width: 75%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>3 / 4</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>服务端下发 missing_context、grounded 和 unsupported 等独立状态。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>固件校验 museum_state 版本、字段和枚举后再应用。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>目标板已有独立博物馆状态显示路径。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>固件协议冒烟测试和目标板构建结果写入可复核记录。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>3 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">代码</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/runtime.py">服务端 museum_state <span>↗</span></a>                    <p class="evidence-note">生成完整状态对象。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">外部仓库</span>
+<span class="evidence-ref">固件状态解析器</span>                    <p class="evidence-note">严格校验版本、枚举和缺失上下文。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">外部仓库</span>
+<span class="evidence-ref">1.46 英寸目标板显示</span>                    <p class="evidence-note">已存在博物馆状态层，尚缺本轮可复核构建记录。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-009</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 协议</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 固件</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 屏幕状态</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">运行固件协议测试与目标板构建，并记录提交号、命令和完整结果。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="in_progress" data-priority="P0" data-phase="rag" data-search="req-011 普通、亲子和深度三种游客模式 三种模式只改变回答长度、术语密度和表达方式，不得改变事实集合、确定性或资料边界。 产品 / 服务端 / 内容 rag 可信回答 游客模式 儿童表达 人工评测">
+            <summary aria-label="REQ-011 普通、亲子和深度三种游客模式">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">110</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-011</span><h3>普通、亲子和深度三种游客模式</h3></div>
+                <p>三种模式只改变回答长度、术语密度和表达方式，不得改变事实集合、确定性或资料边界。</p>
+                <div class="req-meta"><span>产品 / 服务端 / 内容</span><span>2 项证据</span><span>置信度 中</span></div>
+              </div>
+              <div class="req-phase phase-cell">可信回答<small>阶段 02</small></div>
+              <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--in_progress" aria-hidden="true"></span><span class="status-label">进行中</span></div>
+              <div class="req-completion completion-cell"><strong>50%</strong><span>2 / 4</span><div class="mini-progress" aria-label="完成度 50%"><span style="width: 50%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>2 / 4</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>会话模型支持 general、family 和 deep 三种模式。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>模式变化不会扩大允许检索的事实范围。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>三种模式具有稳定、可测试的表达差异。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>儿童理解度和语言流畅度通过独立人工评审。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>2 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">代码</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/store.py">游客会话模型 <span>↗</span></a>                    <p class="evidence-note">visitor_mode 枚举已存在。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="../product/PRD.md">PRD 游客模式要求 <span>↗</span></a>                    <p class="evidence-note">模式只能改变表达，不改变事实。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-006</code></li><li><code>REQ-008</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 游客模式</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 儿童表达</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 人工评测</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">固定三组表达合同和人工评分表，再补自动化与人工验收记录。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="in_progress" data-priority="P0" data-phase="audit" data-search="req-012 会话结束、状态清理与演示重置 新游客开始前必须清除上一组的展品、回答和模式状态；演示人员能够快速恢复统一起点。 服务端 / 固件 audit 审计与设备状态 会话清理 演示控制 隐私">
+            <summary aria-label="REQ-012 会话结束、状态清理与演示重置">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">120</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-012</span><h3>会话结束、状态清理与演示重置</h3></div>
+                <p>新游客开始前必须清除上一组的展品、回答和模式状态；演示人员能够快速恢复统一起点。</p>
+                <div class="req-meta"><span>服务端 / 固件</span><span>2 项证据</span><span>置信度 中</span></div>
+              </div>
+              <div class="req-phase phase-cell">审计与设备状态<small>阶段 03</small></div>
+              <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--in_progress" aria-hidden="true"></span><span class="status-label">进行中</span></div>
+              <div class="req-completion completion-cell"><strong>50%</strong><span>2 / 4</span><div class="mini-progress" aria-label="完成度 50%"><span style="width: 50%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>2 / 4</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>文本调试工具重置后使用新的设备会话。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>重置后不继承上一会话展品上下文。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>目标设备提供明确且误触风险可控的结束或重置入口。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>连续多轮现场演示证明状态不会跨小组泄漏。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>2 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">测试</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/tests/test_museum_text_chat.py">文本会话重置测试 <span>↗</span></a>                    <p class="evidence-note">已验证调试工具重置清除展品上下文。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="../product/PRD.md">PRD 结束与重置场景 <span>↗</span></a>                    <p class="evidence-note">下一小组不得看到上一会话内容。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-004</code></li><li><code>REQ-010</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 会话清理</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 演示控制</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 隐私</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">确定目标板重置交互并纳入真机连续演示脚本。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="pending" data-priority="P1" data-phase="content" data-search="req-013 内容导入、发布校验与版本回滚 馆方内容人员能够用版本化 yaml 或 json 导入展品、别名、事实和来源；发布前拒绝无来源、冲突和不完整内容。 内容 / 服务端 content 内容运营 内容导入 发布 回滚">
+            <summary aria-label="REQ-013 内容导入、发布校验与版本回滚">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">130</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-013</span><h3>内容导入、发布校验与版本回滚</h3></div>
+                <p>馆方内容人员能够用版本化 YAML 或 JSON 导入展品、别名、事实和来源；发布前拒绝无来源、冲突和不完整内容。</p>
+                <div class="req-meta"><span>内容 / 服务端</span><span>1 项证据</span><span>置信度 高</span></div>
+              </div>
+              <div class="req-phase phase-cell">内容运营<small>阶段 04</small></div>
+              <div class="req-priority"><span class="pill priority-P1">P1 · 产品完善</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--pending" aria-hidden="true"></span><span class="status-label">未开始</span></div>
+              <div class="req-completion completion-cell"><strong>0%</strong><span>0 / 5</span><div class="mini-progress" aria-label="完成度 0%"><span style="width: 0%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>0 / 5</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>不修改 Python 代码即可导入一件新展品。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>导入先完整校验，再在单一事务中写入草稿。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>发布前拒绝无来源事实、别名冲突和缺失审核信息。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>发布后新会话使用新版本，撤回后新回答不可见。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>历史交互仍可复核旧内容版本。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>1 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="../roadmap/exhibit-rag-execution-plan.md">内容发布实施计划 <span>↗</span></a>                    <p class="evidence-note">RAG-40 与 RAG-41 尚未实现。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-006</code></li><li><code>REQ-009</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 内容导入</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 发布</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 回滚</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">先实现 CLI 和事务校验，不提前建设大而全运营后台。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="in_progress" data-priority="P1" data-phase="content" data-search="req-014 未命中问题回收与运营洞察 将未回答问题按展品解析、事实缺口、越界和 asr 错误分组，帮助馆方补充内容或修正别名，而不是笼统归因于知识库不足。 运营 / 服务端 content 内容运营 未命中 运营 内容缺口">
+            <summary aria-label="REQ-014 未命中问题回收与运营洞察">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">140</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-014</span><h3>未命中问题回收与运营洞察</h3></div>
+                <p>将未回答问题按展品解析、事实缺口、越界和 ASR 错误分组，帮助馆方补充内容或修正别名，而不是笼统归因于知识库不足。</p>
+                <div class="req-meta"><span>运营 / 服务端</span><span>2 项证据</span><span>置信度 中</span></div>
+              </div>
+              <div class="req-phase phase-cell">内容运营<small>阶段 04</small></div>
+              <div class="req-priority"><span class="pill priority-P1">P1 · 产品完善</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--in_progress" aria-hidden="true"></span><span class="status-label">进行中</span></div>
+              <div class="req-completion completion-cell"><strong>25%</strong><span>1 / 4</span><div class="mini-progress" aria-label="完成度 25%"><span style="width: 25%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>1 / 4</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-done">
+                    <span class="criterion-mark" aria-hidden="true">✓</span>
+                    <span>交互记录已保存 unanswered_reason。</span>
+                    <span class="criterion-status">已完成</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>提供按展品、原因、次数和最近时间聚合的导出 CLI。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>区分展品未识别、事实未覆盖、范围外和明显 ASR 错误。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>运营人员能够从导出结果追溯到原始请求和依据状态。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>2 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">代码</span>
+<a class="evidence-link" href="../../main/xiaozhi-server/core/museum/store.py">未回答原因存储 <span>↗</span></a>                    <p class="evidence-note">interaction_trace 已包含 unanswered_reason。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="../roadmap/exhibit-rag-execution-plan.md">未命中导出计划 <span>↗</span></a>                    <p class="evidence-note">RAG-42 待实现。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-009</code></li><li><code>REQ-013</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 未命中</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 运营</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 内容缺口</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">实现只读导出 CLI 和聚合测试，先用文件报告验证运营闭环。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="blocked" data-priority="P0" data-phase="device" data-search="req-015 真实设备语音端到端验收 在目标 esp32-s3-touch-lcd-1.46 上，用真实说话、麦克风、asr、检索、tts、扬声器和屏幕完成可复核链路。 固件 / 服务端 / 测试 device 真机验收 真机 语音链路 验收">
+            <summary aria-label="REQ-015 真实设备语音端到端验收">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">150</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-015</span><h3>真实设备语音端到端验收</h3></div>
+                <p>在目标 ESP32-S3-Touch-LCD-1.46 上，用真实说话、麦克风、ASR、检索、TTS、扬声器和屏幕完成可复核链路。</p>
+                <div class="req-meta"><span>固件 / 服务端 / 测试</span><span>2 项证据</span><span>置信度 高</span></div>
+              </div>
+              <div class="req-phase phase-cell">真机验收<small>阶段 05</small></div>
+              <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--blocked" aria-hidden="true"></span><span class="status-label">受阻</span></div>
+              <div class="req-completion completion-cell"><strong>0%</strong><span>0 / 7</span><div class="mini-progress" aria-label="完成度 0%"><span style="width: 0%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>0 / 7</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-blocked">
+                    <span class="criterion-mark" aria-hidden="true">!</span>
+                    <span>记录设备 ID、固件提交和服务端提交。</span>
+                    <span class="criterion-status">受阻</span>
+                  </li>
+                  <li class="criterion criterion-blocked">
+                    <span class="criterion-mark" aria-hidden="true">!</span>
+                    <span>保存真实说话内容与 ASR 文本。</span>
+                    <span class="criterion-status">受阻</span>
+                  </li>
+                  <li class="criterion criterion-blocked">
+                    <span class="criterion-mark" aria-hidden="true">!</span>
+                    <span>保存展品解析、事实、来源和内容版本。</span>
+                    <span class="criterion-status">受阻</span>
+                  </li>
+                  <li class="criterion criterion-blocked">
+                    <span class="criterion-mark" aria-hidden="true">!</span>
+                    <span>保存 TTS ready/done、扬声器实际播放和屏幕状态。</span>
+                    <span class="criterion-status">受阻</span>
+                  </li>
+                  <li class="criterion criterion-blocked">
+                    <span class="criterion-mark" aria-hidden="true">!</span>
+                    <span>覆盖首轮、追问、切换、资料不足和无上下文。</span>
+                    <span class="criterion-status">受阻</span>
+                  </li>
+                  <li class="criterion criterion-blocked">
+                    <span class="criterion-mark" aria-hidden="true">!</span>
+                    <span>覆盖中断播报和重新提问。</span>
+                    <span class="criterion-status">受阻</span>
+                  </li>
+                  <li class="criterion criterion-blocked">
+                    <span class="criterion-mark" aria-hidden="true">!</span>
+                    <span>至少一次完整验收记录可由第三方复核。</span>
+                    <span class="criterion-status">受阻</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>2 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="../../README.md">当前状态说明 <span>↗</span></a>                    <p class="evidence-note">明确指出自动化测试不等于真机验收，当前尚无完整记录。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="../roadmap/exhibit-rag-execution-plan.md">真机验收脚本 <span>↗</span></a>                    <p class="evidence-note">RAG-52 与 RAG-53 定义了所需证据。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-008</code></li><li><code>REQ-010</code></li><li><code>REQ-012</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 真机</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 语音链路</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 验收</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">按固定七步脚本执行一次真机验收，并把提交号、日志、屏幕和播放结果归档。</p>
+                </section>
+                <section>
+                  <h4>当前阻塞</h4>
+                  <ul class="compact-list blocker-list"><li>尚未执行并归档本轮目标设备验收记录。</li><li>当前只有源码和自动化测试证据，不能证明真实麦克风、扬声器和屏幕表现。</li></ul>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="blocked" data-priority="P0" data-phase="device" data-search="req-016 比赛稳定性与证据包 比赛材料中的每个“已完成”结论都必须由代码、自动化测试、真机记录或可复核文档支撑，并覆盖连续运行和失败恢复。 测试 / 项目负责人 device 真机验收 比赛 稳定性 证据包">
+            <summary aria-label="REQ-016 比赛稳定性与证据包">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">160</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-016</span><h3>比赛稳定性与证据包</h3></div>
+                <p>比赛材料中的每个“已完成”结论都必须由代码、自动化测试、真机记录或可复核文档支撑，并覆盖连续运行和失败恢复。</p>
+                <div class="req-meta"><span>测试 / 项目负责人</span><span>2 项证据</span><span>置信度 高</span></div>
+              </div>
+              <div class="req-phase phase-cell">真机验收<small>阶段 05</small></div>
+              <div class="req-priority"><span class="pill priority-P0">P0 · 核心交付</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--blocked" aria-hidden="true"></span><span class="status-label">受阻</span></div>
+              <div class="req-completion completion-cell"><strong>0%</strong><span>0 / 5</span><div class="mini-progress" aria-label="完成度 0%"><span style="width: 0%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>0 / 5</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-blocked">
+                    <span class="criterion-mark" aria-hidden="true">!</span>
+                    <span>目标设备连续运行至少 30 分钟。</span>
+                    <span class="criterion-status">受阻</span>
+                  </li>
+                  <li class="criterion criterion-blocked">
+                    <span class="criterion-mark" aria-hidden="true">!</span>
+                    <span>至少完成一次断线、弱网或服务失败恢复。</span>
+                    <span class="criterion-status">受阻</span>
+                  </li>
+                  <li class="criterion criterion-blocked">
+                    <span class="criterion-mark" aria-hidden="true">!</span>
+                    <span>形成不中断的真机演示视频和操作脚本。</span>
+                    <span class="criterion-status">受阻</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>形成架构图、可信性说明和测试报告。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>申报材料中的产品名、范围和完成状态与需求看板一致。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>2 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="../roadmap/2026-08-competition-plan.md">2026 年 8 月实施路线 <span>↗</span></a>                    <p class="evidence-note">定义稳定性、证据与展示阶段。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="../../README.md">项目当前状态 <span>↗</span></a>                    <p class="evidence-note">当前尚缺真机可复核记录。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-015</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 比赛</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 稳定性</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 证据包</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">真机首轮通过后立即执行连续运行与故障恢复，不要把材料编写放在证据之前。</p>
+                </section>
+                <section>
+                  <h4>当前阻塞</h4>
+                  <ul class="compact-list blocker-list"><li>REQ-015 尚未通过，无法形成真实稳定性结论。</li><li>比赛截止日期尚未在项目文档中确认。</li></ul>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="pending" data-priority="P2" data-phase="expansion" data-search="req-017 扩展到多展品内容规模 核心真机闭环稳定后扩展到 20 至 30 件展品，并为每件展品建立规范名称、别名、事实、来源和固定评测问题。 内容 / 测试 expansion 规模扩展 多展品 内容规模 评测集">
+            <summary aria-label="REQ-017 扩展到多展品内容规模">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">170</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-017</span><h3>扩展到多展品内容规模</h3></div>
+                <p>核心真机闭环稳定后扩展到 20 至 30 件展品，并为每件展品建立规范名称、别名、事实、来源和固定评测问题。</p>
+                <div class="req-meta"><span>内容 / 测试</span><span>1 项证据</span><span>置信度 中</span></div>
+              </div>
+              <div class="req-phase phase-cell">规模扩展<small>阶段 06</small></div>
+              <div class="req-priority"><span class="pill priority-P2">P2 · 后续评估</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--pending" aria-hidden="true"></span><span class="status-label">未开始</span></div>
+              <div class="req-completion completion-cell"><strong>0%</strong><span>0 / 4</span><div class="mini-progress" aria-label="完成度 0%"><span style="width: 0%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>0 / 4</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>至少 20 件展品具有审核来源和发布版本。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>每件展品覆盖规范名称、别名、资料不足和诱导编造问题。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>别名冲突和解析准确率具有自动化指标。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>内容扩展不降低单展品事实边界和审计完整性。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>1 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="../roadmap/exhibit-rag-execution-plan.md">扩容阶段计划 <span>↗</span></a>                    <p class="evidence-note">明确要求阶段 5 通过后再扩展内容。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-013</code></li><li><code>REQ-015</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 多展品</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 内容规模</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 评测集</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">保持待办，真机核心闭环通过前不投入批量内容生产。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="requirement" data-status="deferred" data-priority="P2" data-phase="expansion" data-search="req-018 后置路线、图片、多语言和离线能力 固定路线、图片辅助识别、多语言、独立向量数据库和离线知识缓存均不是当前比赛核心闭环，应由真实评测缺口驱动，而不是预先建设。 产品 / 架构 expansion 规模扩展 后置 路线 图片 多语言 离线">
+            <summary aria-label="REQ-018 后置路线、图片、多语言和离线能力">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">180</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">REQ-018</span><h3>后置路线、图片、多语言和离线能力</h3></div>
+                <p>固定路线、图片辅助识别、多语言、独立向量数据库和离线知识缓存均不是当前比赛核心闭环，应由真实评测缺口驱动，而不是预先建设。</p>
+                <div class="req-meta"><span>产品 / 架构</span><span>2 项证据</span><span>置信度 高</span></div>
+              </div>
+              <div class="req-phase phase-cell">规模扩展<small>阶段 06</small></div>
+              <div class="req-priority"><span class="pill priority-P2">P2 · 后续评估</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--deferred" aria-hidden="true"></span><span class="status-label">已后置</span></div>
+              <div class="req-completion completion-cell"><strong>0%</strong><span>0 / 4</span><div class="mini-progress" aria-label="完成度 0%"><span style="width: 0%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>0 / 4</span></h4>
+                <ul class="criterion-list">
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>核心真机验收通过后重新评估固定路线价值。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>只有结构化检索出现可量化缺口时才评估向量召回。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>图片、多语言和离线能力分别建立独立 PRD 与验收指标。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                  <li class="criterion criterion-pending">
+                    <span class="criterion-mark" aria-hidden="true">○</span>
+                    <span>后置能力不得阻塞当前 P0 交付。</span>
+                    <span class="criterion-status">未开始</span>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>2 项</span></h4>
+                <ul class="evidence-list">
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="../product/PRD.md">PRD 范围边界 <span>↗</span></a>                    <p class="evidence-note">路线、地图和通用能力不属于当前主线。</p>
+                  </li>
+                  <li class="evidence-item">
+                    <span class="evidence-kind">文档</span>
+<a class="evidence-link" href="../roadmap/exhibit-rag-execution-plan.md">阶段 6 约束 <span>↗</span></a>                    <p class="evidence-note">阶段 5 通过后才能启动可选能力。</p>
+                  </li>
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                <ul class="compact-list">
+<li><code>REQ-016</code></li>                </ul>
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 后置</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 路线</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 图片</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 多语言</span><span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># 离线</span>                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">保持 deferred；只有真机和运营数据给出明确需求时再立项。</p>
+                </section>
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。</p>
+                </section>
+              </div>
+            </div>
+          </details>
+          <div id="empty-state" class="empty-state" hidden>
+            <strong>没有匹配的需求</strong>
+            <p>尝试清除筛选，或换一个需求编号、阶段、负责人或标签。</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <p>需求追踪与交付看板 · 源文件 <code>docs/requirements/requirements.yaml</code></p>
+        <p>YAML digest <code>b78c5419bab9</code> · 27 passed in 2.13s</p>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      const rows = Array.from(document.querySelectorAll('.requirement'));
+      const searchInput = document.getElementById('search-input');
+      const statusFilter = document.getElementById('status-filter');
+      const phaseFilter = document.getElementById('phase-filter');
+      const resultCount = document.getElementById('result-count');
+      const emptyState = document.getElementById('empty-state');
+      const priorityButtons = Array.from(document.querySelectorAll('[data-priority-filter]'));
+      let priority = 'all';
+
+      const applyFilters = () => {
+        const query = searchInput.value.trim().toLowerCase();
+        const status = statusFilter.value;
+        const phase = phaseFilter.value;
+        let visible = 0;
+
+        rows.forEach((row) => {
+          const matches = (!query || row.dataset.search.includes(query))
+            && (priority === 'all' || row.dataset.priority === priority)
+            && (status === 'all' || row.dataset.status === status)
+            && (phase === 'all' || row.dataset.phase === phase);
+          row.hidden = !matches;
+          if (matches) visible += 1;
+        });
+
+        resultCount.textContent = `显示 ${visible} 条需求`;
+        emptyState.hidden = visible !== 0;
+      };
+
+      priorityButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          priority = button.dataset.priorityFilter;
+          priorityButtons.forEach((item) => item.classList.toggle('is-active', item === button));
+          applyFilters();
+        });
+      });
+
+      searchInput.addEventListener('input', applyFilters);
+      statusFilter.addEventListener('change', applyFilters);
+      phaseFilter.addEventListener('change', applyFilters);
+
+      document.getElementById('clear-filters').addEventListener('click', () => {
+        searchInput.value = '';
+        statusFilter.value = 'all';
+        phaseFilter.value = 'all';
+        priority = 'all';
+        priorityButtons.forEach((item) => item.classList.toggle('is-active', item.dataset.priorityFilter === 'all'));
+        applyFilters();
+        searchInput.focus();
+      });
+
+      document.getElementById('expand-all').addEventListener('click', () => rows.forEach((row) => { row.open = true; }));
+      document.getElementById('collapse-all').addEventListener('click', () => rows.forEach((row) => { row.open = false; }));
+      applyFilters();
+    })();
+  </script>
+</body>
+</html>

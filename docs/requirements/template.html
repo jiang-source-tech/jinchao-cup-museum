@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ project.dashboard_title }}：{{ project.name }}">
+  <title>{{ project.dashboard_title }} · {{ project.name }}</title>
+  <style>
+    :root {
+      --ink: #15201e;
+      --muted: #65716e;
+      --quiet: #87928f;
+      --paper: #f4f7f6;
+      --panel: #ffffff;
+      --line: #d9e3df;
+      --line-strong: #b9c9c4;
+      --jade: #0f766e;
+      --jade-soft: #e1f2ee;
+      --cinnabar: #b94732;
+      --cinnabar-soft: #f8e7e3;
+      --blue: #255ca8;
+      --blue-soft: #e6eefb;
+      --brass: #986b18;
+      --brass-soft: #faf0d4;
+      --gray: #68736f;
+      --gray-soft: #edf1ef;
+      --shadow: 0 14px 38px rgba(21, 32, 30, 0.08);
+      color-scheme: light;
+      font-family: "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    button, input, select { font: inherit; }
+    button, select { cursor: pointer; }
+    a { color: inherit; }
+    :focus-visible { outline: 3px solid rgba(37, 92, 168, 0.36); outline-offset: 3px; }
+
+    .app-shell { min-height: 100vh; }
+
+    .topbar {
+      border-bottom: 1px solid var(--line-strong);
+      background: var(--panel);
+    }
+
+    .topbar-inner,
+    main,
+    .footer-inner {
+      width: min(1440px, calc(100% - 64px));
+      margin: 0 auto;
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 48px;
+      min-height: 272px;
+      padding: 48px 0 42px;
+    }
+
+    .brand-lockup { max-width: 880px; }
+
+    .eyebrow,
+    .kicker,
+    .mono,
+    .req-id,
+    .order-number,
+    .phase-number,
+    .data-label,
+    .ledger-columns,
+    .metric-label,
+    .section-index {
+      font-family: Consolas, "SFMono-Regular", monospace;
+      letter-spacing: 0;
+    }
+
+    .kicker,
+    .eyebrow,
+    .section-index {
+      margin: 0;
+      color: var(--jade);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      max-width: 900px;
+      margin: 14px 0 16px;
+      font-family: "STSong", "Songti SC", "Noto Serif CJK SC", serif;
+      font-size: 44px;
+      line-height: 1.16;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .lede {
+      max-width: 840px;
+      margin-bottom: 22px;
+      color: #465653;
+      font-size: 16px;
+    }
+
+    .header-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 24px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .header-meta strong { color: var(--ink); font-weight: 700; }
+
+    .artifact-seal {
+      position: relative;
+      flex: 0 0 150px;
+      align-self: center;
+      width: 150px;
+      height: 150px;
+      border: 1px solid var(--line-strong);
+      border-radius: 50%;
+      color: var(--jade);
+    }
+
+    .artifact-seal::before,
+    .artifact-seal::after {
+      position: absolute;
+      content: "";
+      background: var(--line-strong);
+    }
+
+    .artifact-seal::before { top: 17px; bottom: 17px; left: 50%; width: 1px; }
+    .artifact-seal::after { top: 50%; right: 17px; left: 17px; height: 1px; }
+
+    .cup-shape {
+      position: absolute;
+      top: 38px;
+      left: 50%;
+      width: 48px;
+      height: 45px;
+      border: 3px solid currentColor;
+      border-top: 0;
+      border-radius: 0 0 18px 18px;
+      transform: translateX(-50%);
+    }
+
+    .cup-shape::before {
+      position: absolute;
+      top: -8px;
+      left: -7px;
+      width: 56px;
+      height: 11px;
+      border: 3px solid currentColor;
+      border-radius: 50%;
+      content: "";
+    }
+
+    .cup-shape::after {
+      position: absolute;
+      bottom: -21px;
+      left: 50%;
+      width: 3px;
+      height: 20px;
+      background: currentColor;
+      content: "";
+      transform: translateX(-50%);
+    }
+
+    .seal-caption {
+      position: absolute;
+      right: 0;
+      bottom: 17px;
+      left: 0;
+      color: var(--muted);
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    main { padding: 34px 0 80px; }
+
+    .control-slab {
+      border-top: 1px solid var(--ink);
+      border-bottom: 1px solid var(--line-strong);
+      background: var(--panel);
+    }
+
+    .metric-strip {
+      display: grid;
+      grid-template-columns: 1.35fr repeat(4, 1fr);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .metric {
+      min-height: 108px;
+      padding: 22px 24px;
+      border-right: 1px solid var(--line);
+    }
+
+    .metric:last-child { border-right: 0; }
+
+    .metric-label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      display: block;
+      font-family: "STSong", "Songti SC", serif;
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .metric-note { color: var(--muted); font-size: 12px; }
+    .metric--progress .metric-value { color: var(--jade); }
+    .metric--blocked .metric-value { color: var(--cinnabar); }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: 16px;
+      padding: 20px 24px;
+    }
+
+    .filter-field { display: grid; gap: 6px; min-width: 150px; }
+    .filter-field--search { flex: 1 1 300px; min-width: 230px; }
+
+    .filter-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .search-wrap { position: relative; }
+
+    .search-wrap::before {
+      position: absolute;
+      top: 50%;
+      left: 13px;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--quiet);
+      border-radius: 50%;
+      content: "";
+      transform: translateY(-60%);
+    }
+
+    .search-wrap::after {
+      position: absolute;
+      top: 57%;
+      left: 25px;
+      width: 6px;
+      height: 2px;
+      background: var(--quiet);
+      content: "";
+      transform: rotate(45deg);
+    }
+
+    input[type="search"], select {
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      color: var(--ink);
+      background: var(--panel);
+    }
+
+    input[type="search"] { padding-left: 38px; }
+    input[type="search"]::placeholder { color: var(--quiet); }
+    input[type="search"]:focus, select:focus { border-color: var(--blue); outline: none; }
+
+    .segment-control { display: flex; min-height: 42px; }
+
+    .segment-control button,
+    .toolbar-button {
+      min-height: 42px;
+      padding: 9px 14px;
+      border: 1px solid var(--line-strong);
+      border-right-width: 0;
+      color: var(--muted);
+      background: var(--panel);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .segment-control button:first-child { border-radius: 4px 0 0 4px; }
+    .segment-control button:last-child { border-right-width: 1px; border-radius: 0 4px 4px 0; }
+    .segment-control button:hover { color: var(--ink); background: var(--paper); }
+    .segment-control button.is-active { color: var(--jade); background: var(--jade-soft); }
+
+    .filter-actions { display: flex; gap: 8px; margin-left: auto; }
+
+    .toolbar-button {
+      border-right-width: 1px;
+      border-radius: 4px;
+      color: var(--ink);
+    }
+
+    .toolbar-button:hover { border-color: var(--blue); color: var(--blue); }
+
+    .phase-rail {
+      padding: 46px 0 40px;
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    .section-head,
+    .ledger-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      margin: 7px 0 0;
+      font-family: "STSong", "Songti SC", serif;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    .section-note { max-width: 420px; margin: 0; color: var(--muted); font-size: 12px; text-align: right; }
+
+    .phase-track {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(138px, 1fr));
+      border-top: 1px solid var(--line-strong);
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    .phase-node {
+      position: relative;
+      min-height: 126px;
+      padding: 16px 16px 14px;
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .phase-node:last-child { border-right: 0; }
+
+    .phase-node-top { display: flex; align-items: baseline; gap: 9px; }
+    .phase-number { color: var(--quiet); font-size: 11px; }
+    .phase-node strong { font-size: 13px; }
+    .phase-node p { margin: 9px 0 0; color: var(--muted); font-size: 11px; }
+
+    .phase-line {
+      height: 5px;
+      margin-top: 17px;
+      background: var(--gray-soft);
+      overflow: hidden;
+    }
+
+    .phase-line span { display: block; height: 100%; background: var(--jade); }
+
+    .ledger { padding-top: 42px; }
+
+    .ledger-count { margin: 0; color: var(--muted); font-size: 12px; }
+
+    .ledger-columns {
+      display: grid;
+      grid-template-columns: 90px minmax(300px, 1fr) 145px 112px 118px 120px;
+      gap: 20px;
+      padding: 12px 20px;
+      border-top: 1px solid var(--ink);
+      border-bottom: 1px solid var(--line-strong);
+      color: var(--quiet);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .requirement-list { background: var(--panel); }
+
+    .requirement {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .requirement[hidden] { display: none; }
+    .requirement:hover { background: #fbfcfc; }
+
+    .requirement > summary {
+      display: grid;
+      grid-template-columns: 90px minmax(300px, 1fr) 145px 112px 118px 120px;
+      gap: 20px;
+      align-items: center;
+      min-height: 112px;
+      padding: 18px 20px;
+      list-style: none;
+      cursor: pointer;
+    }
+
+    .requirement > summary::-webkit-details-marker { display: none; }
+
+    .req-order {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+    }
+
+    .order-rule { width: 20px; height: 1px; background: var(--jade); }
+    .order-number { font-size: 13px; font-weight: 700; }
+
+    .req-title-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .req-id { color: var(--jade); font-size: 11px; font-weight: 700; }
+    .req-main h3 { display: inline; margin: 0; font-size: 16px; line-height: 1.35; }
+    .req-main p { max-width: 720px; margin: 7px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+
+    .req-meta { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-top: 9px; color: var(--quiet); font-size: 11px; }
+    .req-meta span + span::before { margin-right: 12px; color: var(--line-strong); content: "/"; }
+
+    .phase-cell { color: var(--ink); font-size: 12px; font-weight: 700; }
+    .phase-cell small { display: block; margin-top: 3px; color: var(--quiet); font-size: 10px; font-weight: 400; }
+
+    .pill,
+    .status-label,
+    .confidence-badge {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 24px;
+      padding: 3px 8px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .priority-P0 { color: var(--cinnabar); background: var(--cinnabar-soft); border-color: #efc8bf; }
+    .priority-P1 { color: var(--brass); background: var(--brass-soft); border-color: #ead9a9; }
+    .priority-P2 { color: var(--blue); background: var(--blue-soft); border-color: #c4d6f2; }
+
+    .status-cell { display: flex; align-items: center; gap: 7px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray); }
+    .status-dot--done { background: var(--jade); }
+    .status-dot--in_progress { background: var(--blue); }
+    .status-dot--pending { background: var(--gray); }
+    .status-dot--blocked { background: var(--cinnabar); }
+    .status-dot--deferred { background: var(--brass); }
+    .status-label { padding: 0; border: 0; color: var(--muted); background: transparent; }
+
+    .completion-cell strong { display: block; font-family: Consolas, "SFMono-Regular", monospace; font-size: 14px; }
+    .completion-cell span { display: block; margin-top: 2px; color: var(--quiet); font-size: 10px; }
+    .mini-progress { height: 4px; margin-top: 9px; background: var(--gray-soft); }
+    .mini-progress span { display: block; height: 100%; background: var(--jade); }
+    .requirement[data-status="blocked"] .mini-progress span { background: var(--cinnabar); }
+    .requirement[data-status="in_progress"] .mini-progress span { background: var(--blue); }
+    .requirement[data-status="deferred"] .mini-progress span { background: var(--brass); }
+
+    .summary-caret {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      justify-self: end;
+      border: 1px solid var(--line-strong);
+      border-radius: 50%;
+    }
+
+    .summary-caret::before,
+    .summary-caret::after {
+      position: absolute;
+      top: 8px;
+      left: 4px;
+      width: 8px;
+      height: 1px;
+      background: var(--muted);
+      content: "";
+    }
+
+    .summary-caret::after { transform: rotate(90deg); }
+    details[open] .summary-caret::after { display: none; }
+
+    .req-detail {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.95fr) minmax(330px, 1.4fr) minmax(240px, 0.9fr);
+      gap: 28px;
+      padding: 8px 20px 30px 130px;
+      background: #fbfcfc;
+    }
+
+    .detail-section { min-width: 0; }
+    .detail-section h4 { margin: 0 0 11px; font-size: 12px; }
+    .detail-section h4 span { margin-left: 7px; color: var(--quiet); font-family: Consolas, "SFMono-Regular", monospace; font-size: 10px; font-weight: 400; }
+    .detail-copy { margin: 0; color: #465653; font-size: 12px; }
+
+    .criterion-list,
+    .evidence-list,
+    .compact-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+    .criterion {
+      display: grid;
+      grid-template-columns: 18px 1fr auto;
+      gap: 8px;
+      align-items: start;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    .criterion:last-child { border-bottom: 0; }
+    .criterion-mark { font-family: Consolas, "SFMono-Regular", monospace; font-weight: 700; }
+    .criterion-done .criterion-mark { color: var(--jade); }
+    .criterion-pending .criterion-mark { color: var(--gray); }
+    .criterion-blocked .criterion-mark { color: var(--cinnabar); }
+    .criterion-status { color: var(--quiet); font-size: 10px; white-space: nowrap; }
+
+    .evidence-item { padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .evidence-item:last-child { border-bottom: 0; }
+    .evidence-link { display: inline-flex; gap: 6px; color: var(--blue); font-size: 12px; font-weight: 700; text-decoration: none; }
+    .evidence-link:hover { text-decoration: underline; }
+    .evidence-link span { font-family: Consolas, "SFMono-Regular", monospace; font-size: 11px; }
+    .evidence-ref { color: var(--ink); font-family: Consolas, "SFMono-Regular", monospace; font-size: 11px; }
+    .evidence-kind { display: block; margin-bottom: 2px; color: var(--quiet); font-size: 10px; }
+    .evidence-note { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+
+    .compact-list li { display: flex; gap: 8px; align-items: baseline; color: var(--muted); font-size: 11px; }
+    .compact-list li::before { color: var(--line-strong); content: "—"; }
+    .compact-list code { padding: 2px 5px; color: var(--jade); background: var(--jade-soft); font-family: Consolas, "SFMono-Regular", monospace; font-size: 10px; }
+
+    .detail-bottom { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; padding-top: 10px; border-top: 1px solid var(--line-strong); }
+    .next-action { margin: 0; color: var(--ink); font-size: 12px; font-weight: 700; }
+    .blocker-list li { color: var(--cinnabar); }
+
+    .empty-state {
+      padding: 60px 24px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .empty-state strong { display: block; margin-bottom: 6px; color: var(--ink); font-size: 16px; }
+    .empty-state p { margin: 0; font-size: 12px; }
+
+    .footer {
+      border-top: 1px solid var(--line-strong);
+      background: var(--panel);
+    }
+
+    .footer-inner { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px; padding: 22px 0 30px; color: var(--muted); font-size: 11px; }
+    .footer-inner p { margin: 0; }
+    .footer-inner code { color: var(--ink); font-family: Consolas, "SFMono-Regular", monospace; }
+
+    @media (max-width: 1120px) {
+      .topbar-inner, main, .footer-inner { width: min(100% - 40px, 960px); }
+      .topbar-inner { min-height: 0; }
+      .artifact-seal { flex-basis: 120px; width: 120px; height: 120px; }
+      .cup-shape { top: 29px; transform: translateX(-50%) scale(0.84); }
+      .phase-track { overflow-x: auto; grid-template-columns: repeat(7, 160px); }
+      .ledger-columns, .requirement > summary { grid-template-columns: 70px minmax(260px, 1fr) 120px 96px 100px 96px; gap: 14px; }
+      .req-detail { padding-left: 104px; }
+    }
+
+    @media (max-width: 760px) {
+      .topbar-inner, main, .footer-inner { width: calc(100% - 28px); }
+      .topbar-inner { display: block; padding: 30px 0 28px; }
+      .artifact-seal { display: none; }
+      h1 { font-size: 32px; }
+      .lede { font-size: 14px; }
+      .metric-strip { grid-template-columns: repeat(2, 1fr); }
+      .metric { min-height: 92px; padding: 17px 15px; }
+      .metric:first-child { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid var(--line); }
+      .metric:nth-child(2) { border-bottom: 1px solid var(--line); }
+      .metric:nth-child(3) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .metric:nth-child(4) { border-bottom: 0; }
+      .metric:nth-child(5) { border-right: 0; }
+      .metric-value { font-size: 25px; }
+      .filter-bar { display: grid; grid-template-columns: 1fr 1fr; padding: 16px; }
+      .filter-field--search { grid-column: 1 / -1; min-width: 0; }
+      .filter-field { min-width: 0; }
+      .filter-actions { grid-column: 1 / -1; margin-left: 0; }
+      .filter-actions button { flex: 1; }
+      .section-head, .ledger-head { display: block; }
+      .section-note { margin-top: 9px; text-align: left; }
+      .ledger-columns { display: none; }
+      .requirement > summary { display: grid; grid-template-columns: 52px 1fr 24px; gap: 12px; min-height: 0; padding: 17px 14px; }
+      .req-order { align-self: start; gap: 6px; }
+      .order-rule { width: 12px; }
+      .order-number { font-size: 11px; }
+      .req-main h3 { font-size: 14px; }
+      .req-main p { font-size: 11px; }
+      .req-phase, .req-priority, .req-status, .req-completion { grid-column: 2 / -1; }
+      .req-phase { display: inline-flex; gap: 8px; align-items: baseline; margin-top: 8px; }
+      .req-phase::before { color: var(--quiet); content: "阶段"; font-size: 10px; }
+      .req-priority, .req-status, .req-completion { display: inline-flex; align-items: center; gap: 8px; }
+      .req-priority { grid-row: 3; }
+      .req-status { grid-row: 4; }
+      .req-completion { grid-row: 5; width: 100%; }
+      .req-completion .mini-progress { flex: 1; margin-top: 0; }
+      .summary-caret { grid-column: 3; grid-row: 1; }
+      .req-detail { display: block; padding: 4px 14px 26px 78px; }
+      .detail-section + .detail-section { margin-top: 24px; }
+      .detail-bottom { display: block; margin-top: 24px; }
+      .detail-bottom > * + * { margin-top: 20px; }
+      .footer-inner { display: block; }
+      .footer-inner p + p { margin-top: 7px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .filter-bar, .filter-actions, .summary-caret { display: none; }
+      .topbar-inner, main, .footer-inner { width: 100%; }
+      .topbar-inner { min-height: 0; padding: 24px 0; }
+      .phase-rail { break-inside: avoid; }
+      .requirement > summary { break-inside: avoid; }
+      .requirement:not([open]) .req-detail { display: block; }
+      .req-detail { break-inside: avoid; }
+      a { text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand-lockup">
+          <p class="kicker">Requirements / delivery control plane</p>
+          <h1>{{ project.name }}</h1>
+          <p class="lede">{{ project.objective }}</p>
+          <div class="header-meta">
+            <span>看板版本 <strong>{{ project.version }}</strong></span>
+            <span>更新日期 <strong>{{ project.updated_at }}</strong></span>
+            <span>状态规则 <strong>证据优先</strong></span>
+          </div>
+        </div>
+        <div class="artifact-seal" aria-label="博物馆展品标记" role="img">
+          <div class="cup-shape"></div>
+          <span class="seal-caption">catalog / museum</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="control-slab" aria-labelledby="overview-heading">
+        <h2 id="overview-heading" class="visually-hidden" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);">交付概览</h2>
+        <div class="metric-strip">
+          <div class="metric metric--progress">
+            <span class="metric-label">Acceptance completion</span>
+            <strong class="metric-value">{{ stats.progress }}%</strong>
+            <span class="metric-note">{{ stats.criteria_done }} / {{ stats.criteria_total }} 条验收条件</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Requirements</span>
+            <strong class="metric-value">{{ stats.total }}</strong>
+            <span class="metric-note">当前追踪条目</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Verified</span>
+            <strong class="metric-value">{{ stats.done }}</strong>
+            <span class="metric-note">全部条件有证据</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">In progress</span>
+            <strong class="metric-value">{{ stats.in_progress }}</strong>
+            <span class="metric-note">已有部分交付</span>
+          </div>
+          <div class="metric metric--blocked">
+            <span class="metric-label">Blocked</span>
+            <strong class="metric-value">{{ stats.blocked }}</strong>
+            <span class="metric-note">需要外部证据或决策</span>
+          </div>
+        </div>
+        <div class="filter-bar" aria-label="需求筛选">
+          <label class="filter-field filter-field--search">
+            <span class="filter-label">搜索需求、负责人或标签</span>
+            <span class="search-wrap">
+              <input id="search-input" type="search" placeholder="例如：展品解析、真机、审计" autocomplete="off">
+            </span>
+          </label>
+          <div class="filter-field">
+            <span class="filter-label">优先级</span>
+            <div class="segment-control" role="group" aria-label="按优先级筛选">
+              <button type="button" class="is-active" data-priority-filter="all">全部</button>
+              <button type="button" data-priority-filter="P0">P0</button>
+              <button type="button" data-priority-filter="P1">P1</button>
+              <button type="button" data-priority-filter="P2">P2</button>
+            </div>
+          </div>
+          <label class="filter-field">
+            <span class="filter-label">状态</span>
+            <select id="status-filter">
+              <option value="all">全部状态</option>
+              {% for key, label in status_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+            </select>
+          </label>
+          <label class="filter-field">
+            <span class="filter-label">实施阶段</span>
+            <select id="phase-filter">
+              <option value="all">全部阶段</option>
+              {% for phase in phases %}<option value="{{ phase.id }}">{{ phase.title }}</option>{% endfor %}
+            </select>
+          </label>
+          <div class="filter-actions">
+            <button type="button" id="expand-all" class="toolbar-button" title="展开全部需求详情">＋ 展开</button>
+            <button type="button" id="collapse-all" class="toolbar-button" title="收起全部需求详情">－ 收起</button>
+            <button type="button" id="clear-filters" class="toolbar-button" title="清除所有筛选">× 清除</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="phase-rail" aria-labelledby="phase-heading">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Delivery spine</p>
+            <h2 id="phase-heading">实施序列</h2>
+          </div>
+          <p class="section-note">按阶段推进，先闭环证据，再扩展规模。阶段进度按验收条件计算。</p>
+        </div>
+        <div class="phase-track">
+          {% for phase in phases %}
+          <article class="phase-node" data-phase="{{ phase.id }}">
+            <div class="phase-node-top"><span class="phase-number">{{ "%02d"|format(phase.sequence) }}</span><strong>{{ phase.title }}</strong></div>
+            <div class="phase-line" aria-label="{{ phase.title }}完成度 {{ phase.progress }}%"><span style="width: {{ phase.progress }}%"></span></div>
+            <p>{{ phase.progress_text }} · {{ phase.requirement_count }} 条需求</p>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="ledger" aria-labelledby="ledger-heading">
+        <div class="ledger-head">
+          <div>
+            <p class="eyebrow">Requirement ledger</p>
+            <h2 id="ledger-heading">需求台账</h2>
+          </div>
+          <p id="result-count" class="ledger-count">显示 {{ stats.total }} 条需求</p>
+        </div>
+
+        <div class="ledger-columns" aria-hidden="true">
+          <span>序号</span>
+          <span>需求与边界</span>
+          <span>阶段</span>
+          <span>优先级</span>
+          <span>状态</span>
+          <span>完成度</span>
+        </div>
+
+        <div id="requirement-list" class="requirement-list">
+          {% for requirement in requirements %}
+          <details class="requirement" data-status="{{ requirement.status }}" data-priority="{{ requirement.priority }}" data-phase="{{ requirement.phase }}" data-search="{{ requirement.search_text }}">
+            <summary aria-label="{{ requirement.id }} {{ requirement.title }}">
+              <div class="req-order"><span class="order-rule"></span><span class="order-number">{{ requirement.sequence_label }}</span></div>
+              <div class="req-main">
+                <div class="req-title-row"><span class="req-id">{{ requirement.id }}</span><h3>{{ requirement.title }}</h3></div>
+                <p>{{ requirement.summary }}</p>
+                <div class="req-meta"><span>{{ requirement.owner }}</span><span>{{ requirement.evidence_count }} 项证据</span><span>置信度 {{ requirement.confidence_label }}</span></div>
+              </div>
+              <div class="req-phase phase-cell">{{ requirement.phase_title }}<small>阶段 {{ "%02d"|format(requirement.phase_sequence) }}</small></div>
+              <div class="req-priority"><span class="pill priority-{{ requirement.priority }}">{{ requirement.priority }} · {{ requirement.priority_label }}</span></div>
+              <div class="req-status status-cell"><span class="status-dot status-dot--{{ requirement.status }}" aria-hidden="true"></span><span class="status-label">{{ requirement.status_label }}</span></div>
+              <div class="req-completion completion-cell"><strong>{{ requirement.progress }}%</strong><span>{{ requirement.progress_text }}</span><div class="mini-progress" aria-label="完成度 {{ requirement.progress }}%"><span style="width: {{ requirement.progress }}%"></span></div></div>
+              <span class="summary-caret" aria-hidden="true"></span>
+            </summary>
+            <div class="req-detail">
+              <section class="detail-section">
+                <h4>验收条件 <span>{{ requirement.progress_text }}</span></h4>
+                <ul class="criterion-list">
+                  {% for criterion in requirement.acceptance %}
+                  <li class="criterion criterion-{{ criterion.status }}">
+                    <span class="criterion-mark" aria-hidden="true">{% if criterion.status == "done" %}✓{% elif criterion.status == "blocked" %}!{% else %}○{% endif %}</span>
+                    <span>{{ criterion.text }}</span>
+                    <span class="criterion-status">{{ status_labels[criterion.status] }}</span>
+                  </li>
+                  {% endfor %}
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>证据链 <span>{{ requirement.evidence_count }} 项</span></h4>
+                <ul class="evidence-list">
+                  {% for evidence in requirement.evidence %}
+                  <li class="evidence-item">
+                    <span class="evidence-kind">{{ evidence.kind_label }}</span>
+                    {% if evidence.href %}<a class="evidence-link" href="{{ evidence.href }}">{{ evidence.label }} <span>↗</span></a>{% else %}<span class="evidence-ref">{{ evidence.label }}</span>{% endif %}
+                    <p class="evidence-note">{{ evidence.note }}</p>
+                  </li>
+                  {% endfor %}
+                </ul>
+              </section>
+              <section class="detail-section">
+                <h4>依赖与标签</h4>
+                {% if requirement.dependencies %}
+                <ul class="compact-list">
+                  {% for dependency in requirement.dependencies %}<li><code>{{ dependency }}</code></li>{% endfor %}
+                </ul>
+                {% else %}<p class="detail-copy">无前置需求。</p>{% endif %}
+                <div style="height: 16px"></div>
+                <div class="compact-list" aria-label="需求标签">
+                  {% for tag in requirement.tags %}<span class="pill" style="color: var(--muted); border-color: var(--line); background: var(--panel);"># {{ tag }}</span>{% endfor %}
+                </div>
+              </section>
+              <div class="detail-bottom">
+                <section>
+                  <h4>下一动作</h4>
+                  <p class="next-action">{{ requirement.next_action }}</p>
+                </section>
+                {% if requirement.blockers %}
+                <section>
+                  <h4>当前阻塞</h4>
+                  <ul class="compact-list blocker-list">{% for blocker in requirement.blockers %}<li>{{ blocker }}</li>{% endfor %}</ul>
+                </section>
+                {% else %}
+                <section>
+                  <h4>状态说明</h4>
+                  <p class="detail-copy">{{ project.status_rule }}</p>
+                </section>
+                {% endif %}
+              </div>
+            </div>
+          </details>
+          {% endfor %}
+          <div id="empty-state" class="empty-state" hidden>
+            <strong>没有匹配的需求</strong>
+            <p>尝试清除筛选，或换一个需求编号、阶段、负责人或标签。</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <p>{{ project.dashboard_title }} · 源文件 <code>{{ project.source_of_truth }}</code></p>
+        <p>YAML digest <code>{{ source_digest }}</code> · {{ project.automated_baseline.result }}</p>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      const rows = Array.from(document.querySelectorAll('.requirement'));
+      const searchInput = document.getElementById('search-input');
+      const statusFilter = document.getElementById('status-filter');
+      const phaseFilter = document.getElementById('phase-filter');
+      const resultCount = document.getElementById('result-count');
+      const emptyState = document.getElementById('empty-state');
+      const priorityButtons = Array.from(document.querySelectorAll('[data-priority-filter]'));
+      let priority = 'all';
+
+      const applyFilters = () => {
+        const query = searchInput.value.trim().toLowerCase();
+        const status = statusFilter.value;
+        const phase = phaseFilter.value;
+        let visible = 0;
+
+        rows.forEach((row) => {
+          const matches = (!query || row.dataset.search.includes(query))
+            && (priority === 'all' || row.dataset.priority === priority)
+            && (status === 'all' || row.dataset.status === status)
+            && (phase === 'all' || row.dataset.phase === phase);
+          row.hidden = !matches;
+          if (matches) visible += 1;
+        });
+
+        resultCount.textContent = `显示 ${visible} 条需求`;
+        emptyState.hidden = visible !== 0;
+      };
+
+      priorityButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          priority = button.dataset.priorityFilter;
+          priorityButtons.forEach((item) => item.classList.toggle('is-active', item === button));
+          applyFilters();
+        });
+      });
+
+      searchInput.addEventListener('input', applyFilters);
+      statusFilter.addEventListener('change', applyFilters);
+      phaseFilter.addEventListener('change', applyFilters);
+
+      document.getElementById('clear-filters').addEventListener('click', () => {
+        searchInput.value = '';
+        statusFilter.value = 'all';
+        phaseFilter.value = 'all';
+        priority = 'all';
+        priorityButtons.forEach((item) => item.classList.toggle('is-active', item.dataset.priorityFilter === 'all'));
+        applyFilters();
+        searchInput.focus();
+      });
+
+      document.getElementById('expand-all').addEventListener('click', () => rows.forEach((row) => { row.open = true; }));
+      document.getElementById('collapse-all').addEventListener('click', () => rows.forEach((row) => { row.open = false; }));
+      applyFilters();
+    })();
+  </script>
+</body>
+</html>

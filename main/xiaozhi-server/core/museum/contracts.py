@@ -88,3 +88,4 @@ class AnswerResult:
     coarse_intent: str = ""
     fine_intent: str = ""
     intent_confidence: float = 0.0
+    guard_result: str = "not_evaluated"

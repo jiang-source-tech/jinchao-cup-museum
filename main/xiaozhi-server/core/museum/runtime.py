@@ -124,7 +124,7 @@ class MuseumRuntime:
             if answer.knowledge_status == "unsupported"
             else None
         )
-        guard_result = {
+        guard_result = answer.guard_result or {
             "grounded": "published_facts_only",
             "conversational": "conversational_scope",
             "unsupported": "unsupported_fallback",

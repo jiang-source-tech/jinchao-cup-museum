@@ -42,6 +42,7 @@ class GroundedAnswerService:
             coarse_intent=understanding.coarse_intent,
             fine_intent=understanding.fine_intent,
             intent_confidence=understanding.confidence,
+            guard_result="conversational_scope",
         )
 
     def answer(
@@ -87,9 +88,11 @@ class GroundedAnswerService:
                 coarse_intent=understanding.coarse_intent,
                 fine_intent=understanding.fine_intent,
                 intent_confidence=understanding.confidence,
+                guard_result="conversational_scope",
             )
 
         evidence = None
+        guard_result = "published_facts_only"
         if decision is not None and decision.status == "grounded":
             evidence = _select_evidence(
                 candidates,
@@ -97,7 +100,10 @@ class GroundedAnswerService:
                 allowed_fact_types=understanding.fact_types,
             )
             if evidence is None:
+                guard_result = "model_fact_ids_rejected"
                 decision = None
+        elif decision is not None and decision.status == "unsupported":
+            guard_result = "model_unsupported_fallback"
         if decision is None:
             fallback_started = perf_counter()
             evidence = self._store.retrieve_evidence(
@@ -122,14 +128,24 @@ class GroundedAnswerService:
                 coarse_intent=understanding.coarse_intent,
                 fine_intent=understanding.fine_intent,
                 intent_confidence=understanding.confidence,
+                guard_result=(
+                    guard_result
+                    if guard_result != "published_facts_only"
+                    else "unsupported_fallback"
+                ),
             )
         deterministic_answer = self._compose_grounded_answer(evidence)
         spoken_text = deterministic_answer
-        if decision is not None and _is_grounded_paraphrase(
-            decision.answer,
-            "".join(fact.statement for fact in evidence.facts),
-        ):
-            spoken_text = decision.answer
+        if decision is not None and decision.status == "grounded":
+            rejection_reason = _grounded_paraphrase_failure_reason(
+                decision.answer,
+                "".join(fact.statement for fact in evidence.facts),
+            )
+            if rejection_reason is None:
+                spoken_text = decision.answer
+                guard_result = "model_answer_accepted"
+            else:
+                guard_result = rejection_reason
         return AnswerResult(
             knowledge_status="grounded",
             spoken_text=spoken_text,
@@ -139,6 +155,7 @@ class GroundedAnswerService:
             coarse_intent=understanding.coarse_intent,
             fine_intent=understanding.fine_intent,
             intent_confidence=understanding.confidence,
+            guard_result=guard_result,
         )
 
     @staticmethod
@@ -360,13 +377,20 @@ def _conversational_reply(intent: str) -> str:
 
 
 def _is_grounded_paraphrase(answer: str, evidence_text: str) -> bool:
+    return _grounded_paraphrase_failure_reason(answer, evidence_text) is None
+
+
+def _grounded_paraphrase_failure_reason(
+    answer: str,
+    evidence_text: str,
+) -> str | None:
     if len(answer) > 220:
-        return False
+        return "model_answer_too_long"
     if any(
         number not in evidence_text
         for number in re.findall(r"\d+(?:\.\d+)?", answer)
     ):
-        return False
+        return "model_answer_extra_number"
 
     evidence_pairs = _cjk_pairs(evidence_text)
     sentences = [
@@ -375,15 +399,15 @@ def _is_grounded_paraphrase(answer: str, evidence_text: str) -> bool:
         if sentence.strip()
     ]
     if not 2 <= len(sentences) <= 4:
-        return False
+        return "model_answer_shape_rejected"
     for sentence in sentences:
         pairs = _cjk_pairs(sentence)
         if not pairs:
-            return False
+            return "model_answer_shape_rejected"
         covered = sum(pair in evidence_pairs for pair in pairs)
         if covered / len(pairs) < 0.6:
-            return False
-    return True
+            return "model_answer_unsupported_claim"
+    return None
 
 
 def _cjk_pairs(text: str) -> set[str]:
