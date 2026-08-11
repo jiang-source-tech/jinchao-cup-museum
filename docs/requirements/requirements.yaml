@@ -10,10 +10,8 @@ project:
   status_rule: >-
     已完成只表示列出的验收条件全部具备证据；自动化测试通过不等同于真机验收通过。
   automated_baseline:
-    command: >-
-      python -m pytest -q tests/test_exhibit_resolver.py tests/test_query_understanding.py
-      tests/test_museum_runtime.py tests/test_museum_conversation_eval.py tests/test_museum_text_chat.py
-    result: 27 passed in 2.13s
+    command: python -m pytest -q --basetemp=.pytest-local
+    result: 112 passed in 8.86s
     verified_at: "2026-08-11"
 
 phases:
@@ -627,10 +625,10 @@ requirements:
     title: 未命中问题回收与运营洞察
     kind: operational
     priority: P1
-    status: in_progress
+    status: done
     phase: content
     owner: 运营 / 服务端
-    confidence: medium
+    confidence: high
     summary: >-
       将未回答问题按展品解析、事实缺口、越界和 ASR 错误分组，帮助馆方补充内容或修正别名，而不是笼统归因于知识库不足。
     acceptance:
@@ -639,13 +637,13 @@ requirements:
         status: done
       - id: AC-014-2
         text: 提供按展品、原因、次数和最近时间聚合的导出 CLI。
-        status: pending
+        status: done
       - id: AC-014-3
         text: 区分展品未识别、事实未覆盖、范围外和明显 ASR 错误。
-        status: pending
+        status: done
       - id: AC-014-4
         text: 运营人员能够从导出结果追溯到原始请求和依据状态。
-        status: pending
+        status: done
     evidence:
       - kind: code
         label: 未回答原因存储
@@ -654,10 +652,28 @@ requirements:
       - kind: document
         label: 未命中导出计划
         path: rag-execution-plan.md
-        note: RAG-NEXT-06 定义了原因分类、导出字段、CLI 和追溯验收。
+        note: RAG-NEXT-06 已记录确定性分类规则、导出命令、完成证据和不纳入统计的边界。
+      - kind: code
+        label: 未命中聚合与审计查询
+        path: ../../main/xiaozhi-server/core/museum/store.py
+        note: >-
+          提交 0dac644；按唯一 request_id 去重，按展品、分类和规范化原问题聚合，
+          并可把代表 request_id 还原为结构化 interaction_trace。
+      - kind: code
+        label: 运营导出 CLI
+        path: ../../main/xiaozhi-server/scripts/export_museum_unanswered.py
+        note: 数据库和输出路径必须显式指定，支持 JSON、UTF-8 CSV 和代表请求审计导出。
+      - kind: test
+        label: 未命中导出回归测试
+        path: ../../main/xiaozhi-server/tests/test_museum_unanswered_export.py
+        note: >-
+          5 项测试覆盖六类原因、重复请求去重、短文本 ASR 防误判、社交/缺少展品排除、
+          JSON/CSV 导出、完整审计反查和数据库不存在时不创建空库。
     dependencies: [REQ-009, REQ-013]
     tags: [未命中, 运营, 内容缺口]
-    next_action: 实现只读导出 CLI 和聚合测试，先用文件报告验证运营闭环。
+    next_action: >-
+      在真实运行数据上定期导出并复核分类质量；工程主线进入 RAG-NEXT-07，
+      但未连接硬件前不得把服务端检查写成真机验收通过。
 
   - id: REQ-015
     sequence: 150

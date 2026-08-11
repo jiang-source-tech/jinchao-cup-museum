@@ -8,11 +8,11 @@
 | 适用范围 | `REQ-003` 至 `REQ-009` 已有能力之后的 RAG 落地 |
 | 直接关联需求 | `REQ-006`、`REQ-008`、`REQ-009`、`REQ-013`、`REQ-014`、`REQ-017`、`REQ-018` |
 | 当前结论 | 先把事实级 RAG 做成可导入、可发布、可评测的多展品闭环，再根据评测缺口决定是否引入向量召回 |
-| 下一项实施需求 | `RAG-NEXT-06`：未命中问题回收与运营导出 |
+| 下一项实施需求 | `RAG-NEXT-07`：真机前置检查与设备状态闭环 |
 
 这不是“未来愿景”或技术名词清单，而是一份可以逐项执行、验收和归档的任务单。每个任务都写明输入、修改边界、验收条件和完成证据。完成状态仍以 `docs/requirements/requirements.yaml` 为准。
 
-当前执行状态：`RAG-NEXT-01` 至 `RAG-NEXT-05` 已于 2026-08-11 实现；下一项是 `RAG-NEXT-06` 未命中问题回收与运营导出。
+当前执行状态：`RAG-NEXT-01` 至 `RAG-NEXT-06` 已于 2026-08-11 实现；下一项是 `RAG-NEXT-07` 真机前置检查与设备状态闭环。
 
 ## 1. 先明确当前基线
 
@@ -25,11 +25,11 @@
 - `interaction_trace`：请求级解析、意图、依据和守卫审计；
 - `museum_state`：服务端与固件状态合同，AC-010-4 已完成协议和构建验证。
 
-`RAG-NEXT-05` 完成后，当前真正剩下的不是“再加一个 RAG 框架”，而是：
+`RAG-NEXT-06` 完成后，当前真正剩下的不是“再加一个 RAG 框架”，而是：
 
-1. 把未命中结果按展品未识别、事实缺口、范围外和 ASR 错误导出给内容人员；
-2. 在目标硬件上补齐真实麦克风、ASR、TTS、扬声器和屏幕证据；
-3. 用连续运行和故障恢复证明比赛现场稳定性；
+1. 在目标硬件上补齐真实麦克风、ASR、TTS、扬声器和屏幕证据；
+2. 用连续运行和故障恢复证明比赛现场稳定性；
+3. 用真实未命中导出持续校准内容、别名和 ASR 分类；
 4. 只有未命中数据证明现有召回不足时，才进入向量召回决策门；
 5. 核心真机闭环稳定后，再扩展到 20 至 30 件展品。
 
@@ -73,7 +73,7 @@
 | 3 | RAG-NEXT-03 发布、撤回和回滚 | REQ-013 AC-013-3/4/5 | 02 | 发布版本唯一、事务完整、历史依据可复核 |
 | 4 | RAG-NEXT-04 多展品检索闭环（已完成） | REQ-006/008 | 03 | 当前展品和发布版本内的事实级检索稳定工作 |
 | 5 | RAG-NEXT-05 自然问法和真实 LLM 评测（已完成） | REQ-007/008/011/017 | 04 | 随机换问法、多轮、切换、诱导编造均有结果记录 |
-| 6 | RAG-NEXT-06 未命中回收导出 | REQ-014 | 05 | 运营可按原因和展品回收问题 |
+| 6 | RAG-NEXT-06 未命中回收导出（已完成） | REQ-014 | 05 | 运营可按原因和展品回收问题 |
 | 7 | RAG-NEXT-07 真机前置检查 | REQ-010/012/015 | 05 | 服务端状态、固件状态和真实链路验收脚本对齐 |
 | 8 | RAG-NEXT-08 向量检索决策门 | REQ-018 | 05/06 | 只有量化缺口成立时才进入 Embedding 方案 |
 | 9 | RAG-NEXT-09 扩展到 20 至 30 件展品 | REQ-017 | 03/05 | 规模化内容和评测集，不阻塞 P0 闭环 |
@@ -341,6 +341,27 @@ python scripts/import_museum_content.py import --input tests/fixtures/museum_con
 
 **验收**：运营人员可以用一次 CLI 导出按展品、原因、次数和最近时间聚合的问题，并通过 `request_id` 回到完整审计记录。
 
+**实现规则**：
+
+1. 同一 `request_id` 只计算最新一条 trace，防止传输重试抬高出现次数；
+2. 按 `exhibit_id + 分类 + 规范化原问题` 聚合，只合并大小写、全半角、空白和标点差异，不擅自把语义改写聚成一类；
+3. `not_found` 和 `ambiguous` 直接采用展品解析证据；明确展品且无发布事实归为 `fact_not_covered`；比较等非单展品问题归为 `out_of_scope`；检索超时或系统错误归为 `retrieval_failure`；
+4. `asr_suspected` 只比较解析出的未知展品文本与审核名称/别名，文本至少 4 个字符且编辑距离受限；短词不猜测；
+5. 社交轮次和只缺少展品名称、没有未收录证据的请求不进入内容缺口报表；
+6. JSON 和 CSV 均保留最新代表请求、原问题、原始 `unanswered_reason`、分类、事实候选和守卫结果；`audit` 子命令输出完整结构化 trace。
+
+**命令**：
+
+```powershell
+python scripts/export_museum_unanswered.py export --database data/museum.db --output data/unanswered.json --format json
+python scripts/export_museum_unanswered.py export --database data/museum.db --output data/unanswered.csv --format csv
+python scripts/export_museum_unanswered.py audit --database data/museum.db --request-id <request_id> --output data/unanswered-audit.json
+```
+
+**完成证据**：提交 `0dac644`；`tests/test_museum_unanswered_export.py` 的 5 项测试通过；服务端完整回归 `112 passed in 8.86s`。数据库和输出路径均为显式参数，数据库不存在时返回 `database_not_found` 且不创建空库。
+
+**状态**：已完成。该结论只覆盖服务端审计数据和文件导出，不代表真实 ASR 音频已验证；ASR 分类仍需用真机运行数据持续抽查。
+
 ### RAG-NEXT-07：真机前置检查与设备状态闭环
 
 **关联**：`REQ-010 / REQ-012 / REQ-015`。
@@ -401,8 +422,8 @@ python scripts/import_museum_content.py import --input tests/fixtures/museum_con
 3. `RAG-NEXT-03` 已完成：发布、撤回、回滚、生命周期事件和历史版本复核；
 4. `RAG-NEXT-04` 已完成：FTS5 在 SQL 层绑定展品和发布版本，5 件馆方藏品未发生跨展品泄漏；
 5. `RAG-NEXT-05` 已完成：真实 `deepseek-v4-flash` 与规则基线各执行 45 轮，自然问法和事实边界 P0 门槛通过；
-6. 下一步进入 `RAG-NEXT-06`，导出并聚合未命中问题，让内容补录由数据驱动；
-7. 硬件接入后执行 `RAG-NEXT-07`，再判断是否启动 `RAG-NEXT-08`；
+6. `RAG-NEXT-06` 已完成：六类确定性归因、问题聚合、JSON/CSV 导出和代表请求审计反查；
+7. 下一步执行 `RAG-NEXT-07` 的服务端、协议和固件前置检查；硬件接入后再完成真实链路证据；
 8. 最后才批量扩展到 `RAG-NEXT-09`。
 
 ## 6. 每个任务的完成证据格式
