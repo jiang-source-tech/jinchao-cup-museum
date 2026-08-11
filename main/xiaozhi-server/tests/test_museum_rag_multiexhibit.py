@@ -104,14 +104,14 @@ def test_official_hangzhou_content_is_source_backed_and_draft_by_default(tmp_pat
         "china-national-silk-museum",
     }
     assert len(exhibits) == 5
-    assert len(facts) == 24
+    assert len(facts) == 26
     assert all(exhibit.revision.status == "draft" for exhibit in exhibits)
     assert all(fact.source_ids for fact in facts)
     assert {
         urlparse(source.locator).hostname for source in sources
     } == {
         "www.lzmuseum.cn",
-        "westlakemuseum.com",
+        "www.westlakemuseum.com",
         "www.chinasilkmuseum.com",
     }
 
@@ -192,7 +192,7 @@ def test_runtime_switches_exhibits_without_reusing_previous_facts(tmp_path):
     assert jade_answer.fact_ids == ("fact-liangzhu-trident-material",)
     assert "南瓜黄色玉器" in jade_answer.spoken_text
     assert porcelain_answer.fact_ids == ("fact-west-lake-zun-material",)
-    assert "青灰色釉" in porcelain_answer.spoken_text
+    assert "灰青釉" in porcelain_answer.spoken_text
     assert "南瓜黄色玉器" not in porcelain_answer.spoken_text
     assert porcelain_answer.display_state["context"]["exhibit_id"] == (
         "southern-song-guan-zun-incense-burner"
@@ -380,8 +380,8 @@ def test_new_revision_cannot_return_old_revision_fact_or_fts_match(tmp_path):
             {
                 "id": "fact-west-lake-zun-r2-material",
                 "type": "material",
-                "statement": "第二版馆方摘要继续确认器物为灰色胎并施青灰色釉。",
-                "keywords": ["材质", "灰色胎", "青灰色釉"],
+                "statement": "第二版馆方摘要继续确认器物为浅灰胎并施灰青釉。",
+                "keywords": ["材质", "浅灰胎", "灰青釉"],
                 "confidence": "official_museum_webpage",
                 "sources": ["source-west-lake-zun-incense-burner-850"],
             }

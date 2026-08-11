@@ -281,7 +281,7 @@ requirements:
       - kind: document
         label: 杭州馆方藏品内容集
         path: ../../main/xiaozhi-server/content/museum/README.md
-        note: 登记 5 件藏品、24 条事实和良渚博物院、杭州西湖博物馆总馆、中国丝绸博物馆官方来源。
+        note: 登记 5 件藏品、26 条事实和良渚博物院、杭州西湖博物馆总馆、中国丝绸博物馆官方来源。
     dependencies: [REQ-003]
     tags: [RAG, 审核事实, 依据快照]
     next_action: 进入 RAG-NEXT-05，用真实自然问法评测当前事实级召回；没有量化缺口前不引入全馆向量召回。

@@ -16,8 +16,8 @@
 - 良渚博物院“玉钺”：`https://www.lzmuseum.cn/YuQi/2019611219610.html`
 - 良渚博物院“玉三叉形器”：`https://www.lzmuseum.cn/YuQi/2019393530.html`
 - 良渚博物院“三叉形器”：`https://www.lzmuseum.cn/YuQi/20198121782.html`
-- 杭州西湖博物馆总馆“南宋官窑青瓷樽式炉”：`https://westlakemuseum.com/index.php/gcjp/jpzs2/850-gcjp-004.html`
-- 杭州西湖博物馆总馆“南宋官窑青瓷八卦熏炉盖”：`https://westlakemuseum.com/index.php/gcjp/jpzs2/849-gcjp-003.html`
+- 杭州西湖博物馆总馆“南宋官窑青瓷樽式炉”：`https://www.westlakemuseum.com/index.php/gcjp/jpzs2/850-gcjp-004.html`
+- 杭州西湖博物馆总馆“南宋官窑青瓷八卦熏炉盖”：`https://www.westlakemuseum.com/index.php/gcjp/jpzs2/853-gcjp-007.html`
 - 中国丝绸博物馆“清玄色地团花蝴蝶纹袍料”：`https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=2639`
 
 ## 整理边界

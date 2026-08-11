@@ -254,7 +254,7 @@ python scripts/import_museum_content.py import --input tests/fixtures/museum_con
 
 **完成证据**：
 
-- `main/xiaozhi-server/content/museum/` 保存良渚博物院、杭州西湖博物馆总馆和中国丝绸博物馆 5 件藏品、24 条事实及官方来源定位；
+- `main/xiaozhi-server/content/museum/` 保存良渚博物院、杭州西湖博物馆总馆和中国丝绸博物馆 5 件藏品、26 条事实及官方来源定位；
 - `exhibit_fact_fts` 增加 `exhibit_id` 和 `revision_id`，旧六列索引初始化时从关系表重建；
 - `GroundedAnswerService` 对已知意图先执行受限检索，无候选时直接返回 `unsupported`，不调用 LLM；
 - `main/xiaozhi-server/tests/test_museum_rag_multiexhibit.py` 覆盖跨馆切换、跨展品隔离、草稿和撤回、数字依据快照、旧 FTS 迁移及新旧版本隔离。
