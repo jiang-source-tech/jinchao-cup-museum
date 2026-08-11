@@ -39,6 +39,20 @@ def test_inherits_current_exhibit_only_without_a_new_reference(tmp_path):
     assert result.status == "inherited"
     assert result.exhibit_id == "warring-states-crystal-cup"
 
+    colloquial = resolver.resolve(
+        question="这么硬，古人当时是怎么把它做出来的？",
+        current_exhibit_id="warring-states-crystal-cup",
+    )
+    assert colloquial.status == "inherited"
+    assert colloquial.exhibit_id == "warring-states-crystal-cup"
+
+    recent_reference = resolver.resolve(
+        question="刚才那个杯子为什么这么透明？",
+        current_exhibit_id="warring-states-crystal-cup",
+    )
+    assert recent_reference.status == "inherited"
+    assert recent_reference.exhibit_id == "warring-states-crystal-cup"
+
 
 def test_missing_reference_does_not_guess_without_session_context(tmp_path):
     resolver = _resolver(tmp_path)
@@ -68,6 +82,12 @@ def test_unlisted_exhibit_reference_does_not_inherit_old_context(tmp_path):
         current_exhibit_id="warring-states-crystal-cup",
     )
     assert polite.status == "not_found"
+
+    possessive = resolver.resolve(
+        question="那越王勾践剑的材质呢？",
+        current_exhibit_id="warring-states-crystal-cup",
+    )
+    assert possessive.status == "not_found"
 
 
 def test_ambiguous_alias_does_not_bind_a_random_exhibit(tmp_path):

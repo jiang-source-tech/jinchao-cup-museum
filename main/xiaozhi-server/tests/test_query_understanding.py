@@ -10,6 +10,13 @@ def test_understanding_uses_coarse_and_fine_intents():
     assert result.confidence > 0.7
 
 
+def test_material_intent_accepts_colloquial_material_question():
+    result = understand_question("它到底是拿什么做的？")
+
+    assert result.fine_intent == "material"
+    assert result.fact_types == ("material",)
+
+
 def test_craft_intent_maps_to_published_fact_type():
     result = understand_question("它的制作工艺复杂吗？")
 
@@ -19,6 +26,13 @@ def test_craft_intent_maps_to_published_fact_type():
 
 def test_craft_intent_accepts_colloquial_phrasing():
     result = understand_question("这么硬的水晶，当时的人是咋做出来的？")
+
+    assert result.fine_intent == "craft"
+    assert result.fact_types == ("research_limit",)
+
+
+def test_craft_intent_accepts_object_inserted_before_verb():
+    result = understand_question("这么硬，古人当时是怎么把它做出来的？")
 
     assert result.fine_intent == "craft"
     assert result.fact_types == ("research_limit",)

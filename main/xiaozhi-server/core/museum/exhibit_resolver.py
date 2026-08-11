@@ -58,7 +58,10 @@ class ExhibitResolver:
                 context_source="explicit_mention",
             )
 
-        if _looks_like_new_exhibit_reference(normalized_question):
+        if _looks_like_new_exhibit_reference(
+            normalized_question,
+            current_exhibit_id=current_exhibit_id,
+        ):
             return ExhibitResolution(
                 status="not_found",
                 matched_text=_unknown_reference_text(normalized_question),
@@ -83,7 +86,19 @@ def _normalize_text(value: str) -> str:
     return re.sub(r"[\s，。！？、；：,.!?;:]", "", value).lower()
 
 
-_PRONOUN_PREFIXES = ("它", "这件", "这个", "这把", "这只", "这枚", "该展品")
+_PRONOUN_PREFIXES = (
+    "它",
+    "这件",
+    "这个",
+    "这把",
+    "这只",
+    "这枚",
+    "该展品",
+    "刚才那个杯子",
+    "刚才那件展品",
+    "前面那个杯子",
+    "前面那件展品",
+)
 _QUESTION_MARKERS = (
     "是什么",
     "是啥",
@@ -94,12 +109,44 @@ _QUESTION_MARKERS = (
     "哪里",
     "哪儿",
     "哪個",
+    "的材质",
+    "的材料",
+    "的年代",
+    "的历史",
+    "的工艺",
+    "的制作",
+    "的价格",
+    "的尺寸",
+    "的外形",
+    "的出土地",
 )
 _SWITCH_CUES = ("换成", "换到", "改问", "改聊", "另一个", "另一件", "另外一件", "关于")
 _POLITE_PREFIXES = ("请问", "我想知道", "我想了解", "能不能告诉我", "能否告诉我")
+_FOLLOW_UP_REFERENCE_PHRASES = (
+    "刚才那个杯子",
+    "刚才那件展品",
+    "前面那个杯子",
+    "前面那件展品",
+)
+_CONTEXTUAL_OPENERS = ("这么", "那么", "刚才", "刚刚", "前面")
+_FOLLOW_UP_PRONOUNS = ("它", "这个", "这件", "这把", "这只", "这枚")
+_FOLLOW_UP_DIALOGUE_PREFIXES = (
+    "你能讲讲",
+    "能说说",
+    "说说",
+    "请介绍",
+    "请问",
+    "我想了解",
+    "我想知道",
+    "介绍一下",
+    "讲讲",
+)
 
 
-def _looks_like_new_exhibit_reference(question: str) -> bool:
+def _looks_like_new_exhibit_reference(
+    question: str,
+    current_exhibit_id: str | None = None,
+) -> bool:
     """Detect likely exhibit switching without guessing from arbitrary nouns."""
     for cue in _SWITCH_CUES:
         if cue not in question:
@@ -110,6 +157,16 @@ def _looks_like_new_exhibit_reference(question: str) -> bool:
 
     if question.startswith(_PRONOUN_PREFIXES) or question.startswith(_QUESTION_MARKERS):
         return False
+    if current_exhibit_id and any(
+        phrase in question for phrase in _FOLLOW_UP_REFERENCE_PHRASES
+    ):
+        return False
+    if current_exhibit_id and question.startswith(_CONTEXTUAL_OPENERS):
+        if any(pronoun in question for pronoun in _FOLLOW_UP_PRONOUNS):
+            return False
+    if current_exhibit_id and question.startswith(_FOLLOW_UP_DIALOGUE_PREFIXES):
+        if any(pronoun in question for pronoun in _FOLLOW_UP_PRONOUNS):
+            return False
     marker_positions = [question.find(marker) for marker in _QUESTION_MARKERS]
     marker_positions = [position for position in marker_positions if position > 1]
     if not marker_positions:

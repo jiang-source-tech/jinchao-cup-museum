@@ -40,6 +40,17 @@
           "expected": {"knowledge_status": "grounded"}
         },
         {
+          "text": "它到底是拿什么做的？",
+          "expected": {
+            "knowledge_status": "grounded",
+            "coarse_intent": "exhibit_knowledge",
+            "fine_intent": "material",
+            "fact_ids": ["fact-crystal-cup-material"],
+            "context_exhibit_id": "warring-states-crystal-cup",
+            "context_source": "inherited_session"
+          }
+        },
+        {
           "text": "这个杯子是怎么做出来的？",
           "expected": {
             "knowledge_status": "grounded",
@@ -67,7 +78,7 @@
           }
         },
         {
-          "text": "这么硬的水晶，当时的人是咋做出来的？",
+          "text": "这么硬，古人当时是怎么把它做出来的？",
           "expected": {
             "knowledge_status": "grounded",
             "coarse_intent": "exhibit_knowledge",
@@ -134,6 +145,24 @@
       "turns": [
         {
           "text": "我想知道越王勾践剑是什么材质？",
+          "expected": {
+            "knowledge_status": "missing_context",
+            "resolution_status": "not_found",
+            "contains": "没有收录",
+            "context_exhibit_id": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-exhibit-possessive-question",
+      "turns": [
+        {
+          "text": "战国水晶杯是什么材质？",
+          "expected": {"knowledge_status": "grounded"}
+        },
+        {
+          "text": "那越王勾践剑的材质呢？",
           "expected": {
             "knowledge_status": "missing_context",
             "resolution_status": "not_found",
