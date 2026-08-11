@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from time import perf_counter
 
-import json
 import re
 
 from core.museum.contracts import AnswerResult, EvidenceSnapshot
@@ -11,15 +9,11 @@ from core.museum.query_understanding import (
     QuestionUnderstanding,
     understand_question,
 )
+from core.museum.llm_contract import (
+    MuseumLlmCall,
+    decide_with_museum_llm,
+)
 from core.museum.store import MuseumStore
-
-
-@dataclass(frozen=True)
-class _TurnDecision:
-    status: str
-    fact_ids: tuple[str, ...] = ()
-    social_intent: str = ""
-    answer: str = ""
 
 
 class GroundedAnswerService:
@@ -81,12 +75,14 @@ class GroundedAnswerService:
         retrieval_ms = _duration_ms(retrieval_started)
         composition_started = perf_counter()
 
+        llm_call = MuseumLlmCall.not_called()
         decision = None
         if (
-            llm_candidates is not None
+            llm is not None
+            and llm_candidates is not None
             and understanding.coarse_intent != "comparison"
         ):
-            decision = self._decide_with_llm(
+            llm_call = decide_with_museum_llm(
                 exhibit_name=exhibit_name,
                 question=question,
                 candidates=llm_candidates,
@@ -95,6 +91,7 @@ class GroundedAnswerService:
                 history=history,
                 understanding=understanding,
             )
+            decision = llm_call.decision
         if decision is not None and decision.status == "conversational":
             return AnswerResult(
                 knowledge_status="conversational",
@@ -106,6 +103,7 @@ class GroundedAnswerService:
                 fine_intent=understanding.fine_intent,
                 intent_confidence=understanding.confidence,
                 guard_result="conversational_scope",
+                **_llm_answer_fields(llm_call),
             )
 
         evidence = None
@@ -123,6 +121,11 @@ class GroundedAnswerService:
             guard_result = "model_unsupported_fallback"
         if decision is None:
             evidence = retrieved_evidence
+            if guard_result == "published_facts_only":
+                guard_result = {
+                    "invalid_response": "model_response_invalid_fallback",
+                    "request_failed": "model_request_failed_fallback",
+                }.get(llm_call.result, guard_result)
 
         if evidence is None:
             return AnswerResult(
@@ -142,6 +145,7 @@ class GroundedAnswerService:
                     if guard_result != "published_facts_only"
                     else "unsupported_fallback"
                 ),
+                **_llm_answer_fields(llm_call),
             )
         deterministic_answer = self._compose_grounded_answer(evidence)
         spoken_text = deterministic_answer
@@ -165,6 +169,7 @@ class GroundedAnswerService:
             fine_intent=understanding.fine_intent,
             intent_confidence=understanding.confidence,
             guard_result=guard_result,
+            **_llm_answer_fields(llm_call),
         )
 
     @staticmethod
@@ -175,117 +180,18 @@ class GroundedAnswerService:
             "这轮我只使用了这件展品已经发布的资料，没有补充猜测。"
         )
 
-    @staticmethod
-    def _decide_with_llm(
-        *,
-        exhibit_name,
-        question,
-        candidates,
-        llm,
-        session_id,
-        history,
-        understanding,
-    ) -> _TurnDecision | None:
-        if llm is None:
-            return None
-        facts = "\n".join(
-            f"- {fact.id}: {fact.statement}"
-            for fact in (candidates.facts if candidates else ())
-        )
-        recent_history = json.dumps(
-            list(history[-4:]) if history else [],
-            ensure_ascii=False,
-        )
-        system_prompt = (
-            "你是博物馆语音对话的受限路由器。只依据给定的当前展品事实判断本轮输入。"
-            "只输出一个JSON对象，不要输出Markdown或解释。JSON字段必须为："
-            "status、fact_ids、social_intent、answer。"
-            "status只能是grounded、unsupported、conversational之一。"
-            "grounded表示一个或多个给定事实可以直接回答问题；fact_ids选择最少且不超过3个事实ID，"
-            "answer用中文回答2至4句，不得增加给定事实之外的具体信息。"
-            "conversational只允许问候、身份、能力、感谢或告别；social_intent只能是"
-            "greeting、identity、capability、thanks、farewell之一，fact_ids和answer留空。"
-            "需要外部常识、价格、传说、推测或与博物馆无关的问题一律unsupported，其他字段留空。"
-        )
-        user_prompt = (
-            f"当前展品：{exhibit_name}\n"
-            f"问题粗分类：{understanding.coarse_intent}\n"
-            f"问题细分类：{understanding.fine_intent}\n"
-            f"最近对话：{recent_history}\n"
-            f"游客本轮输入：{question}\n"
-            f"当前发布且已审核的事实：\n{facts or '（无）'}"
-        )
-        try:
-            if hasattr(llm, "response_no_stream"):
-                raw_decision = llm.response_no_stream(system_prompt, user_prompt)
-            else:
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ]
-                raw_decision = "".join(
-                    str(part) for part in llm.response(session_id, messages)
-                )
-        except Exception:
-            return None
-        return _parse_turn_decision(raw_decision)
-
-
 def _duration_ms(started: float) -> int:
     return max(0, round((perf_counter() - started) * 1000))
 
 
-def _parse_turn_decision(raw_decision) -> _TurnDecision | None:
-    text = str(raw_decision or "").strip()
-    if not text:
-        return None
-    try:
-        payload = json.loads(text)
-    except json.JSONDecodeError:
-        start = text.find("{")
-        end = text.rfind("}")
-        if start < 0 or end <= start:
-            return None
-        try:
-            payload = json.loads(text[start : end + 1])
-        except json.JSONDecodeError:
-            return None
-    if not isinstance(payload, dict):
-        return None
-
-    status = str(payload.get("status", "")).strip().lower()
-    if status not in {"grounded", "unsupported", "conversational"}:
-        return None
-    raw_fact_ids = payload.get("fact_ids", [])
-    if not isinstance(raw_fact_ids, list):
-        return None
-    fact_ids = tuple(
-        dict.fromkeys(
-            str(fact_id).strip()
-            for fact_id in raw_fact_ids
-            if str(fact_id).strip()
-        )
-    )
-    if status == "grounded" and (not fact_ids or len(fact_ids) > 3):
-        return None
-    if status != "grounded":
-        fact_ids = ()
-
-    social_intent = str(payload.get("social_intent", "")).strip().lower()
-    if status == "conversational" and social_intent not in {
-        "greeting",
-        "identity",
-        "capability",
-        "thanks",
-        "farewell",
-    }:
-        social_intent = "greeting"
-    return _TurnDecision(
-        status=status,
-        fact_ids=fact_ids,
-        social_intent=social_intent,
-        answer=str(payload.get("answer", "") or "").strip(),
-    )
+def _llm_answer_fields(llm_call: MuseumLlmCall) -> dict[str, object]:
+    return {
+        "llm_invoked": llm_call.invoked,
+        "llm_model": llm_call.model_name,
+        "llm_prompt_version": llm_call.prompt_version,
+        "llm_result": llm_call.result,
+        "llm_response_summary": llm_call.response_summary,
+    }
 
 
 def _select_evidence(

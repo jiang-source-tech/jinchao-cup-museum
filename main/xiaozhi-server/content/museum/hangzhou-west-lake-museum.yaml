@@ -26,7 +26,7 @@ exhibits:
   - id: southern-song-guan-zun-incense-burner
     zone_id: west-lake-official-collection
     name: 南宋官窑青瓷樽式炉
-    aliases: [青瓷樽式炉, 官窑樽式炉, 樽式炉]
+    aliases: [青瓷樽式炉, 官窑樽式炉, 樽式炉, 青瓷尊式炉, 官窑尊式炉, 尊式炉]
     status: active
     revision:
       id: southern-song-guan-zun-incense-burner-r1
@@ -67,7 +67,7 @@ exhibits:
   - id: southern-song-guan-bagua-incense-lid
     zone_id: west-lake-official-collection
     name: 南宋官窑青瓷八卦熏炉盖
-    aliases: [青瓷八卦熏炉盖, 官窑八卦熏炉盖, 八卦熏炉盖]
+    aliases: [青瓷八卦熏炉盖, 官窑八卦熏炉盖, 八卦熏炉盖, 青瓷八挂熏炉盖, 官窑八挂熏炉盖, 八挂熏炉盖]
     status: active
     revision:
       id: southern-song-guan-bagua-incense-lid-r1

@@ -232,10 +232,10 @@ requirements:
       - kind: test
         label: 固定会话评测集
         path: ../../main/xiaozhi-server/tests/test_museum_conversation_eval.py
-        note: 评测自然问法和跨轮行为。
+        note: 以 35 个用例、45 轮固定输入评测自然问法、ASR 审核别名、跨轮继承和显式切换。
     dependencies: [REQ-004]
     tags: [多轮对话, 追问, 展品切换]
-    next_action: 将真实 ASR 文本加入固定评测集，持续防止旧展品上下文泄漏。
+    next_action: 真机接入后把真实 ASR 转写追加为审核别名或失败样本，持续防止旧展品上下文泄漏。
 
   - id: REQ-006
     sequence: 60
@@ -282,9 +282,13 @@ requirements:
         label: 杭州馆方藏品内容集
         path: ../../main/xiaozhi-server/content/museum/README.md
         note: 登记 5 件藏品、26 条事实和良渚博物院、杭州西湖博物馆总馆、中国丝绸博物馆官方来源。
+      - kind: document
+        label: RAG-NEXT-05 评测报告
+        path: rag-evaluation-report.md
+        note: 规则与真实 DeepSeek 各 45 轮，事实越界率、错误绑定率和资料不足编造率均为 0。
     dependencies: [REQ-003]
     tags: [RAG, 审核事实, 依据快照]
-    next_action: 进入 RAG-NEXT-05，用真实自然问法评测当前事实级召回；没有量化缺口前不引入全馆向量召回。
+    next_action: 进入 RAG-NEXT-06 回收未命中问题；当前没有证据支持引入全馆向量召回。
 
   - id: REQ-007
     sequence: 70
@@ -319,9 +323,13 @@ requirements:
         label: 问题理解测试
         path: ../../main/xiaozhi-server/tests/test_query_understanding.py
         note: 6 个意图优先级与映射测试已通过。
+      - kind: test
+        label: 杭州藏品自然问法评测
+        path: ../../main/xiaozhi-server/tests/test_museum_conversation_eval.py
+        note: 覆盖规范名、审核别名、ASR 误识别、多轮追问、切换、歧义和未收录展品。
     dependencies: [REQ-006]
     tags: [问题理解, 意图, 事实类型]
-    next_action: 用真实游客问法扩展评测集，但保持分类集合有界且可审计。
+    next_action: 从 RAG-NEXT-06 的未命中导出中补充真实失败问法，分类集合继续保持有界且可审计。
 
   - id: REQ-008
     sequence: 80
@@ -367,9 +375,17 @@ requirements:
         label: 多展品无命中与隔离测试
         path: ../../main/xiaozhi-server/tests/test_museum_rag_multiexhibit.py
         note: 已知意图无事实时直接 unsupported 且不调用 LLM，切换展品后不复用上一展品事实。
+      - kind: test
+        label: 真实 LLM 结构合同与回退测试
+        path: ../../main/xiaozhi-server/tests/test_museum_llm_contract.py
+        note: 覆盖 JSON Object 格式、非法字段、响应摘要、确定性回退和审计持久化。
+      - kind: document
+        label: DeepSeek 自然问法验收报告
+        path: rag-evaluation-report.md
+        note: 真实模型 45 轮无事实越界或资料不足编造，并比规则基线额外接住 5 轮自然语义问法。
     dependencies: [REQ-006, REQ-007]
     tags: [知识兜底, 幻觉防护, 守卫]
-    next_action: 执行 RAG-NEXT-05，把 deepseek-v4-flash 的真实失败样本加入回答守卫回归。
+    next_action: 保持当前严格守卫；后续仅用已复现的真实失败样本扩展回归，不降低事实边界换取流畅度。
 
   - id: REQ-009
     sequence: 90
@@ -395,6 +411,9 @@ requirements:
       - id: AC-009-4
         text: 运营人员可按请求 ID 一次性查看完整审计记录。
         status: done
+      - id: AC-009-5
+        text: 真实 LLM 调用保存模型名、提示版本、结构解析结果和脱敏响应摘要，不记录密钥。
+        status: done
     evidence:
       - kind: code
         label: interaction_trace 数据模型
@@ -404,6 +423,10 @@ requirements:
         label: 审计断言
         path: ../../main/xiaozhi-server/tests/test_museum_audit.py
         note: 已验证显式命中、继承、缺少上下文、知识兜底和社交回复的审计记录。
+      - kind: test
+        label: LLM 审计合同
+        path: ../../main/xiaozhi-server/tests/test_museum_llm_contract.py
+        note: 验证模型名、提示版本、调用结果和 SHA-256 响应摘要可按 request_id 复核。
     dependencies: [REQ-005, REQ-006, REQ-007]
     tags: [审计, 可追溯, 延迟]
     next_action: 后续新增解析或回答分支时同步写入同一审计结构，并保持 request_id 查询回归测试。
@@ -477,7 +500,7 @@ requirements:
         status: done
       - id: AC-011-3
         text: 回答长度、语言难度和事实边界具有稳定、可测试的约束。
-        status: pending
+        status: done
       - id: AC-011-4
         text: 儿童理解度和语言流畅度通过独立人工评审，游客不需要选择模式。
         status: pending
@@ -490,9 +513,17 @@ requirements:
         label: PRD 统一回答策略要求
         path: ../product/PRD.md
         note: 临时表达调整只能改变篇幅和措辞，不改变事实。
+      - kind: test
+        label: LLM 回答形状与事实守卫
+        path: ../../main/xiaozhi-server/tests/test_museum_llm_contract.py
+        note: 要求结构化选择事实，回答越界或结构失败时回到确定性短回答。
+      - kind: document
+        label: 自然问法流畅度样本
+        path: rag-evaluation-report.md
+        note: 项目内观察为 3/5；事实稳定，但固定回退模板仍重复，不替代儿童独立评审。
     dependencies: [REQ-006, REQ-008]
     tags: [统一回答策略, 儿童表达, 人工评测]
-    next_action: 固定回答长度、语言难度和事实边界，再补自动化与人工验收记录。
+    next_action: 在不降低事实守卫的前提下减少固定模板重复，并由真实儿童或讲解人员完成 AC-011-4 独立评审。
 
   - id: REQ-012
     sequence: 120
@@ -586,10 +617,10 @@ requirements:
       - kind: document
         label: 内容发布实施计划
         path: rag-execution-plan.md
-        note: RAG-NEXT-01 至 RAG-NEXT-04 已完成内容契约、导入发布、版本回滚和多展品检索闭环。
+        note: RAG-NEXT-01 至 RAG-NEXT-05 已完成内容契约、导入发布、版本回滚、多展品检索和真实自然问法评测。
     dependencies: [REQ-006, REQ-009]
     tags: [内容导入, 发布, 回滚]
-    next_action: 保持内容发布门和历史复核不变，项目进入 RAG-NEXT-05 的真实自然问法评测。
+    next_action: 保持内容发布门和历史复核不变，使用 RAG-NEXT-06 的未命中数据驱动补录。
 
   - id: REQ-014
     sequence: 140
@@ -725,7 +756,7 @@ requirements:
     title: 扩展到多展品内容规模
     kind: content
     priority: P2
-    status: pending
+    status: in_progress
     phase: expansion
     owner: 内容 / 测试
     confidence: medium
@@ -740,7 +771,7 @@ requirements:
         status: pending
       - id: AC-017-3
         text: 别名冲突和解析准确率具有自动化指标。
-        status: pending
+        status: done
       - id: AC-017-4
         text: 内容扩展不降低单展品事实边界和审计完整性。
         status: pending
@@ -749,6 +780,10 @@ requirements:
         label: 扩容阶段计划
         path: rag-execution-plan.md
         note: RAG-NEXT-09 明确要求发布闭环和自然问法评测通过后再扩展到 20 至 30 件展品。
+      - kind: document
+        label: 五展品扩容前评测基线
+        path: rag-evaluation-report.md
+        note: 已建立规范名、审核别名、ASR 别名、事实边界和审计完整性的量化基线。
     dependencies: [REQ-013, REQ-015]
     tags: [多展品, 内容规模, 评测集]
     next_action: 保持待办，真机核心闭环通过前不投入批量内容生产。
@@ -786,6 +821,10 @@ requirements:
         label: 阶段 6 约束
         path: rag-execution-plan.md
         note: RAG-NEXT-08 定义了向量召回的量化决策门和不得绕过的事实边界。
+      - kind: document
+        label: 当前检索量化结果
+        path: rag-evaluation-report.md
+        note: 当前 45 轮评测未出现跨展品错误、依据越界或需要向量召回才能修复的 P0 缺口。
     dependencies: [REQ-016]
     tags: [后置, 路线, 图片, 多语言, 离线]
     next_action: 保持 deferred；只有真机和运营数据给出明确需求时再立项。

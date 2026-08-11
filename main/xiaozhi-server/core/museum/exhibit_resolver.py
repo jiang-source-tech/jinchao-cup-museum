@@ -90,6 +90,9 @@ _PRONOUN_PREFIXES = (
     "它",
     "这件",
     "这个",
+    "这个东西",
+    "这东西",
+    "这玩意",
     "这把",
     "这只",
     "这枚",
@@ -129,7 +132,17 @@ _FOLLOW_UP_REFERENCE_PHRASES = (
     "前面那件展品",
 )
 _CONTEXTUAL_OPENERS = ("这么", "那么", "刚才", "刚刚", "前面")
-_FOLLOW_UP_PRONOUNS = ("它", "这个", "这件", "这把", "这只", "这枚")
+_FOLLOW_UP_PRONOUNS = (
+    "它",
+    "这个",
+    "这个东西",
+    "这东西",
+    "这玩意",
+    "这件",
+    "这把",
+    "这只",
+    "这枚",
+)
 _FOLLOW_UP_DIALOGUE_PREFIXES = (
     "你能讲讲",
     "能说说",

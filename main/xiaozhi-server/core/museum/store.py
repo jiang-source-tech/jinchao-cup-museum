@@ -142,6 +142,11 @@ CREATE TABLE IF NOT EXISTS interaction_trace (
     fine_intent TEXT NOT NULL DEFAULT '',
     intent_confidence REAL NOT NULL DEFAULT 0,
     guard_result TEXT NOT NULL,
+    llm_invoked INTEGER NOT NULL DEFAULT 0,
+    llm_model TEXT NOT NULL DEFAULT '',
+    llm_prompt_version TEXT NOT NULL DEFAULT '',
+    llm_result TEXT NOT NULL DEFAULT 'not_called',
+    llm_response_summary TEXT NOT NULL DEFAULT '{}',
     stage_latency_json TEXT NOT NULL,
     duration_ms INTEGER NOT NULL,
     created_at TEXT NOT NULL
@@ -305,6 +310,36 @@ class MuseumStore:
                 "interaction_trace",
                 "candidate_exhibit_ids_json",
                 "TEXT NOT NULL DEFAULT '[]'",
+            )
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "llm_invoked",
+                "INTEGER NOT NULL DEFAULT 0",
+            )
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "llm_model",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "llm_prompt_version",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "llm_result",
+                "TEXT NOT NULL DEFAULT 'not_called'",
+            )
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "llm_response_summary",
+                "TEXT NOT NULL DEFAULT '{}'",
             )
             fts_columns = {
                 row["name"]
@@ -836,6 +871,11 @@ class MuseumStore:
         fine_intent: str = "",
         intent_confidence: float = 0.0,
         guard_result: str,
+        llm_invoked: bool = False,
+        llm_model: str = "",
+        llm_prompt_version: str = "",
+        llm_result: str = "not_called",
+        llm_response_summary: str = "{}",
         stage_latency: dict[str, int],
         duration_ms: int,
         occurred_at: datetime,
@@ -865,9 +905,10 @@ class MuseumStore:
                     candidate_exhibit_ids_json,
                     user_text, grounding_status, evidence_json, answer_text,
                     unanswered_reason, coarse_intent, fine_intent,
-                    intent_confidence, guard_result, stage_latency_json,
-                    duration_ms, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    intent_confidence, guard_result, llm_invoked, llm_model,
+                    llm_prompt_version, llm_result, llm_response_summary,
+                    stage_latency_json, duration_ms, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     trace_id,
@@ -888,6 +929,11 @@ class MuseumStore:
                     fine_intent,
                     intent_confidence,
                     guard_result,
+                    int(llm_invoked),
+                    llm_model,
+                    llm_prompt_version,
+                    llm_result,
+                    llm_response_summary,
                     json.dumps(stage_latency, ensure_ascii=False),
                     duration_ms,
                     _iso(occurred_at),

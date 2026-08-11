@@ -89,3 +89,8 @@ class AnswerResult:
     fine_intent: str = ""
     intent_confidence: float = 0.0
     guard_result: str = "not_evaluated"
+    llm_invoked: bool = False
+    llm_model: str = ""
+    llm_prompt_version: str = ""
+    llm_result: str = "not_called"
+    llm_response_summary: str = "{}"

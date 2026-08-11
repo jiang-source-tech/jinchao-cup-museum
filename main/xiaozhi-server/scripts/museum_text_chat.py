@@ -164,6 +164,16 @@ def outcome_payload(outcome: TurnOutcome) -> dict[str, Any]:
         "coarse_intent": outcome.audit_record.get("coarse_intent", ""),
         "fine_intent": outcome.audit_record.get("fine_intent", ""),
         "intent_confidence": outcome.audit_record.get("intent_confidence", 0),
+        "guard_result": outcome.audit_record.get("guard_result", ""),
+        "llm_invoked": outcome.audit_record.get("llm_invoked", False),
+        "llm_model": outcome.audit_record.get("llm_model", ""),
+        "llm_prompt_version": outcome.audit_record.get(
+            "llm_prompt_version", ""
+        ),
+        "llm_result": outcome.audit_record.get("llm_result", "not_called"),
+        "llm_response_summary": outcome.audit_record.get(
+            "llm_response_summary", "{}"
+        ),
         "fact_ids": list(outcome.fact_ids),
         "source_ids": list(outcome.source_ids),
         "audit_id": outcome.audit_id,

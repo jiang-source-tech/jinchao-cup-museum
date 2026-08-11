@@ -1,186 +1,724 @@
 {
-  "version": 1,
-  "description": "服务端文本层自然问法验收集，不包含真实麦克风、ASR、TTS或扬声器验证。",
+  "version": 2,
+  "description": "杭州馆方五件藏品的服务端文本评测集；真实 LLM 与规则基线使用相同输入，但不包含麦克风、ASR、TTS 或扬声器验收。",
+  "content_packages": [
+    "content/museum/liangzhu-museum.yaml",
+    "content/museum/hangzhou-west-lake-museum.yaml",
+    "content/museum/china-national-silk-museum.yaml"
+  ],
+  "thresholds": {
+    "canonical_name_accuracy": 1.0,
+    "reviewed_alias_accuracy": 0.95,
+    "asr_alias_accuracy": 0.95,
+    "ambiguous_wrong_binding_rate": 0.0,
+    "unlisted_silent_inheritance_rate": 0.0,
+    "grounded_boundary_violation_rate": 0.0,
+    "unsupported_hallucination_rate": 0.0,
+    "evidence_audit_reproducibility": 1.0
+  },
   "cases": [
     {
-      "id": "canonical-material",
+      "id": "canonical-yue-dimensions",
+      "category": "canonical_name",
       "turns": [
         {
-          "text": "战国水晶杯是什么材质？",
+          "text": "玉钺组合有多大？",
+          "metrics": ["canonical_resolution", "grounded_boundary", "audit_reproducibility"],
           "expected": {
             "knowledge_status": "grounded",
-            "coarse_intent": "exhibit_knowledge",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-yue-set",
+            "context_source": "explicit_mention",
+            "fine_intent": "dimensions",
+            "fact_ids": ["fact-liangzhu-yue-dimensions"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "canonical-trident-material",
+      "category": "canonical_name",
+      "turns": [
+        {
+          "text": "玉三叉形器是什么材质？",
+          "metrics": ["canonical_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-trident",
             "fine_intent": "material",
-            "fact_ids": ["fact-crystal-cup-material"],
-            "context_exhibit_id": "warring-states-crystal-cup",
-            "context_source": "explicit_mention"
+            "fact_ids": ["fact-liangzhu-trident-material"]
           }
         }
       ]
     },
     {
-      "id": "polite-alias-material",
+      "id": "canonical-zun-excavation",
+      "category": "canonical_name",
       "turns": [
         {
-          "text": "请问水晶杯是用什么做成的？",
+          "text": "南宋官窑青瓷樽式炉在哪里出土？",
+          "metrics": ["canonical_resolution", "grounded_boundary", "audit_reproducibility"],
           "expected": {
             "knowledge_status": "grounded",
-            "fact_ids": ["fact-crystal-cup-material"],
-            "context_exhibit_id": "warring-states-crystal-cup",
-            "context_source": "explicit_mention"
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-zun-incense-burner",
+            "fine_intent": "excavation",
+            "fact_ids": ["fact-west-lake-zun-excavation"]
           }
         }
       ]
     },
     {
-      "id": "pronoun-follow-ups",
+      "id": "canonical-bagua-dimensions",
+      "category": "canonical_name",
       "turns": [
         {
-          "text": "战国水晶杯是什么材质？",
-          "expected": {"knowledge_status": "grounded"}
-        },
-        {
-          "text": "它到底是拿什么做的？",
+          "text": "南宋官窑青瓷八卦熏炉盖有多高？",
+          "metrics": ["canonical_resolution", "grounded_boundary", "audit_reproducibility"],
           "expected": {
             "knowledge_status": "grounded",
-            "coarse_intent": "exhibit_knowledge",
-            "fine_intent": "material",
-            "fact_ids": ["fact-crystal-cup-material"],
-            "context_exhibit_id": "warring-states-crystal-cup",
-            "context_source": "inherited_session"
-          }
-        },
-        {
-          "text": "这个杯子是怎么做出来的？",
-          "expected": {
-            "knowledge_status": "grounded",
-            "fact_ids": ["fact-crystal-cup-craft-limit"],
-            "context_exhibit_id": "warring-states-crystal-cup",
-            "context_source": "inherited_session"
-          }
-        },
-        {
-          "text": "你能讲讲它的历史吗？",
-          "expected": {
-            "knowledge_status": "grounded",
-            "fact_ids": ["fact-crystal-cup-era"],
-            "context_exhibit_id": "warring-states-crystal-cup",
-            "context_source": "inherited_session"
-          }
-        },
-        {
-          "text": "它的制作工艺复杂吗？",
-          "expected": {
-            "knowledge_status": "grounded",
-            "fact_ids": ["fact-crystal-cup-craft-limit"],
-            "context_exhibit_id": "warring-states-crystal-cup",
-            "context_source": "inherited_session"
-          }
-        },
-        {
-          "text": "这么硬，古人当时是怎么把它做出来的？",
-          "expected": {
-            "knowledge_status": "grounded",
-            "coarse_intent": "exhibit_knowledge",
-            "fine_intent": "craft",
-            "fact_ids": ["fact-crystal-cup-craft-limit"],
-            "context_exhibit_id": "warring-states-crystal-cup",
-            "context_source": "inherited_session"
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-bagua-incense-lid",
+            "fine_intent": "dimensions",
+            "fact_ids": ["fact-west-lake-bagua-dimensions"]
           }
         }
       ]
     },
     {
-      "id": "unsupported-fact-question",
+      "id": "canonical-silk-era",
+      "category": "canonical_name",
       "turns": [
         {
-          "text": "战国水晶杯在战国时期卖了多少钱？",
+          "text": "清玄色地团花蝴蝶纹袍料是什么年代的？",
+          "metrics": ["canonical_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "qing-butterfly-medallion-robe-fabric",
+            "fine_intent": "era",
+            "fact_ids": ["fact-china-silk-butterfly-era"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-yue",
+      "category": "reviewed_alias",
+      "turns": [
+        {
+          "text": "玉钺有多大？",
+          "metrics": ["alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-yue-set",
+            "fact_ids": ["fact-liangzhu-yue-dimensions"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-yue-m14",
+      "category": "reviewed_alias",
+      "turns": [
+        {
+          "text": "反山M14玉钺组合是哪里出土的？",
+          "metrics": ["alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-yue-set",
+            "fact_ids": ["fact-liangzhu-yue-excavation"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asr-yue-homophone",
+      "category": "asr_alias",
+      "turns": [
+        {
+          "text": "玉越组合有多大？",
+          "metrics": ["asr_alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-yue-set",
+            "fact_ids": ["fact-liangzhu-yue-dimensions"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-trident",
+      "category": "reviewed_alias",
+      "turns": [
+        {
+          "text": "三叉形器是什么材质？",
+          "metrics": ["alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-trident",
+            "fact_ids": ["fact-liangzhu-trident-material"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-trident-m7",
+      "category": "reviewed_alias",
+      "turns": [
+        {
+          "text": "瑶山M7玉三叉形器有多高？",
+          "metrics": ["alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-trident",
+            "fact_ids": ["fact-liangzhu-trident-dimensions"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asr-trident-shape",
+      "category": "asr_alias",
+      "turns": [
+        {
+          "text": "三叉型器是什么材质？",
+          "metrics": ["asr_alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-trident",
+            "fact_ids": ["fact-liangzhu-trident-material"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-zun-short",
+      "category": "reviewed_alias",
+      "turns": [
+        {
+          "text": "青瓷樽式炉有多高？",
+          "metrics": ["alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-zun-incense-burner",
+            "fact_ids": ["fact-west-lake-zun-dimensions"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-zun-guan",
+      "category": "reviewed_alias",
+      "turns": [
+        {
+          "text": "官窑樽式炉是什么时候的？",
+          "metrics": ["alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-zun-incense-burner",
+            "fact_ids": ["fact-west-lake-zun-era"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-zun-minimal",
+      "category": "reviewed_alias",
+      "turns": [
+        {
+          "text": "樽式炉是什么材质？",
+          "metrics": ["alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-zun-incense-burner",
+            "fact_ids": ["fact-west-lake-zun-material"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asr-zun-homophone",
+      "category": "asr_alias",
+      "turns": [
+        {
+          "text": "尊式炉有多高？",
+          "metrics": ["asr_alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-zun-incense-burner",
+            "fact_ids": ["fact-west-lake-zun-dimensions"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-bagua-short",
+      "category": "reviewed_alias",
+      "turns": [
+        {
+          "text": "青瓷八卦熏炉盖有多高？",
+          "metrics": ["alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-bagua-incense-lid",
+            "fact_ids": ["fact-west-lake-bagua-dimensions"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-bagua-guan",
+      "category": "reviewed_alias",
+      "turns": [
+        {
+          "text": "官窑八卦熏炉盖是哪里出土的？",
+          "metrics": ["alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-bagua-incense-lid",
+            "fact_ids": ["fact-west-lake-bagua-excavation"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-bagua-minimal",
+      "category": "reviewed_alias",
+      "turns": [
+        {
+          "text": "八卦熏炉盖是什么材质？",
+          "metrics": ["alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-bagua-incense-lid",
+            "fact_ids": ["fact-west-lake-bagua-material"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asr-bagua-homophone",
+      "category": "asr_alias",
+      "turns": [
+        {
+          "text": "八挂熏炉盖有多高？",
+          "metrics": ["asr_alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-bagua-incense-lid",
+            "fact_ids": ["fact-west-lake-bagua-dimensions"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-silk-long",
+      "category": "reviewed_alias",
+      "turns": [
+        {
+          "text": "团花蝴蝶纹袍料是什么材质？",
+          "metrics": ["alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "qing-butterfly-medallion-robe-fabric",
+            "fact_ids": ["fact-china-silk-butterfly-material"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-silk-short",
+      "category": "reviewed_alias",
+      "turns": [
+        {
+          "text": "蝴蝶纹袍料有多大？",
+          "metrics": ["alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "qing-butterfly-medallion-robe-fabric",
+            "fact_ids": ["fact-china-silk-butterfly-dimensions"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asr-silk-material",
+      "category": "asr_alias",
+      "turns": [
+        {
+          "text": "蝴蝶纹袍聊是什么材质？",
+          "metrics": ["asr_alias_resolution", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "qing-butterfly-medallion-robe-fabric",
+            "fact_ids": ["fact-china-silk-butterfly-material"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "multiturn-switch-zun-to-trident",
+      "category": "multi_turn",
+      "turns": [
+        {
+          "text": "南宋官窑青瓷樽式炉有多高？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-zun-incense-burner",
+            "fact_ids": ["fact-west-lake-zun-dimensions"]
+          }
+        },
+        {
+          "text": "它是在哪儿发现的呀？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "inherited",
+            "context_exhibit_id": "southern-song-guan-zun-incense-burner",
+            "context_source": "inherited_session",
+            "fact_ids": ["fact-west-lake-zun-excavation"]
+          }
+        },
+        {
+          "text": "换成玉三叉形器，它是什么材质？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-trident",
+            "context_source": "explicit_mention",
+            "fact_ids": ["fact-liangzhu-trident-material"]
+          }
+        },
+        {
+          "text": "这东西原来戴在哪儿？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "resolution_status": "inherited",
+            "context_exhibit_id": "liangzhu-jade-trident"
+          },
+          "expected_by_mode": {
+            "rules": {
+              "knowledge_status": "unsupported",
+              "fact_ids": []
+            },
+            "llm": {
+              "knowledge_status": "grounded",
+              "required_fact_ids": ["fact-liangzhu-trident-usage"],
+              "allowed_fact_ids": ["fact-liangzhu-trident-usage"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "multiturn-silk-to-bagua",
+      "category": "multi_turn",
+      "turns": [
+        {
+          "text": "蝴蝶纹袍料长什么样？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "qing-butterfly-medallion-robe-fabric",
+            "fact_ids": ["fact-china-silk-butterfly-appearance"]
+          }
+        },
+        {
+          "text": "这个是怎么绣出来的？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "inherited",
+            "context_exhibit_id": "qing-butterfly-medallion-robe-fabric",
+            "fact_ids": ["fact-china-silk-butterfly-craft"]
+          }
+        },
+        {
+          "text": "换成八卦熏炉盖，它有多大？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-bagua-incense-lid",
+            "fact_ids": ["fact-west-lake-bagua-dimensions"]
+          }
+        },
+        {
+          "text": "上面的孔是干什么用的？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "resolution_status": "inherited",
+            "context_exhibit_id": "southern-song-guan-bagua-incense-lid"
+          },
+          "expected_by_mode": {
+            "rules": {
+              "knowledge_status": "unsupported",
+              "fact_ids": []
+            },
+            "llm": {
+              "knowledge_status": "grounded",
+              "required_fact_ids": ["fact-west-lake-bagua-usage"],
+              "allowed_fact_ids": ["fact-west-lake-bagua-usage", "fact-west-lake-bagua-appearance"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "natural-yue-symbolism",
+      "category": "natural_rephrase",
+      "turns": [
+        {
+          "text": "玉钺组合为什么能代表权力呀？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-yue-set"
+          },
+          "expected_by_mode": {
+            "rules": {
+              "knowledge_status": "unsupported",
+              "fact_ids": []
+            },
+            "llm": {
+              "knowledge_status": "grounded",
+              "required_fact_ids": ["fact-liangzhu-yue-usage"],
+              "allowed_fact_ids": ["fact-liangzhu-yue-usage"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "natural-bagua-holes",
+      "category": "natural_rephrase",
+      "turns": [
+        {
+          "text": "八卦熏炉盖为什么要开这么多孔？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-bagua-incense-lid"
+          },
+          "expected_by_mode": {
+            "rules": {
+              "knowledge_status": "unsupported",
+              "fact_ids": []
+            },
+            "llm": {
+              "knowledge_status": "grounded",
+              "required_fact_ids": ["fact-west-lake-bagua-usage"],
+              "allowed_fact_ids": ["fact-west-lake-bagua-usage", "fact-west-lake-bagua-appearance"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "natural-silk-decoration",
+      "category": "natural_rephrase",
+      "turns": [
+        {
+          "text": "这件蝴蝶纹袍料上面主要绣了些什么呀？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "resolution_status": "explicit",
+            "context_exhibit_id": "qing-butterfly-medallion-robe-fabric"
+          },
+          "expected_by_mode": {
+            "rules": {
+              "knowledge_status": "unsupported",
+              "fact_ids": []
+            },
+            "llm": {
+              "knowledge_status": "grounded",
+              "required_fact_ids": ["fact-china-silk-butterfly-appearance"],
+              "allowed_fact_ids": ["fact-china-silk-butterfly-appearance", "fact-china-silk-butterfly-craft"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "unsupported-price",
+      "category": "unsupported",
+      "turns": [
+        {
+          "text": "玉钺组合现在拿去拍卖值多少钱？",
+          "metrics": ["unsupported_no_hallucination", "audit_reproducibility"],
           "expected": {
             "knowledge_status": "unsupported",
-            "coarse_intent": "exhibit_knowledge",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-yue-set",
             "fine_intent": "price",
-            "fact_ids": [],
-            "context_exhibit_id": "warring-states-crystal-cup"
+            "fact_ids": []
           }
         }
       ]
     },
     {
-      "id": "knowledge-coverage-gap-is-explicit",
+      "id": "unsupported-invented-designer",
+      "category": "hallucination_pressure",
       "turns": [
         {
-          "text": "战国水晶杯为什么这么透明？",
+          "text": "南宋官窑青瓷樽式炉是不是宋高宗亲手设计的？",
+          "metrics": ["unsupported_no_hallucination", "audit_reproducibility"],
           "expected": {
             "knowledge_status": "unsupported",
-            "coarse_intent": "exhibit_knowledge",
-            "fine_intent": "appearance",
-            "fact_ids": [],
-            "context_exhibit_id": "warring-states-crystal-cup"
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-zun-incense-burner",
+            "fact_ids": []
           }
         }
       ]
     },
     {
-      "id": "unknown-exhibit-switch",
+      "id": "unsupported-invented-legend",
+      "category": "hallucination_pressure",
       "turns": [
         {
-          "text": "战国水晶杯是什么材质？",
-          "expected": {"knowledge_status": "grounded"}
+          "text": "玉三叉形器是不是能召唤神兽？给我讲个馆方没写的传说。",
+          "metrics": ["unsupported_no_hallucination", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-trident",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "unlisted-switch-does-not-inherit",
+      "category": "unlisted_exhibit",
+      "turns": [
+        {
+          "text": "玉三叉形器是什么材质？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "context_exhibit_id": "liangzhu-jade-trident",
+            "fact_ids": ["fact-liangzhu-trident-material"]
+          }
         },
         {
           "text": "换成越王勾践剑，它是什么材质？",
+          "metrics": ["unlisted_no_inherit", "audit_reproducibility"],
           "expected": {
             "knowledge_status": "missing_context",
-            "coarse_intent": "exhibit_knowledge",
-            "fine_intent": "material",
             "resolution_status": "not_found",
-            "contains": "没有收录",
-            "context_exhibit_id": ""
+            "context_exhibit_id": "",
+            "fact_ids": []
           }
         }
       ]
     },
     {
-      "id": "unknown-exhibit-with-polite-prefix",
+      "id": "ambiguous-two-exhibits",
+      "category": "ambiguous",
       "turns": [
         {
-          "text": "我想知道越王勾践剑是什么材质？",
+          "text": "南宋官窑青瓷樽式炉和南宋官窑青瓷八卦熏炉盖有什么区别？",
+          "metrics": ["ambiguous_no_binding", "audit_reproducibility"],
           "expected": {
             "knowledge_status": "missing_context",
-            "resolution_status": "not_found",
-            "contains": "没有收录",
-            "context_exhibit_id": ""
-          }
-        }
-      ]
-    },
-    {
-      "id": "unknown-exhibit-possessive-question",
-      "turns": [
-        {
-          "text": "战国水晶杯是什么材质？",
-          "expected": {"knowledge_status": "grounded"}
-        },
-        {
-          "text": "那越王勾践剑的材质呢？",
-          "expected": {
-            "knowledge_status": "missing_context",
-            "resolution_status": "not_found",
-            "contains": "没有收录",
-            "context_exhibit_id": ""
+            "resolution_status": "ambiguous",
+            "context_exhibit_id": "",
+            "fact_ids": []
           }
         }
       ]
     },
     {
       "id": "missing-first-context",
+      "category": "missing_context",
       "turns": [
         {
-          "text": "它为什么这么透明？",
+          "text": "它为什么要做成这个样子？",
+          "metrics": ["audit_reproducibility"],
           "expected": {
             "knowledge_status": "missing_context",
             "resolution_status": "missing",
-            "context_exhibit_id": ""
+            "context_exhibit_id": "",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "social-does-not-enter-retrieval",
+      "category": "social",
+      "turns": [
+        {
+          "text": "你好",
+          "metrics": ["audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "conversational",
+            "fact_ids": []
+          }
+        },
+        {
+          "text": "你是谁？",
+          "metrics": ["audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "conversational",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "social-after-grounded-turn",
+      "category": "social",
+      "turns": [
+        {
+          "text": "玉三叉形器是什么材质？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "context_exhibit_id": "liangzhu-jade-trident",
+            "fact_ids": ["fact-liangzhu-trident-material"]
+          }
+        },
+        {
+          "text": "谢谢",
+          "metrics": ["audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "conversational",
+            "context_exhibit_id": "liangzhu-jade-trident",
+            "fact_ids": []
+          }
+        },
+        {
+          "text": "再见",
+          "metrics": ["audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "conversational",
+            "context_exhibit_id": "liangzhu-jade-trident",
+            "fact_ids": []
           }
         }
       ]
