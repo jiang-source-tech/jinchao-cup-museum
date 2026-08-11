@@ -114,6 +114,20 @@ def test_ambiguous_alias_does_not_bind_a_random_exhibit(tmp_path):
                 '["杯子"]',
             ),
         )
+        connection.execute(
+            """
+            INSERT INTO content_revision(
+                id, exhibit_id, revision_no, status,
+                reviewed_by, reviewed_at, published_at
+            ) VALUES (?, ?, 1, 'published', 'test-reviewer', ?, ?)
+            """,
+            (
+                "demo-glass-cup-r1",
+                "demo-glass-cup",
+                "2026-08-11T00:00:00+00:00",
+                "2026-08-11T00:00:00+00:00",
+            ),
+        )
     resolver = ExhibitResolver(store)
 
     result = resolver.resolve(

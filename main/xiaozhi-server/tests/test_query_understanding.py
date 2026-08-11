@@ -21,21 +21,21 @@ def test_craft_intent_maps_to_published_fact_type():
     result = understand_question("它的制作工艺复杂吗？")
 
     assert result.fine_intent == "craft"
-    assert result.fact_types == ("research_limit",)
+    assert result.fact_types == ("craft", "research_limit")
 
 
 def test_craft_intent_accepts_colloquial_phrasing():
     result = understand_question("这么硬的水晶，当时的人是咋做出来的？")
 
     assert result.fine_intent == "craft"
-    assert result.fact_types == ("research_limit",)
+    assert result.fact_types == ("craft", "research_limit")
 
 
 def test_craft_intent_accepts_object_inserted_before_verb():
     result = understand_question("这么硬，古人当时是怎么把它做出来的？")
 
     assert result.fine_intent == "craft"
-    assert result.fact_types == ("research_limit",)
+    assert result.fact_types == ("craft", "research_limit")
 
 
 def test_price_intent_wins_over_incidental_era_word():

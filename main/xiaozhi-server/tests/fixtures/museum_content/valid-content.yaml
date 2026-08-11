@@ -1,0 +1,80 @@
+schema_version: 1
+
+museum:
+  id: fixture-museum
+  name: 自动化测试博物馆
+  status: active
+
+zones:
+  - id: fixture-gallery
+    name: 自动化测试展区
+    sort_order: 1
+
+sources:
+  - id: fixture-source-bronze
+    title: 测试铜铃资料
+    source_type: test_fixture
+    locator: fixture://bronze-bell
+    rights_note: 自动化测试专用，不用于游客回答。
+  - id: fixture-source-pottery
+    title: 测试彩陶罐资料
+    source_type: test_fixture
+    locator: fixture://painted-pottery
+    rights_note: 自动化测试专用，不用于游客回答。
+  - id: fixture-source-jade
+    title: 测试玉佩资料
+    source_type: test_fixture
+    locator: fixture://jade-pendant
+    rights_note: 自动化测试专用，不用于游客回答。
+
+exhibits:
+  - id: fixture-bronze-bell
+    zone_id: fixture-gallery
+    name: 测试青铜铃
+    aliases: [测试铜铃]
+    status: active
+    revision:
+      id: fixture-bronze-bell-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fixture-fact-bronze-material
+          type: material
+          statement: 这是一条用于验证青铜材质检索的测试事实。
+          keywords: [材质, 青铜]
+          confidence: test_fixture
+          sources: [fixture-source-bronze]
+
+  - id: fixture-painted-pottery
+    zone_id: fixture-gallery
+    name: 测试彩陶罐
+    aliases: [测试陶罐]
+    status: active
+    revision:
+      id: fixture-painted-pottery-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fixture-fact-pottery-appearance
+          type: appearance
+          statement: 这是一条用于验证彩绘外观检索的测试事实。
+          keywords: [外形, 彩绘]
+          confidence: test_fixture
+          sources: [fixture-source-pottery]
+
+  - id: fixture-jade-pendant
+    zone_id: fixture-gallery
+    name: 测试玉佩
+    aliases: [测试玉饰]
+    status: active
+    revision:
+      id: fixture-jade-pendant-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fixture-fact-jade-craft
+          type: craft
+          statement: 这是一条用于验证雕琢工艺检索的测试事实。
+          keywords: [工艺, 雕琢]
+          confidence: test_fixture
+          sources: [fixture-source-jade]

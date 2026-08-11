@@ -1,0 +1,53 @@
+schema_version: 1
+
+museum:
+  id: invalid-fixture-museum
+  name: 无效内容测试博物馆
+  status: active
+
+zones:
+  - id: invalid-fixture-gallery
+    name: 无效内容测试展区
+    sort_order: 1
+
+sources:
+  - id: invalid-fixture-source
+    title: 无效测试资料
+    source_type: test_fixture
+    locator: fixture://invalid
+    rights_note: 自动化测试专用。
+
+exhibits:
+  - id: invalid-fixture-one
+    zone_id: invalid-fixture-gallery
+    name: 无效测试展品一
+    aliases: [共享测试别名]
+    status: active
+    revision:
+      id: invalid-fixture-one-r1
+      number: 1
+      status: published
+      facts:
+        - id: invalid-fixture-fact-one
+          type: material
+          statement: 该事实引用了不存在的来源。
+          keywords: [材质]
+          confidence: test_fixture
+          sources: [missing-source]
+
+  - id: invalid-fixture-two
+    zone_id: invalid-fixture-gallery
+    name: 无效测试展品二
+    aliases: [共享测试别名]
+    status: active
+    revision:
+      id: invalid-fixture-two-r1
+      number: 1
+      status: draft
+      facts:
+        - id: invalid-fixture-fact-two
+          type: appearance
+          statement: 该事实用于触发别名冲突校验。
+          keywords: [外形]
+          confidence: test_fixture
+          sources: [invalid-fixture-source]

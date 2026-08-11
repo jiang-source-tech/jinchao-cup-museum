@@ -202,6 +202,7 @@ _TYPE_TERMS = {
     "excavation": ("出土", "发现", "哪里", "地点", "哪儿"),
     "dimensions": ("尺寸", "多高", "多大", "口径", "底径"),
     "appearance": ("外形", "样子", "玻璃杯", "现代", "长什么", "为什么像"),
+    "craft": ("工艺", "制作", "怎么做", "雕琢", "加工"),
     "research_limit": ("工艺", "制作", "怎么做", "掏膛", "抛光", "原料来源"),
     "price": ("多少钱", "价格", "售价", "卖了多少", "值多少钱", "市场价"),
 }
@@ -444,6 +445,11 @@ class MuseumStore:
                 JOIN zone z ON z.id = e.zone_id
                 JOIN museum m ON m.id = z.museum_id
                 WHERE e.status = 'active' AND m.status = 'active'
+                  AND EXISTS (
+                      SELECT 1 FROM content_revision cr
+                      WHERE cr.exhibit_id = e.id
+                        AND cr.status IN ('published', 'withdrawn')
+                  )
                 ORDER BY e.id
                 """
             ).fetchall()

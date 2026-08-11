@@ -14,6 +14,7 @@
 | `test_render_requirements.py` | 数据与生成结果回归测试 |
 | `ac-010-4-firmware-verification.md` | 固件协议测试、目标板构建结果和真机验收边界 |
 | `rag-execution-plan.md` | REQ-013 之后的事实级 RAG 逐项实施、验收和决策门 |
+| `museum-content-contract.md` | YAML/JSON 内容包 v1 字段、校验、事务和草稿可见性合同 |
 
 ## 更新流程
 

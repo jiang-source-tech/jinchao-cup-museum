@@ -12,6 +12,8 @@
 
 这不是“未来愿景”或技术名词清单，而是一份可以逐项执行、验收和归档的任务单。每个任务都写明输入、修改边界、验收条件和完成证据。完成状态仍以 `docs/requirements/requirements.yaml` 为准。
 
+当前执行状态：`RAG-NEXT-01` 和 `RAG-NEXT-02` 已于 2026-08-11 实现；下一项是 `RAG-NEXT-03` 审核、发布、撤回和回滚。
+
 ## 1. 先明确当前基线
 
 项目已经有第一阶段的 RAG 骨架，不应从零重写：
@@ -115,34 +117,38 @@
 **每件展品的最小字段**：
 
 ```yaml
-museum_id: hangzhou-museum-demo
+schema_version: 1
+museum:
+  id: fixture-museum
+  name: 自动化测试博物馆
+  status: active
+zones:
+  - id: fixture-gallery
+    name: 自动化测试展区
+    sort_order: 1
+sources:
+  - id: fixture-source-bronze
+    title: 测试铜铃资料
+    source_type: test_fixture
+    locator: fixture://bronze-bell
+    rights_note: 自动化测试专用。
 exhibits:
-  - id: warring-states-crystal-cup
-    zone_id: hangzhou-history-demo-zone
-    name: 战国水晶杯
-    aliases:
-      - text: 水晶杯
-        type: short
-      - text: 战国时期水晶杯
-        type: official
-    sources:
-      - id: source-hangzhou-portal-2020
-        title: 杭州公开资料
-        locator: https://example.invalid/source
-        source_type: public_web
-        rights_note: 演示资料，待授权
+  - id: fixture-bronze-bell
+    zone_id: fixture-gallery
+    name: 测试青铜铃
+    aliases: [测试铜铃]
+    status: active
     revision:
-      id: warring-states-crystal-cup-r1
+      id: fixture-bronze-bell-r1
       number: 1
       status: draft
-      reviewed_by: reviewer-id
-      reviewed_at: 2026-08-11T00:00:00Z
-    facts:
-      - id: fact-crystal-cup-material
-        type: material
-        statement: 由一整块天然水晶琢制而成。
-        keywords: [材质, 材料, 水晶]
-        sources: [source-hangzhou-portal-2020]
+      facts:
+        - id: fixture-fact-bronze-material
+          type: material
+          statement: 这是一条测试事实。
+          keywords: [材质, 青铜]
+          confidence: test_fixture
+          sources: [fixture-source-bronze]
 ```
 
 **规则**：
@@ -152,9 +158,9 @@ exhibits:
 - 每件展品最多一个活动 `published` revision；
 - 活动别名跨展品冲突时必须报错；
 - 原始问题保留，不用规范化文本覆盖用户审计记录；
-- fixture 至少包含同义问法、别名、资料不足和诱导编造样本。
+- 内容 fixture 覆盖规范名称与别名；同义问法、资料不足和诱导编造问题归入 `RAG-NEXT-05` 的独立评测集。
 
-**验收**：一份有效包能被完整解析；四类无效包能给出稳定、可定位的错误，不产生半份数据库写入。
+**验收**：已完成。有效三展品内容包能够完整解析；非草稿状态、来源缺失和别名冲突能够一次返回；数据库中途失败不会留下半份写入。
 
 ### RAG-NEXT-02：内容导入与草稿事务
 
@@ -190,6 +196,8 @@ python scripts/import_museum_content.py import --input tests/fixtures/museum_con
 - 导入后仍只能从 `published` 事实生成游客回答。
 
 **证据**：CLI 输出、临时 SQLite 数据库快照、聚焦测试和 `git diff --check`。
+
+**状态**：已完成 `validate`、可选数据库冲突检查和单事务 `draft import`；发布相关命令不在本任务内。
 
 ### RAG-NEXT-03：审核、发布、撤回和回滚
 

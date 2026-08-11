@@ -131,7 +131,7 @@ _INTENT_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
 _FACT_TYPES_BY_INTENT = {
     "dimensions": ("dimensions",),
     "excavation": ("excavation",),
-    "craft": ("research_limit",),
+    "craft": ("craft", "research_limit"),
     "material": ("material",),
     "era": ("era",),
     "appearance": ("appearance",),
