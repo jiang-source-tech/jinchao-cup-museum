@@ -339,6 +339,50 @@ def test_identity_question_gets_a_normal_conversational_reply(tmp_path):
     assert trace["grounding_status"] == "conversational"
 
 
+def test_capability_request_and_joke_refusal_are_helpful_without_context(tmp_path):
+    runtime = _runtime(tmp_path)
+
+    capability = runtime.handle_turn(
+        _request(text="你好，我第一次来博物馆，你能帮我做什么？")
+    )
+    joke = runtime.handle_turn(_request(text="给我讲个笑话吧。"))
+
+    assert capability.knowledge_status == "conversational"
+    assert "讲解" in capability.spoken_text
+    assert "审核" in capability.spoken_text
+    assert joke.knowledge_status == "conversational"
+    assert "暂时不讲笑话" in joke.spoken_text
+    assert "年代、材质、外形或制作方式" in joke.spoken_text
+
+
+def test_one_sentence_child_friendly_request_accepts_grounded_paraphrase(tmp_path):
+    class ChildFriendlyLLM:
+        def response_no_stream(self, _system_prompt, _user_prompt, **_kwargs):
+            return json.dumps(
+                {
+                    "status": "grounded",
+                    "fact_ids": ["fact-crystal-cup-material"],
+                    "social_intent": "",
+                    "answer": "这只杯子由一整块天然水晶琢制而成。",
+                },
+                ensure_ascii=False,
+            )
+
+    runtime = _runtime(tmp_path)
+    first = runtime.handle_turn(
+        _request(text="战国水晶杯是什么？", llm=ChildFriendlyLLM())
+    )
+    follow_up = runtime.handle_turn(
+        _request(text="能不能用一句话讲给小朋友听？", llm=ChildFriendlyLLM())
+    )
+
+    assert first.knowledge_status == "grounded"
+    assert follow_up.knowledge_status == "grounded"
+    assert follow_up.audit_record["resolution_status"] == "inherited"
+    assert follow_up.spoken_text == "这只杯子由一整块天然水晶琢制而成。"
+    assert follow_up.audit_record["guard_result"] == "model_answer_accepted"
+
+
 def test_missing_current_exhibit_is_handled_without_legacy_or_llm_fallback(tmp_path):
     class LLMThatMustNotRun:
         def response(self, *_args, **_kwargs):

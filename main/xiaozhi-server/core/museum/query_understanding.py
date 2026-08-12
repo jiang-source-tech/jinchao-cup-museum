@@ -32,6 +32,11 @@ _SOCIAL_IDENTITY_TERMS = (
     "你是谁",
     "你能做什么",
 )
+_SOCIAL_CAPABILITY_TERMS = (
+    "你能帮我做什么",
+    "你可以帮我做什么",
+    "能帮我做什么",
+)
 _SOCIAL_GREETINGS = {"你好", "您好", "嗨", "哈喽", "hello", "hi", "在吗"}
 _SOCIAL_THANKS = ("谢谢", "感谢", "多谢", "辛苦了")
 _SOCIAL_FAREWELLS = ("再见", "拜拜", "回头见", "下次见")
@@ -214,6 +219,8 @@ def _normalize_text(value: str) -> str:
 
 def _is_social_question(normalized: str) -> bool:
     if normalized in _SOCIAL_GREETINGS:
+        return True
+    if any(term in normalized for term in _SOCIAL_CAPABILITY_TERMS):
         return True
     if any(term in normalized for term in _SOCIAL_IDENTITY_TERMS):
         return True

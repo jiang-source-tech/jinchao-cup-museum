@@ -125,7 +125,8 @@ def build_museum_llm_prompts(
         "JSON字段必须包含status、fact_ids、social_intent、answer。"
         "status只能是grounded、unsupported、conversational之一。"
         "grounded表示一个或多个给定事实可以直接回答问题；"
-        "fact_ids选择最少且不超过3个给定事实ID，answer用中文回答2至4句，"
+        "fact_ids选择最少且不超过3个给定事实ID，answer用中文回答1至4句，"
+        "如果游客要求一句话、简短说明或讲给小朋友听，必须遵守该表达要求，"
         "不得增加事实之外的数字、人物、地点、年代、因果、用途或传说。"
         "unsupported表示给定事实不能直接回答，fact_ids必须是空数组，"
         "social_intent和answer必须是空字符串。"
@@ -140,6 +141,7 @@ def build_museum_llm_prompts(
         f"问题细分类：{understanding.fine_intent}\n"
         f"最近对话：{recent_history}\n"
         f"游客本轮输入：{question}\n"
+        "回答表达：优先遵守游客对篇幅、受众和通俗程度的明确要求。\n"
         f"当前发布且已审核的事实：\n{facts or '（无）'}"
     )
     return system_prompt, user_prompt

@@ -238,6 +238,9 @@ def _local_social_intent(question: str) -> str | None:
         for term in (
             "你会什么",
             "你能做什么",
+            "你能帮我做什么",
+            "你可以帮我做什么",
+            "能帮我做什么",
             "你能干什么",
             "怎么用你",
             "可以问你什么",
@@ -272,6 +275,16 @@ def _local_social_intent(question: str) -> str | None:
     }
     if normalized in greetings:
         return "greeting"
+    if any(
+        term in normalized
+        for term in (
+            "讲个笑话",
+            "讲笑话",
+            "说个笑话",
+            "说笑话",
+        )
+    ):
+        return "out_of_scope"
     return None
 
 
@@ -288,6 +301,10 @@ def _conversational_reply(intent: str) -> str:
         "thanks": "不客气，我们继续看这件展品吧。",
         "farewell": "再见，祝你接下来的参观顺利。",
         "greeting": "你好。你想先了解眼前这件展品的什么？",
+        "out_of_scope": (
+            "我主要负责讲解馆内展品，暂时不讲笑话。"
+            "你可以继续问这件展品的年代、材质、外形或制作方式。"
+        ),
     }.get(intent, "我在。你可以直接问我眼前这件展品。")
 
 
@@ -313,7 +330,7 @@ def _grounded_paraphrase_failure_reason(
         for sentence in re.split(r"[。！？!?；;\n]+", answer)
         if sentence.strip()
     ]
-    if not 2 <= len(sentences) <= 4:
+    if not 1 <= len(sentences) <= 4:
         return "model_answer_shape_rejected"
     for sentence in sentences:
         pairs = _cjk_pairs(sentence)
