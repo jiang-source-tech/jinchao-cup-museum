@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -15,22 +14,12 @@ if str(SERVER_ROOT) not in sys.path:
 
 from config.settings import load_config  # noqa: E402
 from core.museum.embedding import DashScopeTextEmbedder  # noqa: E402
+from core.museum.knowledge_release import (  # noqa: E402
+    build_index_text,
+    prepare_index_records,
+)
 from core.museum.qdrant_index import QdrantFactIndex  # noqa: E402
 from core.museum.store import MuseumStore  # noqa: E402
-
-
-def build_index_text(record: dict[str, object]) -> str:
-    aliases = "、".join(str(value) for value in record.get("aliases", []))
-    keywords = "、".join(str(value) for value in record.get("keywords", []))
-    return "\n".join(
-        (
-            f"展品：{record['exhibit_name']}",
-            f"别名：{aliases}",
-            f"事实类型：{record['fact_type']}",
-            f"事实：{record['statement']}",
-            f"关键词：{keywords}",
-        )
-    )
 
 
 def rebuild_from_config(config: dict) -> dict[str, object]:
@@ -46,7 +35,11 @@ def rebuild_from_config(config: dict) -> dict[str, object]:
         str(retrieval.get("qdrant_url", "http://qdrant:6333"))
     )
     store = MuseumStore(database_path)
-    records = [dict(record) for record in store.published_fact_index_records()]
+    records = prepare_index_records(
+        store.published_fact_index_records(),
+        embedding_model=model,
+        embedding_dimension=dimension,
+    )
     texts = [build_index_text(record) for record in records]
     embedder = DashScopeTextEmbedder(
         api_key=os.getenv("DASHSCOPE_API_KEY", ""),
@@ -58,17 +51,6 @@ def rebuild_from_config(config: dict) -> dict[str, object]:
     vectors: list[list[float]] = []
     for offset in range(0, len(texts), 10):
         vectors.extend(embedder.embed_many(texts[offset : offset + 10]))
-    for record, text in zip(records, texts, strict=True):
-        record.update(
-            {
-                "embedding_model": model,
-                "embedding_dimension": dimension,
-                "index_version": "facts-v1",
-                "content_hash": hashlib.sha256(
-                    text.encode("utf-8")
-                ).hexdigest(),
-            }
-        )
     index = QdrantFactIndex(
         url=qdrant_url,
         collection_name=collection,

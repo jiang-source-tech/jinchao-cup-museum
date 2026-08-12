@@ -265,21 +265,43 @@ class UnansweredIssue:
 
 
 class MuseumStore:
-    def __init__(self, database_path: str | Path):
+    def __init__(
+        self,
+        database_path: str | Path,
+        *,
+        session_idle_ttl_minutes: int = 5,
+        session_max_ttl_minutes: int = 30,
+        read_only: bool = False,
+    ):
+        if session_idle_ttl_minutes <= 0:
+            raise ValueError("session_idle_ttl_minutes must be positive")
+        if session_max_ttl_minutes <= 0:
+            raise ValueError("session_max_ttl_minutes must be positive")
         self.database_path = Path(database_path)
-        self.database_path.parent.mkdir(parents=True, exist_ok=True)
-        self._initialize()
+        self._session_idle_ttl = timedelta(minutes=session_idle_ttl_minutes)
+        self._session_max_ttl = timedelta(minutes=session_max_ttl_minutes)
+        self._read_only = read_only
+        if not self._read_only:
+            self.database_path.parent.mkdir(parents=True, exist_ok=True)
+            self._initialize()
 
     @contextmanager
     def connection(self) -> Iterator[sqlite3.Connection]:
-        connection = sqlite3.connect(self.database_path, timeout=5.0)
+        target: str | Path = self.database_path
+        connect_options: dict[str, Any] = {"timeout": 5.0}
+        if self._read_only:
+            target = self.database_path.resolve().as_uri() + "?mode=ro"
+            connect_options["uri"] = True
+        connection = sqlite3.connect(target, **connect_options)
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON")
         try:
             yield connection
-            connection.commit()
+            if not self._read_only:
+                connection.commit()
         except Exception:
-            connection.rollback()
+            if not self._read_only:
+                connection.rollback()
             raise
         finally:
             connection.close()
@@ -570,24 +592,32 @@ class MuseumStore:
     ) -> tuple[VisitorSession, ExhibitContext] | None:
         now = _as_utc(occurred_at)
         now_iso = _iso(now)
+        latest_valid_start_iso = _iso(now - self._session_max_ttl)
         with self.connection() as connection:
             context_source = "visitor_session"
             if requested_session_id:
                 row = connection.execute(
                     """
                     SELECT * FROM visitor_session
-                    WHERE id = ? AND device_id = ? AND ended_at IS NULL AND expires_at > ?
+                    WHERE id = ? AND device_id = ? AND ended_at IS NULL
+                      AND expires_at > ? AND started_at > ?
                     """,
-                    (requested_session_id, device_id, now_iso),
+                    (
+                        requested_session_id,
+                        device_id,
+                        now_iso,
+                        latest_valid_start_iso,
+                    ),
                 ).fetchone()
             else:
                 row = connection.execute(
                     """
                     SELECT * FROM visitor_session
-                    WHERE device_id = ? AND ended_at IS NULL AND expires_at > ?
+                    WHERE device_id = ? AND ended_at IS NULL
+                      AND expires_at > ? AND started_at > ?
                     ORDER BY started_at DESC LIMIT 1
                     """,
-                    (device_id, now_iso),
+                    (device_id, now_iso, latest_valid_start_iso),
                 ).fetchone()
 
             authoritative_exhibit_id = explicit_exhibit_id or route_exhibit_id
@@ -603,13 +633,13 @@ class MuseumStore:
                 )
                 if row is not None:
                     connection.execute(
-                        "UPDATE visitor_session SET current_exhibit_id = ? WHERE id = ?",
+                        """
+                        UPDATE visitor_session
+                        SET current_exhibit_id = ?
+                        WHERE id = ?
+                        """,
                         (authoritative_exhibit_id, row["id"]),
                     )
-                    row = connection.execute(
-                        "SELECT * FROM visitor_session WHERE id = ?",
-                        (row["id"],),
-                    ).fetchone()
 
             if row is None and authoritative_exhibit_id is None and allow_device_placement:
                 placement = connection.execute(
@@ -629,7 +659,10 @@ class MuseumStore:
 
             if row is None:
                 session_id = uuid.uuid4().hex
-                expires_at = now + timedelta(minutes=30)
+                expires_at = min(
+                    now + self._session_idle_ttl,
+                    now + self._session_max_ttl,
+                )
                 connection.execute(
                     """
                     INSERT INTO visitor_session(
@@ -648,6 +681,20 @@ class MuseumStore:
                 row = connection.execute(
                     "SELECT * FROM visitor_session WHERE id = ?",
                     (session_id,),
+                ).fetchone()
+            else:
+                started_at = _parse_datetime(row["started_at"])
+                expires_at = min(
+                    now + self._session_idle_ttl,
+                    started_at + self._session_max_ttl,
+                )
+                connection.execute(
+                    "UPDATE visitor_session SET expires_at = ? WHERE id = ?",
+                    (_iso(expires_at), row["id"]),
+                )
+                row = connection.execute(
+                    "SELECT * FROM visitor_session WHERE id = ?",
+                    (row["id"],),
                 ).fetchone()
 
             context_row = connection.execute(
@@ -684,6 +731,27 @@ class MuseumStore:
             context_source=context_source,
         )
         return session, context
+
+    def end_session(
+        self,
+        session_id: str,
+        device_id: str,
+        ended_at: datetime,
+    ) -> bool:
+        ended_at_iso = _iso(_as_utc(ended_at))
+        with self.connection() as connection:
+            row = connection.execute(
+                "SELECT ended_at FROM visitor_session WHERE id = ? AND device_id = ?",
+                (session_id, device_id),
+            ).fetchone()
+            if row is None:
+                return False
+            if row["ended_at"] is None:
+                connection.execute(
+                    "UPDATE visitor_session SET ended_at = ? WHERE id = ?",
+                    (ended_at_iso, session_id),
+                )
+        return True
 
     def retrieve_evidence(
         self,

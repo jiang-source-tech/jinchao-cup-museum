@@ -33,6 +33,7 @@ def _runtime(tmp_path):
             "business_runtime": {
                 "type": "museum",
                 "database_path": str(tmp_path / "museum.db"),
+                "seed_demo_content": True,
                 "exhibit_context_mode": "explicit",
             }
         }

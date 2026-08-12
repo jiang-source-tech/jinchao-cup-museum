@@ -211,11 +211,7 @@ class GroundedAnswerService:
 
     @staticmethod
     def _compose_grounded_answer(evidence: EvidenceSnapshot) -> str:
-        statements = "".join(fact.statement for fact in evidence.facts)
-        return (
-            f"根据已审核资料，{statements}"
-            "这轮我只使用了这件展品已经发布的资料，没有补充猜测。"
-        )
+        return "".join(fact.statement for fact in evidence.facts)
 
 def _duration_ms(started: float) -> int:
     return max(0, round((perf_counter() - started) * 1000))
@@ -328,21 +324,21 @@ def _local_social_intent(question: str) -> str | None:
 def _conversational_reply(intent: str) -> str:
     return {
         "identity": (
-            "你好，我是小芯，金潮杯博物馆的现场语音讲解助手。"
-            "你可以直接问我眼前这件展品，我会根据馆方审核资料回答。"
+            "你好，我是金潮杯博物馆讲解助手。"
+            "请说出展品名称和你想了解的内容，我会根据已审核资料回答。"
         ),
         "capability": (
-            "我可以讲解当前展品的已审核信息，也能接着回答你的追问。"
-            "资料没有确认的内容，我会直接告诉你。"
+            "我可以讲解你说出的展品，也能围绕同一件展品继续回答追问。"
+            "我只使用已经审核的资料；没有确认的内容，我会直接告诉你。"
         ),
-        "thanks": "不客气，我们继续看这件展品吧。",
+        "thanks": "不客气。你还可以继续问这件展品，或者说出另一件展品的名称。",
         "farewell": "再见，祝你接下来的参观顺利。",
-        "greeting": "你好。你想先了解眼前这件展品的什么？",
+        "greeting": "你好。请说出你想了解的展品名称。",
         "out_of_scope": (
             "我主要负责讲解馆内展品，暂时不讲笑话。"
-            "你可以继续问这件展品的年代、材质、外形或制作方式。"
+            "你可以问展品的年代、材质、外形或制作方式。"
         ),
-    }.get(intent, "我在。你可以直接问我眼前这件展品。")
+    }.get(intent, "我在。请说出展品名称和你想了解的内容。")
 
 
 def _is_grounded_paraphrase(answer: str, evidence_text: str) -> bool:

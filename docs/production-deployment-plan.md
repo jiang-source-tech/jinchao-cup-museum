@@ -31,7 +31,9 @@
 | WebSocket | `8000`，正式路径 `/museum/v1/` |
 | HTTP/OTA | `8003`，正式路径 `/museum/ota/` |
 | 镜像标签 | `jinchao-museum-server:<服务端提交短 SHA>` |
-| 健康入口 | `GET http://127.0.0.1:8003/museum/ota/` |
+| 进程存活入口 | `GET http://127.0.0.1:8003/museum/health/live` |
+| RAG 就绪入口 | `GET http://127.0.0.1:8003/museum/health/ready` |
+| OTA 入口 | `GET http://127.0.0.1:8003/museum/ota/` |
 
 代码目录和数据目录必须独立。不得把新仓库克隆到旧项目目录，也不得把旧项目 `data` 目录挂载给新容器。
 
@@ -102,12 +104,18 @@ docker compose \
 ## 部署后验收
 
 1. 容器状态为 running，且镜像标签与服务端提交一致。
-2. `GET http://127.0.0.1:8003/museum/ota/` 返回成功状态和 `/museum/v1/` WebSocket 地址。
-3. `8000` 只接受 `/museum/v1/` WebSocket；旧传输路径、旧控制台、小程序和 Xiaoxin 业务接口必须不可达。
-4. 日志不出现课程、待办、学生、Doorbell、Overview、Voiceprint 或主动陪伴调度器。
-5. 容器挂载源为 `/opt/jinchao-cup-museum-data`，目录中不存在禁止项。
-6. 通过文字或模拟客户端验证“你好，你是谁”可以正常回答博物馆身份。
-7. 真机验证必须另行记录设备标识、固件提交、服务端提交、连接地址、操作步骤和实际表现。
+2. `GET http://127.0.0.1:8003/museum/health/live` 返回 `live=true`；该入口只证明进程存活。
+3. `GET http://127.0.0.1:8003/museum/health/ready` 返回 `ready=true`。hybrid 模式必须同时通过 SQLite 完整性、已发布事实存在和 Qdrant 全量事实 ID、展品 ID、事实类型、revision、来源、模型、维度、索引版本、内容哈希一致性检查。
+4. 运行 `verify_museum_knowledge_release.py --qdrant-url http://127.0.0.1:6333 --pretty`，保存 `release_id`、`content_set_hash`、事实数和校验结果。该命令失败时不得继续业务验收。
+5. `GET http://127.0.0.1:8003/museum/ota/` 返回成功状态和 `/museum/v1/` WebSocket 地址。
+6. `8000` 只接受 `/museum/v1/` WebSocket；旧传输路径、旧控制台、小程序和 Xiaoxin 业务接口必须不可达。
+7. 通过生产文本接口执行至少一条 grounded、unsupported 和连续追问用例，并按 `request_id` 复核 interaction trace。
+
+Compose 的容器 healthcheck 使用 `/museum/health/live`，不使用 readiness。索引重建或内容发布窗口内 readiness 可以暂时失败，但不得因此触发容器自动重启；readiness 用于部署门禁和停止切流。
+8. 日志不出现课程、待办、学生、Doorbell、Overview、Voiceprint 或主动陪伴调度器。
+9. 容器挂载源为 `/opt/jinchao-cup-museum-data`，目录中不存在禁止项。
+10. 通过文字或模拟客户端验证“你好，你是谁”可以正常回答博物馆身份。
+11. 真机验证必须另行记录设备标识、固件提交、服务端提交、连接地址、操作步骤和实际表现。
 
 ## 回滚
 

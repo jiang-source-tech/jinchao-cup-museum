@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from datetime import datetime
 from time import perf_counter
 
 from core.conversation_runtime import TurnOutcome, TurnRequest
@@ -29,6 +30,14 @@ class MuseumRuntime:
 
     def get_interaction_trace_by_request_id(self, request_id: str):
         return self._store.get_interaction_trace_by_request_id(request_id)
+
+    def end_session(
+        self,
+        session_id: str,
+        device_id: str,
+        ended_at: datetime,
+    ) -> bool:
+        return self._store.end_session(session_id, device_id, ended_at)
 
     def open_session(self, request: TurnRequest) -> TurnOutcome:
         started = perf_counter()

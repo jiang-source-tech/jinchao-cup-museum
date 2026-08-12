@@ -38,8 +38,19 @@ def create_conversation_runtime(
     database_path = Path(
         str(runtime_config.get("database_path", "data/museum_demo.db"))
     )
-    store = MuseumStore(database_path)
-    store.seed_demo_content()
+    session_idle_ttl_minutes = int(
+        runtime_config.get("session_idle_ttl_minutes", 5)
+    )
+    session_max_ttl_minutes = int(
+        runtime_config.get("session_max_ttl_minutes", 30)
+    )
+    store = MuseumStore(
+        database_path,
+        session_idle_ttl_minutes=session_idle_ttl_minutes,
+        session_max_ttl_minutes=session_max_ttl_minutes,
+    )
+    if bool(runtime_config.get("seed_demo_content", False)):
+        store.seed_demo_content()
     retrieval_config = runtime_config.get("retrieval", {})
     if not isinstance(retrieval_config, Mapping):
         raise ValueError("business_runtime.retrieval must be a mapping")

@@ -26,10 +26,15 @@ class QdrantFactIndex:
         collection_name: str,
         dimension: int,
         timeout_seconds: float = 2.0,
+        client: QdrantClient | None = None,
     ):
         self.collection_name = collection_name
         self.dimension = dimension
-        self._client = QdrantClient(url=url, timeout=timeout_seconds)
+        self._client = (
+            client
+            if client is not None
+            else QdrantClient(url=url, timeout=timeout_seconds)
+        )
 
     def search(
         self,
@@ -143,6 +148,22 @@ class QdrantFactIndex:
                 exact=True,
             ).count
         )
+
+    def all_payloads(self, *, page_size: int = 256) -> tuple[dict[str, Any], ...]:
+        payloads: list[dict[str, Any]] = []
+        offset = None
+        while True:
+            points, next_offset = self._client.scroll(
+                collection_name=self.collection_name,
+                limit=page_size,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            payloads.extend(dict(point.payload or {}) for point in points)
+            if next_offset is None:
+                return tuple(payloads)
+            offset = next_offset
 
     def _switch_alias(self, build_name: str) -> str | None:
         aliases = self._client.get_aliases().aliases

@@ -112,6 +112,15 @@ class MuseumTextChatSession:
         return outcome
 
     def reset(self) -> None:
+        old_visitor_session_id = self.visitor_session_id
+        old_device_id = self.device_id
+        end_session = getattr(self.runtime, "end_session", None)
+        if old_visitor_session_id and callable(end_session):
+            end_session(
+                old_visitor_session_id,
+                old_device_id,
+                datetime.now().astimezone(),
+            )
         self._generation += 1
         self.transport_session_id = uuid.uuid4().hex
         self.visitor_session_id = None
@@ -186,7 +195,7 @@ def print_outcome(outcome: TurnOutcome, *, as_json: bool = False) -> None:
     if as_json:
         print(json.dumps(payload, ensure_ascii=False))
         return
-    print(f"小芯> {payload['answer']}")
+    print(f"讲解助手> {payload['answer']}")
     print(
         "     "
         f"状态={payload['knowledge_status']} "

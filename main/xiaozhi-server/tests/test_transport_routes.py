@@ -24,8 +24,9 @@ class _Handler:
         return web.Response()
 
 
-def test_http_server_registers_only_museum_ota_routes():
+def test_http_server_registers_only_museum_routes():
     server = SimpleHttpServer.__new__(SimpleHttpServer)
+    server.config = {}
     server.ota_handler = _Handler()
     server.vision_handler = _Handler()
 
@@ -37,6 +38,8 @@ def test_http_server_registers_only_museum_ota_routes():
     assert ("GET", "/museum/ota/") in routes
     assert ("POST", "/museum/ota/") in routes
     assert ("GET", "/museum/ota/artifacts/{sha256}.bin") in routes
+    assert ("GET", "/museum/health/live") in routes
+    assert ("GET", "/museum/health/ready") in routes
     assert all("/xiaoxin/" not in path for _, path in routes)
     assert all("/xiaozhi/" not in path for _, path in routes)
     assert all("/activate" not in path for _, path in routes)

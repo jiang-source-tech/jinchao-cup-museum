@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 from aiohttp import web
 
@@ -6,6 +7,7 @@ from config.logger import setup_logging
 from core.api.ota_handler import OTAHandler
 from core.api.vision_handler import VisionHandler
 from core.firmware_release import FirmwareReleaseCatalog
+from core.museum.readiness import check_museum_readiness
 
 TAG = __name__
 
@@ -35,6 +37,16 @@ class SimpleHttpServer:
             return websocket_config
         return f"ws://{local_ip}:{port}/museum/v1/"
 
+    async def handle_live(self, _request: web.Request) -> web.Response:
+        return web.json_response({"live": True})
+
+    async def handle_ready(self, _request: web.Request) -> web.Response:
+        result = check_museum_readiness(
+            self.config,
+            server_root=Path(__file__).resolve().parents[1],
+        )
+        return web.json_response(result, status=200 if result["ready"] else 503)
+
     def build_app(self) -> web.Application:
         app = web.Application()
         ota_routes = [
@@ -51,6 +63,13 @@ class SimpleHttpServer:
             ),
         ]
         app.add_routes(ota_routes)
+
+        app.add_routes(
+            [
+                web.get("/museum/health/live", self.handle_live),
+                web.get("/museum/health/ready", self.handle_ready),
+            ]
+        )
 
         app.add_routes(
             [

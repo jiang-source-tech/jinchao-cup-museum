@@ -25,11 +25,42 @@ def _runtime(tmp_path, **runtime_overrides):
         "business_runtime": {
             "type": "museum",
             "database_path": str(tmp_path / "museum.db"),
+            "seed_demo_content": True,
             "exhibit_context_mode": "explicit",
             **runtime_overrides,
         }
     }
     return create_conversation_runtime(config)
+
+
+def test_demo_content_requires_an_explicit_runtime_flag(tmp_path):
+    database_path = tmp_path / "museum.db"
+
+    create_conversation_runtime(
+        {
+            "business_runtime": {
+                "type": "museum",
+                "database_path": str(database_path),
+                "exhibit_context_mode": "explicit",
+            }
+        }
+    )
+    store = MuseumStore(database_path)
+    with store.connection() as connection:
+        assert connection.execute("SELECT COUNT(*) FROM exhibit").fetchone()[0] == 0
+
+    create_conversation_runtime(
+        {
+            "business_runtime": {
+                "type": "museum",
+                "database_path": str(database_path),
+                "seed_demo_content": True,
+                "exhibit_context_mode": "explicit",
+            }
+        }
+    )
+    with store.connection() as connection:
+        assert connection.execute("SELECT COUNT(*) FROM exhibit").fetchone()[0] == 1
 
 
 def test_published_fact_produces_grounded_answer_and_trace(tmp_path):
@@ -300,7 +331,7 @@ def test_identity_question_gets_a_normal_conversational_reply(tmp_path):
 
     assert outcome.handled is True
     assert outcome.knowledge_status == "conversational"
-    assert "小芯" in outcome.spoken_text
+    assert "小芯" not in outcome.spoken_text
     assert "金潮杯博物馆" in outcome.spoken_text
     assert "不能替它补一个答案" not in outcome.spoken_text
     assert outcome.fact_ids == ()
@@ -317,6 +348,7 @@ def test_identity_question_gets_a_normal_conversational_reply(tmp_path):
             "business_runtime": {
                 "type": "museum",
                 "database_path": str(tmp_path / "museum.db"),
+                "seed_demo_content": True,
                 "exhibit_context_mode": "explicit",
                 "auto_assign_unknown_devices": False,
             }
@@ -393,6 +425,7 @@ def test_missing_current_exhibit_is_handled_without_legacy_or_llm_fallback(tmp_p
             "business_runtime": {
                 "type": "museum",
                 "database_path": str(tmp_path / "museum.db"),
+                "seed_demo_content": True,
                 "auto_assign_unknown_devices": False,
             }
         }

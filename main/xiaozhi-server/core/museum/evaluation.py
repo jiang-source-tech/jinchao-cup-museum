@@ -5,7 +5,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 import re
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from core.conversation_runtime import TurnRequest
 from core.museum.content_import import (
@@ -87,6 +87,7 @@ def prepare_evaluation_runtime(
     database_path: str | Path,
     server_root: str | Path,
     fixture: Mapping[str, Any],
+    retriever_factory: Callable[[MuseumStore], Any] | None = None,
 ) -> MuseumRuntime:
     root = Path(server_root).resolve()
     store = MuseumStore(database_path)
@@ -110,7 +111,12 @@ def prepare_evaluation_runtime(
                 published_by="rag-evaluator",
                 published_at=occurred_at,
             )
-    return MuseumRuntime(store, exhibit_context_mode="explicit")
+    retriever = retriever_factory(store) if retriever_factory else None
+    return MuseumRuntime(
+        store,
+        retriever=retriever,
+        exhibit_context_mode="explicit",
+    )
 
 
 def run_evaluation(

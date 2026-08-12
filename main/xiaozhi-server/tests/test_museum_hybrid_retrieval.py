@@ -107,7 +107,7 @@ def test_dense_recall_fills_a_real_understanding_gap(tmp_path, monkeypatch):
         candidate["fact_id"]
         for candidate in answer.retrieval_trace["dense_candidates"]
     ] == ["fact-crystal-cup-material"]
-    assert index.last_fact_types == ()
+    assert index.last_fact_types == ("material",)
 
     appearance_index = InspectingIndex(
         (
@@ -133,6 +133,7 @@ def test_dense_recall_fills_a_real_understanding_gap(tmp_path, monkeypatch):
     assert appearance_answer.evidence.fact_ids == (
         "fact-crystal-cup-appearance",
     )
+    assert appearance_index.last_fact_types == ("appearance",)
 
     captured = {}
 

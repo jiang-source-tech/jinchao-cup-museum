@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import subprocess
 import sys
@@ -8,6 +9,7 @@ import sys
 import pytest
 
 from core.business_runtime_factory import create_conversation_runtime
+from core.museum.store import DEMO_EXHIBIT_ID, MuseumStore
 from scripts.museum_text_chat import (
     MuseumTextChatSession,
     initialize_chat_llm,
@@ -21,6 +23,7 @@ def _session(tmp_path) -> MuseumTextChatSession:
             "business_runtime": {
                 "type": "museum",
                 "database_path": str(tmp_path / "museum.db"),
+                "seed_demo_content": True,
                 "exhibit_context_mode": "explicit",
             }
         }
@@ -43,12 +46,61 @@ def test_text_chat_keeps_session_context_and_history(tmp_path):
     assert len(session.history) == 4
 
 
+def test_session_idle_expiry_renews_only_until_maximum_lifetime(tmp_path):
+    store = MuseumStore(
+        tmp_path / "museum.db",
+        session_idle_ttl_minutes=5,
+        session_max_ttl_minutes=30,
+    )
+    store.seed_demo_content()
+    started_at = datetime(2026, 8, 12, 8, 0, tzinfo=timezone.utc)
+
+    created, _ = store.resolve_or_create_session(
+        device_id="ttl-device",
+        occurred_at=started_at,
+        explicit_exhibit_id=DEMO_EXHIBIT_ID,
+        allow_device_placement=False,
+    )
+    current = created
+    for elapsed_minutes in range(4, 29, 4):
+        current, _ = store.resolve_or_create_session(
+            device_id="ttl-device",
+            occurred_at=started_at + timedelta(minutes=elapsed_minutes),
+            requested_session_id=created.id,
+            allow_device_placement=False,
+        )
+
+    assert current.id == created.id
+    assert current.expires_at == started_at + timedelta(minutes=30)
+
+    replacement, _ = store.resolve_or_create_session(
+        device_id="ttl-device",
+        occurred_at=started_at + timedelta(minutes=30),
+        explicit_exhibit_id=DEMO_EXHIBIT_ID,
+        allow_device_placement=False,
+    )
+    assert replacement.id != created.id
+
+
 def test_reset_clears_exhibit_context_by_starting_a_new_device_session(tmp_path):
     session = _session(tmp_path)
     session.ask("战国水晶杯是什么材质？")
     previous_device_id = session.device_id
+    previous_session_id = session.visitor_session_id
 
     session.reset()
+    store = MuseumStore(tmp_path / "museum.db")
+    with store.connection() as connection:
+        ended_at = connection.execute(
+            "SELECT ended_at FROM visitor_session WHERE id = ? AND device_id = ?",
+            (previous_session_id, previous_device_id),
+        ).fetchone()["ended_at"]
+    assert ended_at is not None
+    assert session.runtime.end_session(
+        previous_session_id,
+        previous_device_id,
+        datetime.now().astimezone(),
+    ) is True
     outcome = session.ask("它是怎么做出来的？")
 
     assert session.device_id != previous_device_id
@@ -62,6 +114,7 @@ def test_separate_text_chat_instances_do_not_share_exhibit_context(tmp_path):
             "business_runtime": {
                 "type": "museum",
                 "database_path": str(tmp_path / "museum.db"),
+                "seed_demo_content": True,
                 "exhibit_context_mode": "explicit",
             }
         }

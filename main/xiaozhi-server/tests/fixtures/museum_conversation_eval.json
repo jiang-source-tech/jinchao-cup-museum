@@ -1,10 +1,13 @@
 {
   "version": 2,
-  "description": "杭州馆方五件藏品的服务端文本评测集；真实 LLM 与规则基线使用相同输入，但不包含麦克风、ASR、TTS 或扬声器验收。",
+  "description": "杭州馆方十七件正式藏品的服务端文本最低覆盖评测集；真实 LLM 与规则基线使用相同输入，但不包含麦克风、ASR、TTS 或扬声器验收，也不代表已经达到完整黄金集规模。",
   "content_packages": [
     "content/museum/liangzhu-museum.yaml",
+    "content/museum/liangzhu-museum-batch-2.yaml",
     "content/museum/hangzhou-west-lake-museum.yaml",
-    "content/museum/china-national-silk-museum.yaml"
+    "content/museum/hangzhou-west-lake-museum-batch-2.yaml",
+    "content/museum/china-national-silk-museum.yaml",
+    "content/museum/china-national-silk-museum-batch-2.yaml"
   ],
   "thresholds": {
     "canonical_name_accuracy": 1.0,
@@ -718,6 +721,434 @@
           "expected": {
             "knowledge_status": "conversational",
             "context_exhibit_id": "liangzhu-jade-trident",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-jade-bird-dimensions",
+      "category": "collection_coverage_grounded",
+      "turns": [
+        {
+          "text": "反山M14玉鸟有多大？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-bird-fanshan-m14-259",
+            "fact_ids": ["fact-liangzhu-jade-bird-dimensions"],
+            "source_ids": ["source-liangzhu-jade-bird-fanshan-m14-259"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-jade-cong-dimensions",
+      "category": "collection_coverage_grounded",
+      "turns": [
+        {
+          "text": "瑶山M7:50玉琮有多大？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-cong-yaoshan-m7-50",
+            "fact_ids": ["fact-liangzhu-cong-m7-50-dimensions"],
+            "source_ids": ["source-liangzhu-jade-cong-yaoshan-m7-50"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-jade-bi-dimensions",
+      "category": "collection_coverage_grounded",
+      "turns": [
+        {
+          "text": "反山M14:223玉璧有多大？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-bi-fanshan-m14-223",
+            "fact_ids": ["fact-liangzhu-bi-m14-223-dimensions"],
+            "source_ids": ["source-liangzhu-jade-bi-fanshan-m14-223"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-plain-cong-dimensions",
+      "category": "collection_coverage_grounded",
+      "turns": [
+        {
+          "text": "吴家埠素面琮有多大？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-plain-cong-wujiabu",
+            "fact_ids": ["fact-liangzhu-plain-cong-dimensions"],
+            "source_ids": ["source-liangzhu-plain-cong-wujiabu"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-gui-incense-burner-dimensions",
+      "category": "collection_coverage_grounded",
+      "turns": [
+        {
+          "text": "南宋官窑青瓷簋式炉有多大？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-gui-incense-burner",
+            "fact_ids": ["fact-west-lake-gui-dimensions"],
+            "source_ids": ["source-west-lake-gui-incense-burner-854"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-sagger-pad-dimensions",
+      "category": "collection_coverage_grounded",
+      "turns": [
+        {
+          "text": "南宋官窑“大宋国物”垫饼有多大？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-dasong-guowu-sagger-pad",
+            "fact_ids": ["fact-west-lake-sagger-pad-dimensions"],
+            "source_ids": ["source-west-lake-dasong-guowu-sagger-pad-856"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-yue-cup-stand-dimensions",
+      "category": "collection_coverage_grounded",
+      "turns": [
+        {
+          "text": "五代至北宋越窑青釉水波纹盏托有多大？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "five-dynasties-northern-song-yue-celadon-cup-stand",
+            "fact_ids": ["fact-west-lake-yue-cup-stand-dimensions"],
+            "source_ids": ["source-west-lake-yue-celadon-cup-stand-858"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-funerary-jar-dimensions",
+      "category": "collection_coverage_grounded",
+      "turns": [
+        {
+          "text": "三国青釉堆塑罐有多大？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "three-kingdoms-celadon-funerary-jar",
+            "fact_ids": ["fact-west-lake-funerary-jar-dimensions"],
+            "source_ids": ["source-west-lake-three-kingdoms-celadon-funerary-jar-859"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-figured-damask-robe-dimensions",
+      "category": "collection_coverage_grounded",
+      "turns": [
+        {
+          "text": "环人物纹绫袍有多大？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "northern-dynasties-figured-damask-robe",
+            "fact_ids": ["fact-silk-figured-damask-robe-dimensions"],
+            "source_ids": ["source-china-silk-figured-damask-robe-1819"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-blue-gauze-robe-era",
+      "category": "collection_coverage_grounded",
+      "turns": [
+        {
+          "text": "深蓝色菱纹罗袍是什么年代的？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "tang-dark-blue-diamond-gauze-robe",
+            "fact_ids": ["fact-silk-blue-gauze-robe-era"],
+            "source_ids": ["source-china-silk-blue-gauze-robe-1827"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-gold-damask-robe-dimensions",
+      "category": "collection_coverage_grounded",
+      "turns": [
+        {
+          "text": "织金绫大袖袍有多大？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "yuan-gold-damask-wide-sleeve-robe",
+            "fact_ids": ["fact-silk-gold-damask-robe-dimensions"],
+            "source_ids": ["source-china-silk-gold-damask-wide-sleeve-robe-1853"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-shi-fragment-dimensions",
+      "category": "collection_coverage_grounded",
+      "turns": [
+        {
+          "text": "絁袍残片有多大？",
+          "metrics": ["grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liao-shi-robe-fragment",
+            "fact_ids": ["fact-silk-shi-fragment-dimensions"],
+            "source_ids": ["source-china-silk-shi-robe-fragment-2466"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-unsupported-bagua-price",
+      "category": "collection_coverage_unsupported",
+      "turns": [
+        {
+          "text": "南宋官窑青瓷八卦熏炉盖现在市场价多少钱？",
+          "metrics": ["unsupported_no_hallucination", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-bagua-incense-lid",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-unsupported-silk-price",
+      "category": "collection_coverage_unsupported",
+      "turns": [
+        {
+          "text": "清玄色地团花蝴蝶纹袍料现在市场价多少钱？",
+          "metrics": ["unsupported_no_hallucination", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "qing-butterfly-medallion-robe-fabric",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-unsupported-jade-bird-price",
+      "category": "collection_coverage_unsupported",
+      "turns": [
+        {
+          "text": "反山M14玉鸟现在市场价多少钱？",
+          "metrics": ["unsupported_no_hallucination", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-bird-fanshan-m14-259",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-unsupported-jade-cong-price",
+      "category": "collection_coverage_unsupported",
+      "turns": [
+        {
+          "text": "瑶山M7:50玉琮现在市场价多少钱？",
+          "metrics": ["unsupported_no_hallucination", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-cong-yaoshan-m7-50",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-unsupported-jade-bi-price",
+      "category": "collection_coverage_unsupported",
+      "turns": [
+        {
+          "text": "反山M14:223玉璧现在市场价多少钱？",
+          "metrics": ["unsupported_no_hallucination", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-bi-fanshan-m14-223",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-unsupported-plain-cong-price",
+      "category": "collection_coverage_unsupported",
+      "turns": [
+        {
+          "text": "吴家埠素面琮现在市场价多少钱？",
+          "metrics": ["unsupported_no_hallucination", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-plain-cong-wujiabu",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-unsupported-gui-price",
+      "category": "collection_coverage_unsupported",
+      "turns": [
+        {
+          "text": "南宋官窑青瓷簋式炉现在市场价多少钱？",
+          "metrics": ["unsupported_no_hallucination", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-gui-incense-burner",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-unsupported-sagger-pad-price",
+      "category": "collection_coverage_unsupported",
+      "turns": [
+        {
+          "text": "南宋官窑“大宋国物”垫饼现在市场价多少钱？",
+          "metrics": ["unsupported_no_hallucination", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-dasong-guowu-sagger-pad",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-unsupported-yue-cup-stand-price",
+      "category": "collection_coverage_unsupported",
+      "turns": [
+        {
+          "text": "五代至北宋越窑青釉水波纹盏托现在市场价多少钱？",
+          "metrics": ["unsupported_no_hallucination", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "five-dynasties-northern-song-yue-celadon-cup-stand",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-unsupported-funerary-jar-price",
+      "category": "collection_coverage_unsupported",
+      "turns": [
+        {
+          "text": "三国青釉堆塑罐现在市场价多少钱？",
+          "metrics": ["unsupported_no_hallucination", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "three-kingdoms-celadon-funerary-jar",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-unsupported-figured-damask-robe-price",
+      "category": "collection_coverage_unsupported",
+      "turns": [
+        {
+          "text": "环人物纹绫袍现在市场价多少钱？",
+          "metrics": ["unsupported_no_hallucination", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "northern-dynasties-figured-damask-robe",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-unsupported-blue-gauze-robe-price",
+      "category": "collection_coverage_unsupported",
+      "turns": [
+        {
+          "text": "深蓝色菱纹罗袍现在市场价多少钱？",
+          "metrics": ["unsupported_no_hallucination", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "tang-dark-blue-diamond-gauze-robe",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-unsupported-gold-damask-robe-price",
+      "category": "collection_coverage_unsupported",
+      "turns": [
+        {
+          "text": "织金绫大袖袍现在市场价多少钱？",
+          "metrics": ["unsupported_no_hallucination", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "yuan-gold-damask-wide-sleeve-robe",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-unsupported-shi-fragment-price",
+      "category": "collection_coverage_unsupported",
+      "turns": [
+        {
+          "text": "絁袍残片现在市场价多少钱？",
+          "metrics": ["unsupported_no_hallucination", "grounded_boundary", "audit_reproducibility"],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liao-shi-robe-fragment",
             "fact_ids": []
           }
         }

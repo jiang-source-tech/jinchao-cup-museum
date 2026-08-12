@@ -46,6 +46,7 @@ def test_llm_json_contract_and_audit_metadata_are_persisted(tmp_path):
             "business_runtime": {
                 "type": "museum",
                 "database_path": str(database),
+                "seed_demo_content": True,
                 "exhibit_context_mode": "explicit",
             }
         }
@@ -97,6 +98,7 @@ def test_invalid_llm_response_uses_deterministic_fallback_and_is_auditable(tmp_p
             "business_runtime": {
                 "type": "museum",
                 "database_path": str(database),
+                "seed_demo_content": True,
                 "exhibit_context_mode": "explicit",
             }
         }
@@ -122,6 +124,7 @@ def test_llm_contract_rejects_wrong_field_shapes(tmp_path):
             "business_runtime": {
                 "type": "museum",
                 "database_path": str(tmp_path / "museum.db"),
+                "seed_demo_content": True,
                 "exhibit_context_mode": "explicit",
             }
         }
@@ -152,6 +155,7 @@ def test_grounded_llm_response_cannot_mix_in_a_social_intent(tmp_path):
             "business_runtime": {
                 "type": "museum",
                 "database_path": str(tmp_path / "museum.db"),
+                "seed_demo_content": True,
                 "exhibit_context_mode": "explicit",
             }
         }

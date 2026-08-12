@@ -63,8 +63,12 @@ TTS: {}
 business_runtime:
   type: museum
   database_path: data/museum_demo.db
+  # 仅供本地演示。生产环境必须保持 false，正式内容通过内容包发布。
+  seed_demo_content: false
   exhibit_context_mode: explicit
   auto_assign_unknown_devices: false
+  session_idle_ttl_minutes: 5
+  session_max_ttl_minutes: 30
   retrieval:
     # rules 保持原检索；shadow 只记录向量对照；hybrid 启用融合结果。
     mode: rules

@@ -181,7 +181,7 @@ class HybridEvidenceRetriever:
                 dense = self._index.search(
                     vector=vector,
                     exhibit_id=request.exhibit_id,
-                    fact_types=(),
+                    fact_types=request.dense_fact_types,
                     limit=max(self._dense_limit, request.limit),
                 )
                 diagnostics.stage_latency_ms["dense"] = _duration_ms(dense_started)
