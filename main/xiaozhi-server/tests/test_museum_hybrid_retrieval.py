@@ -99,7 +99,10 @@ def test_dense_recall_fills_a_real_understanding_gap(tmp_path, monkeypatch):
     assert answer.fine_intent == "material"
     assert answer.evidence is not None
     assert answer.evidence.fact_ids == ("fact-crystal-cup-material",)
-    assert answer.retrieval_trace["lexical_candidates"] == []
+    assert [
+        candidate["fact_id"]
+        for candidate in answer.retrieval_trace["lexical_candidates"]
+    ] == ["fact-crystal-cup-material"]
     assert [
         candidate["fact_id"]
         for candidate in answer.retrieval_trace["dense_candidates"]

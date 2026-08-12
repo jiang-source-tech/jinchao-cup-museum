@@ -1,6 +1,11 @@
+import json
+from pathlib import Path
+
 import pytest
 
+from core.museum.evaluation import prepare_evaluation_runtime
 from core.museum.query_understanding import understand_question
+from core.museum.store import DEMO_EXHIBIT_ID, MuseumStore
 
 
 def test_understanding_uses_coarse_and_fine_intents():
@@ -90,3 +95,62 @@ def test_understanding_covers_natural_museum_usage_questions(
     assert result.coarse_intent == "exhibit_knowledge"
     assert result.fine_intent == expected_intent
     assert result.fact_types == expected_fact_types
+
+
+@pytest.mark.parametrize(
+    ("exhibit_id", "question", "expected_fact_id"),
+    (
+        (
+            "warring-states-crystal-cup",
+            "古人拿哪种矿物琢成了这个杯子？",
+            "fact-crystal-cup-material",
+        ),
+        (
+            "liangzhu-jade-yue-set",
+            "这套东西是不是代表了主人的权力？",
+            "fact-liangzhu-yue-usage",
+        ),
+        (
+            "liangzhu-jade-trident",
+            "它原来戴在身体哪个位置？",
+            "fact-liangzhu-trident-usage",
+        ),
+        (
+            "southern-song-guan-bagua-incense-lid",
+            "上面的洞除了好看还有什么用？",
+            "fact-west-lake-bagua-usage",
+        ),
+    ),
+)
+def test_natural_questions_reach_published_facts_through_lexical_fallback(
+    tmp_path,
+    exhibit_id,
+    question,
+    expected_fact_id,
+):
+    server_root = Path(__file__).resolve().parents[1]
+    if exhibit_id == DEMO_EXHIBIT_ID:
+        store = MuseumStore(tmp_path / "museum.db")
+        store.seed_demo_content()
+    else:
+        fixture = json.loads(
+            (
+                server_root / "tests/fixtures/museum_conversation_eval.json"
+            ).read_text(encoding="utf-8")
+        )
+        runtime = prepare_evaluation_runtime(
+            database_path=tmp_path / "museum.db",
+            server_root=server_root,
+            fixture=fixture,
+        )
+        store = runtime._store
+    understanding = understand_question(question)
+
+    candidates = store.lexical_fact_candidates(
+        exhibit_id=exhibit_id,
+        question=question,
+        fact_types=understanding.fact_types,
+        query_terms=understanding.query_terms,
+    )
+
+    assert candidates[0][0] == expected_fact_id

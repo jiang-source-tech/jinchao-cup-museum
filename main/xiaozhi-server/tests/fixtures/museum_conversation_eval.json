@@ -420,8 +420,8 @@
           },
           "expected_by_mode": {
             "rules": {
-              "knowledge_status": "unsupported",
-              "fact_ids": []
+              "knowledge_status": "grounded",
+              "fact_ids": ["fact-liangzhu-trident-usage"]
             },
             "llm": {
               "knowledge_status": "grounded",
@@ -475,8 +475,8 @@
           },
           "expected_by_mode": {
             "rules": {
-              "knowledge_status": "unsupported",
-              "fact_ids": []
+              "knowledge_status": "grounded",
+              "fact_ids": ["fact-west-lake-bagua-usage"]
             },
             "llm": {
               "knowledge_status": "grounded",
@@ -500,8 +500,8 @@
           },
           "expected_by_mode": {
             "rules": {
-              "knowledge_status": "unsupported",
-              "fact_ids": []
+              "knowledge_status": "grounded",
+              "fact_ids": ["fact-liangzhu-yue-usage"]
             },
             "llm": {
               "knowledge_status": "grounded",

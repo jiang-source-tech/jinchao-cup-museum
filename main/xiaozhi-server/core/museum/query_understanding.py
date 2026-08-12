@@ -127,6 +127,8 @@ _INTENT_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
             "佩戴在哪里",
             "佩戴位置",
             "有什么用",
+            "干什么用",
+            "用来干什么",
             "什么用途",
             "什么作用",
             "代表权力",
@@ -176,8 +178,10 @@ _FACT_TYPES_BY_INTENT = {
 
 _RETRIEVAL_TERMS_BY_INTENT = {
     # Normalize colloquial ways of asking about making an object into the
-    # vocabulary used by the published research-limit fact.
+    # vocabulary used by published facts.
     "craft": ("工艺", "制作", "怎么做"),
+    "material": ("材质",),
+    "usage": ("用途",),
 }
 
 
