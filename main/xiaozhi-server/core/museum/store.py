@@ -371,6 +371,12 @@ class MuseumStore:
                 "llm_response_summary",
                 "TEXT NOT NULL DEFAULT '{}'",
             )
+            _ensure_column(
+                connection,
+                "interaction_trace",
+                "retrieval_trace_json",
+                "TEXT NOT NULL DEFAULT '{}'",
+            )
             fts_columns = {
                 row["name"]
                 for row in connection.execute(
@@ -689,6 +695,30 @@ class MuseumStore:
         query_terms: tuple[str, ...] = (),
         overview: bool = False,
     ) -> EvidenceSnapshot | None:
+        candidates = self.lexical_fact_candidates(
+            exhibit_id=exhibit_id,
+            question=question,
+            limit=max(limit, 12),
+            fact_types=fact_types,
+            query_terms=query_terms,
+            overview=overview,
+        )
+        return self.hydrate_published_facts(
+            exhibit_id=exhibit_id,
+            fact_ids=tuple(fact_id for fact_id, _ in candidates),
+            limit=limit,
+        )
+
+    def lexical_fact_candidates(
+        self,
+        *,
+        exhibit_id: str,
+        question: str,
+        limit: int = 12,
+        fact_types: tuple[str, ...] | None = None,
+        query_terms: tuple[str, ...] = (),
+        overview: bool = False,
+    ) -> tuple[tuple[str, float], ...]:
         with self.connection() as connection:
             revision = connection.execute(
                 """
@@ -699,7 +729,7 @@ class MuseumStore:
                 (exhibit_id,),
             ).fetchone()
             if revision is None:
-                return None
+                return ()
             rows = connection.execute(
                 """
                 SELECT f.id, f.fact_type, f.statement, f.keywords_json,
@@ -716,7 +746,7 @@ class MuseumStore:
                 (revision["id"],),
             ).fetchall()
             if not rows:
-                return None
+                return ()
             fts_ids = self._fts_candidate_ids(
                 connection,
                 exhibit_id=exhibit_id,
@@ -777,22 +807,167 @@ class MuseumStore:
                 scored.append((score, row))
 
         if not scored:
-            return None
+            return ()
         scored.sort(key=lambda item: (-item[0], item[1]["id"]))
+        return tuple(
+            (str(row["id"]), float(score))
+            for score, row in scored[:limit]
+        )
+
+    def hydrate_published_facts(
+        self,
+        *,
+        exhibit_id: str,
+        fact_ids: tuple[str, ...],
+        limit: int = 3,
+    ) -> EvidenceSnapshot | None:
+        ordered_ids = tuple(dict.fromkeys(fact_id for fact_id in fact_ids if fact_id))
+        if not ordered_ids or limit <= 0:
+            return None
+        placeholders = ", ".join("?" for _ in ordered_ids)
+        with self.connection() as connection:
+            revision = connection.execute(
+                """
+                SELECT id, revision_no
+                FROM content_revision
+                WHERE exhibit_id = ? AND status = 'published'
+                """,
+                (exhibit_id,),
+            ).fetchone()
+            if revision is None:
+                return None
+            rows = connection.execute(
+                f"""
+                SELECT f.id, f.fact_type, f.statement,
+                       GROUP_CONCAT(fs.source_id) AS source_ids
+                FROM exhibit_fact f
+                JOIN fact_source fs ON fs.fact_id = f.id
+                WHERE f.revision_id = ?
+                  AND f.id IN ({placeholders})
+                GROUP BY f.id, f.fact_type, f.statement
+                """,
+                (revision["id"], *ordered_ids),
+            ).fetchall()
+        rows_by_id = {str(row["id"]): row for row in rows if row["source_ids"]}
+        selected_rows = [
+            rows_by_id[fact_id]
+            for fact_id in ordered_ids
+            if fact_id in rows_by_id
+        ][:limit]
+        if not selected_rows:
+            return None
         facts = tuple(
             EvidenceFact(
-                id=row["id"],
-                fact_type=row["fact_type"],
-                statement=row["statement"],
-                source_ids=tuple(sorted(row["source_ids"].split(","))),
+                id=str(row["id"]),
+                fact_type=str(row["fact_type"]),
+                statement=str(row["statement"]),
+                source_ids=tuple(sorted(str(row["source_ids"]).split(","))),
             )
-            for _, row in scored[:limit]
+            for row in selected_rows
         )
         return EvidenceSnapshot(
             exhibit_id=exhibit_id,
-            content_revision_id=revision["id"],
-            content_version=revision["revision_no"],
+            content_revision_id=str(revision["id"]),
+            content_version=int(revision["revision_no"]),
             facts=facts,
+        )
+
+    def valid_published_fact_ids(
+        self,
+        *,
+        exhibit_id: str,
+        fact_ids: tuple[str, ...],
+    ) -> tuple[str, ...]:
+        ordered_ids = tuple(dict.fromkeys(fact_id for fact_id in fact_ids if fact_id))
+        if not ordered_ids:
+            return ()
+        evidence = self.hydrate_published_facts(
+            exhibit_id=exhibit_id,
+            fact_ids=ordered_ids,
+            limit=len(ordered_ids),
+        )
+        return evidence.fact_ids if evidence else ()
+
+    def valid_published_fact_ids_by_type(
+        self,
+        *,
+        exhibit_id: str,
+        fact_ids: tuple[str, ...],
+        fact_types: tuple[str, ...],
+    ) -> tuple[str, ...]:
+        ordered_ids = tuple(dict.fromkeys(fact_id for fact_id in fact_ids if fact_id))
+        if not ordered_ids or not fact_types:
+            return ()
+        id_placeholders = ", ".join("?" for _ in ordered_ids)
+        type_placeholders = ", ".join("?" for _ in fact_types)
+        with self.connection() as connection:
+            rows = connection.execute(
+                f"""
+                SELECT f.id
+                FROM exhibit_fact f
+                JOIN content_revision cr ON cr.id = f.revision_id
+                JOIN fact_source fs ON fs.fact_id = f.id
+                WHERE cr.exhibit_id = ?
+                  AND cr.status = 'published'
+                  AND f.id IN ({id_placeholders})
+                  AND f.fact_type IN ({type_placeholders})
+                GROUP BY f.id
+                """,
+                (exhibit_id, *ordered_ids, *fact_types),
+            ).fetchall()
+        valid = {str(row["id"]) for row in rows}
+        return tuple(fact_id for fact_id in ordered_ids if fact_id in valid)
+
+    def published_fact_index_records(self) -> tuple[dict[str, Any], ...]:
+        with self.connection() as connection:
+            rows = connection.execute(
+                """
+                SELECT
+                    m.id AS museum_id,
+                    e.id AS exhibit_id,
+                    e.name AS exhibit_name,
+                    e.aliases_json,
+                    cr.id AS revision_id,
+                    cr.revision_no,
+                    f.id AS fact_id,
+                    f.fact_type,
+                    f.statement,
+                    f.keywords_json,
+                    GROUP_CONCAT(fs.source_id) AS source_ids
+                FROM exhibit_fact f
+                JOIN content_revision cr ON cr.id = f.revision_id
+                JOIN exhibit e ON e.id = cr.exhibit_id
+                JOIN zone z ON z.id = e.zone_id
+                JOIN museum m ON m.id = z.museum_id
+                JOIN fact_source fs ON fs.fact_id = f.id
+                WHERE cr.status = 'published'
+                  AND e.status = 'active'
+                  AND m.status = 'active'
+                GROUP BY
+                    m.id, e.id, e.name, e.aliases_json,
+                    cr.id, cr.revision_no,
+                    f.id, f.fact_type, f.statement, f.keywords_json
+                ORDER BY m.id, e.id, f.id
+                """
+            ).fetchall()
+        return tuple(
+            {
+                "museum_id": str(row["museum_id"]),
+                "exhibit_id": str(row["exhibit_id"]),
+                "exhibit_name": str(row["exhibit_name"]),
+                "aliases": _json_list(row["aliases_json"]),
+                "revision_id": str(row["revision_id"]),
+                "revision_no": int(row["revision_no"]),
+                "fact_id": str(row["fact_id"]),
+                "fact_type": str(row["fact_type"]),
+                "statement": str(row["statement"]),
+                "keywords": _json_list(row["keywords_json"]),
+                "source_ids": sorted(str(row["source_ids"]).split(",")),
+                "published": True,
+                "schema_version": 1,
+            }
+            for row in rows
+            if row["source_ids"]
         )
 
     def published_evidence(self, exhibit_id: str) -> EvidenceSnapshot | None:
@@ -913,6 +1088,7 @@ class MuseumStore:
         context_source: str = "missing",
         matched_exhibit_text: str | None = None,
         candidate_exhibit_ids: tuple[str, ...] = (),
+        retrieval_trace: dict[str, Any] | None = None,
     ) -> str:
         trace_id = uuid.uuid4().hex
         evidence_json = json.dumps(
@@ -937,8 +1113,9 @@ class MuseumStore:
                     unanswered_reason, coarse_intent, fine_intent,
                     intent_confidence, guard_result, llm_invoked, llm_model,
                     llm_prompt_version, llm_result, llm_response_summary,
-                    stage_latency_json, duration_ms, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    retrieval_trace_json, stage_latency_json,
+                    duration_ms, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     trace_id,
@@ -964,6 +1141,7 @@ class MuseumStore:
                     llm_prompt_version,
                     llm_result,
                     llm_response_summary,
+                    json.dumps(retrieval_trace or {}, ensure_ascii=False),
                     json.dumps(stage_latency, ensure_ascii=False),
                     duration_ms,
                     _iso(occurred_at),
@@ -1009,6 +1187,9 @@ class MuseumStore:
         audit["evidence"] = _json_object(audit.pop("evidence_json", "{}"))
         audit["stage_latency"] = _json_object(
             audit.pop("stage_latency_json", "{}")
+        )
+        audit["retrieval_trace"] = _json_object(
+            audit.pop("retrieval_trace_json", "{}")
         )
         audit["llm_response_summary"] = _json_object(
             audit["llm_response_summary"]

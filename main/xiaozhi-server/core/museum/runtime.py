@@ -9,6 +9,7 @@ from core.museum.contracts import AnswerResult, ExhibitResolution
 from core.museum.exhibit_resolver import ExhibitResolver
 from core.museum.query_understanding import understand_question
 from core.museum.store import MuseumStore
+from core.museum.retrieval import EvidenceRetriever
 
 
 class MuseumRuntime:
@@ -18,9 +19,10 @@ class MuseumRuntime:
         *,
         auto_assign_unknown_devices: bool = False,
         exhibit_context_mode: str = "explicit",
+        retriever: EvidenceRetriever | None = None,
     ):
         self._store = store
-        self._answering = GroundedAnswerService(store)
+        self._answering = GroundedAnswerService(store, retriever)
         self._auto_assign_unknown_devices = auto_assign_unknown_devices
         self._exhibit_context_mode = exhibit_context_mode
         self._exhibit_resolver = ExhibitResolver(store)
@@ -165,6 +167,7 @@ class MuseumRuntime:
             context_source=context.context_source,
             matched_exhibit_text=resolution.matched_text,
             candidate_exhibit_ids=resolution.candidate_ids,
+            retrieval_trace=answer.retrieval_trace,
         )
         fact_ids = list(answer.evidence.fact_ids) if answer.evidence else []
         source_ids = list(answer.evidence.source_ids) if answer.evidence else []
@@ -221,6 +224,7 @@ class MuseumRuntime:
                     "composition_ms": answer.composition_ms,
                     "total_ms": duration_ms,
                 },
+                "retrieval_trace": answer.retrieval_trace,
             },
         )
 

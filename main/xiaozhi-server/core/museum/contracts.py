@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 
@@ -94,3 +94,4 @@ class AnswerResult:
     llm_prompt_version: str = ""
     llm_result: str = "not_called"
     llm_response_summary: str = "{}"
+    retrieval_trace: dict[str, object] = field(default_factory=dict)

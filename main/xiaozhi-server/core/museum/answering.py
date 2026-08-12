@@ -14,11 +14,22 @@ from core.museum.llm_contract import (
     decide_with_museum_llm,
 )
 from core.museum.store import MuseumStore
+from core.museum.retrieval import (
+    EvidenceRetriever,
+    RetrievalRequest,
+    SqliteEvidenceRetriever,
+    dense_fact_types_for_intent,
+)
 
 
 class GroundedAnswerService:
-    def __init__(self, store: MuseumStore):
+    def __init__(
+        self,
+        store: MuseumStore,
+        retriever: EvidenceRetriever | None = None,
+    ):
         self._store = store
+        self._retriever = retriever or SqliteEvidenceRetriever(store)
 
     @staticmethod
     def answer_conversational(question: str) -> AnswerResult | None:
@@ -57,13 +68,25 @@ class GroundedAnswerService:
             return conversational_answer
 
         retrieval_started = perf_counter()
-        retrieved_evidence = self._store.retrieve_evidence(
+        retrieval = self._retriever.retrieve(RetrievalRequest(
             exhibit_id=exhibit_id,
             question=question,
-            fact_types=understanding.fact_types,
+            fact_types=understanding.fact_types or (),
             query_terms=understanding.query_terms,
             overview=understanding.fine_intent == "overview",
-        )
+            allow_dense_only=(
+                understanding.coarse_intent == "exhibit_knowledge"
+                and understanding.fine_intent != "unknown"
+                and "price" not in understanding.fact_types
+            ),
+            dense_fact_types=dense_fact_types_for_intent(
+                understanding.fine_intent,
+                understanding.fact_types,
+                understanding.query_terms,
+            ),
+        ))
+        retrieved_evidence = retrieval.evidence
+        retrieval_trace = retrieval.diagnostics.as_dict()
         llm_candidates = retrieved_evidence
         if (
             llm_candidates is None
@@ -103,6 +126,7 @@ class GroundedAnswerService:
                 fine_intent=understanding.fine_intent,
                 intent_confidence=understanding.confidence,
                 guard_result="conversational_scope",
+                retrieval_trace=retrieval_trace,
                 **_llm_answer_fields(llm_call),
             )
 
@@ -145,6 +169,7 @@ class GroundedAnswerService:
                     if guard_result != "published_facts_only"
                     else "unsupported_fallback"
                 ),
+                retrieval_trace=retrieval_trace,
                 **_llm_answer_fields(llm_call),
             )
         deterministic_answer = self._compose_grounded_answer(evidence)
@@ -169,6 +194,7 @@ class GroundedAnswerService:
             fine_intent=understanding.fine_intent,
             intent_confidence=understanding.confidence,
             guard_result=guard_result,
+            retrieval_trace=retrieval_trace,
             **_llm_answer_fields(llm_call),
         )
 

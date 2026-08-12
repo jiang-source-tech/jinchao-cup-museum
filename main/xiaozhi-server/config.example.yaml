@@ -65,6 +65,21 @@ business_runtime:
   database_path: data/museum_demo.db
   exhibit_context_mode: explicit
   auto_assign_unknown_devices: false
+  retrieval:
+    # rules 保持原检索；shadow 只记录向量对照；hybrid 启用融合结果。
+    mode: rules
+    embedding_model: text-embedding-v4
+    embedding_dimension: 1024
+    embedding_timeout_seconds: 3
+    qdrant_url: ${MUSEUM_QDRANT_URL:-http://qdrant:6333}
+    qdrant_collection: museum_facts_v1
+    qdrant_timeout_seconds: 2
+    lexical_limit: 12
+    dense_limit: 12
+    dense_score_threshold: 0.5
+    rrf_k: 60
+    circuit_failure_threshold: 3
+    circuit_cooldown_seconds: 30
 
 ota_release:
   public_ota_url: ""

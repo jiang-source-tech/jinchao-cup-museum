@@ -1,6 +1,15 @@
 name: jinchao-museum
 
 services:
+  qdrant:
+    image: qdrant/qdrant:v1.18.1
+    container_name: jinchao-museum-qdrant
+    restart: always
+    volumes:
+      - type: bind
+        source: ${MUSEUM_DATA_DIR:-./museum-data}/qdrant
+        target: /qdrant/storage
+
   museum-server:
     image: jinchao-museum-server:${MUSEUM_IMAGE_TAG:-local}
     build:
@@ -16,6 +25,9 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
+      - MUSEUM_QDRANT_URL=${MUSEUM_QDRANT_URL:-http://qdrant:6333}
+    depends_on:
+      - qdrant
     ports:
       # ws服务端
       - "8000:8000"
