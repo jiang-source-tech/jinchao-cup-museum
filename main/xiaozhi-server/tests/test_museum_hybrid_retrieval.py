@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 import json
 from types import SimpleNamespace
 
+import pytest
+
 from core.conversation_runtime import TurnRequest
 from core.museum.answering import GroundedAnswerService
 from core.museum.embedding import DashScopeTextEmbedder
@@ -94,10 +96,14 @@ def test_dense_recall_fills_a_real_understanding_gap(tmp_path, monkeypatch):
         question="古人挑了哪一种透明矿物来琢它？",
     )
 
-    assert answer.fine_intent == "appearance"
+    assert answer.fine_intent == "material"
     assert answer.evidence is not None
     assert answer.evidence.fact_ids == ("fact-crystal-cup-material",)
     assert answer.retrieval_trace["lexical_candidates"] == []
+    assert [
+        candidate["fact_id"]
+        for candidate in answer.retrieval_trace["dense_candidates"]
+    ] == ["fact-crystal-cup-material"]
     assert index.last_fact_types == ()
 
     appearance_index = InspectingIndex(
