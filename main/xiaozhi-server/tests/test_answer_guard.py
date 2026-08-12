@@ -132,6 +132,31 @@ def test_model_added_facts_are_never_spoken_and_guard_reason_is_recorded(
     assert trace["guard_result"] == expected_guard
 
 
+def test_non_social_question_cannot_be_rewritten_as_assistant_identity(tmp_path):
+    runtime = _runtime(tmp_path)
+
+    outcome = runtime.handle_turn(
+        _request(
+            text="战国水晶杯的馆长叫什么名字？",
+            request_id="reject-conversational-mismatch",
+            llm=_JsonLLM(
+                {
+                    "status": "conversational",
+                    "fact_ids": [],
+                    "social_intent": "identity",
+                    "answer": "",
+                }
+            ),
+        )
+    )
+
+    assert outcome.knowledge_status == "unsupported"
+    assert "小芯" not in outcome.spoken_text
+    assert outcome.audit_record["guard_result"] == (
+        "model_conversational_intent_mismatch"
+    )
+
+
 def test_withdrawn_revision_is_hidden_from_new_answers_but_old_trace_remains(
     tmp_path,
 ):

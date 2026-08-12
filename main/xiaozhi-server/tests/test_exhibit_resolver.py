@@ -53,6 +53,13 @@ def test_inherits_current_exhibit_only_without_a_new_reference(tmp_path):
     assert recent_reference.status == "inherited"
     assert recent_reference.exhibit_id == "warring-states-crystal-cup"
 
+    cloth_reference = resolver.resolve(
+        question="这块衣料上的图案是怎么做上去的？",
+        current_exhibit_id="warring-states-crystal-cup",
+    )
+    assert cloth_reference.status == "inherited"
+    assert cloth_reference.exhibit_id == "warring-states-crystal-cup"
+
 
 def test_missing_reference_does_not_guess_without_session_context(tmp_path):
     resolver = _resolver(tmp_path)

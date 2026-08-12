@@ -115,6 +115,13 @@ class GroundedAnswerService:
                 understanding=understanding,
             )
             decision = llm_call.decision
+        conversational_rejected = bool(
+            decision is not None
+            and decision.status == "conversational"
+            and _local_social_intent(question) != decision.social_intent
+        )
+        if conversational_rejected:
+            decision = None
         if decision is not None and decision.status == "conversational":
             return AnswerResult(
                 knowledge_status="conversational",
@@ -131,7 +138,11 @@ class GroundedAnswerService:
             )
 
         evidence = None
-        guard_result = "published_facts_only"
+        guard_result = (
+            "model_conversational_intent_mismatch"
+            if conversational_rejected
+            else "published_facts_only"
+        )
         if decision is not None and decision.status == "grounded":
             evidence = _select_evidence(
                 llm_candidates,
