@@ -83,6 +83,8 @@ def test_specific_fact_intent_wins_over_overview_wording():
         ("这套东西是不是代表了主人的权力？", "usage", ("usage",)),
         ("它原来戴在身体哪个位置？", "usage", ("usage",)),
         ("上面的洞除了好看还有什么用？", "usage", ("usage",)),
+        ("这件袍子原来是什么场合穿的？", "usage", ("usage",)),
+        ("垫饼上写了什么字？", "craft", ("craft", "research_limit")),
     ),
 )
 def test_understanding_covers_natural_museum_usage_questions(

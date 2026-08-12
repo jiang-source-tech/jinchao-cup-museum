@@ -1,0 +1,186 @@
+schema_version: 1
+
+museum:
+  id: liangzhu-museum
+  name: 良渚博物院
+  status: active
+
+zones:
+  - id: liangzhu-official-collection
+    name: 馆藏精品
+    sort_order: 1
+
+sources:
+  - id: source-liangzhu-jade-bird-fanshan-m14-259
+    title: 杭州市余杭区良渚遗址官方典藏：玉鸟（反山M14:259）
+    source_type: official_cultural_heritage_webpage
+    locator: "https://www.lzsite.cn/wap/details.aspx?id=76"
+    rights_note: 仅保存官方公开事实摘要与来源定位，不保存页面图片。
+  - id: source-liangzhu-jade-cong-yaoshan-m7-50
+    title: 杭州市余杭区良渚遗址官方典藏：玉琮（瑶山M7:50）
+    source_type: official_cultural_heritage_webpage
+    locator: "https://www.lzsite.cn/YuQi/2023711672.html"
+    rights_note: 仅保存官方公开事实摘要与来源定位，不保存页面图片。
+  - id: source-liangzhu-jade-bi-fanshan-m14-223
+    title: 杭州市余杭区良渚遗址官方典藏：玉璧（反山M14:223）
+    source_type: official_cultural_heritage_webpage
+    locator: "https://www.lzsite.cn/YuQi/202387115877.html"
+    rights_note: 仅保存官方公开事实摘要与来源定位，不保存页面图片。
+  - id: source-liangzhu-plain-cong-wujiabu
+    title: 杭州市余杭区良渚遗址官方典藏：素面琮（吴家埠）
+    source_type: official_cultural_heritage_webpage
+    locator: "https://www.lzsite.cn/YuQi/202312111128.html"
+    rights_note: 仅保存官方公开事实摘要与来源定位，不保存页面图片。
+
+exhibits:
+  - id: liangzhu-jade-bird-fanshan-m14-259
+    zone_id: liangzhu-official-collection
+    name: 反山M14玉鸟
+    aliases: [玉鸟, 良渚玉鸟, 反山玉鸟, 反山M十四玉鸟]
+    status: active
+    revision:
+      id: liangzhu-jade-bird-fanshan-m14-259-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-liangzhu-jade-bird-excavation
+          type: excavation
+          statement: 这件玉鸟于1986年出土于杭州市余杭区瓶窑镇反山遗址M14:259。
+          keywords: [出土, 1986年, 反山遗址, M14, M14:259]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-jade-bird-fanshan-m14-259]
+        - id: fact-liangzhu-jade-bird-dimensions
+          type: dimensions
+          statement: 玉鸟长4.36厘米，两翼宽5.33厘米，厚0.93厘米。
+          keywords: [尺寸, 长, 两翼宽, 厚, 厘米]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-jade-bird-fanshan-m14-259]
+        - id: fact-liangzhu-jade-bird-appearance
+          type: appearance
+          statement: 玉鸟呈平展鸟形，尖喙短尾，两翼外张，表现出振翅奋飞的姿态。
+          keywords: [外形, 平展, 尖喙, 短尾, 两翼, 振翅]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-jade-bird-fanshan-m14-259]
+        - id: fact-liangzhu-jade-bird-craft
+          type: craft
+          statement: 玉鸟背部可见斜向切磨和横向切割线，背面钻有一对横向隧孔。
+          keywords: [工艺, 切磨, 切割线, 背面, 隧孔, 钻孔]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-jade-bird-fanshan-m14-259]
+        - id: fact-liangzhu-jade-bird-usage
+          type: usage
+          statement: 官方资料说明，这类玉坠件通常与玉管、玉珠组成组佩，可作为项饰、手腕饰品或脚饰。
+          keywords: [用途, 玉坠件, 组佩, 项饰, 手腕饰品, 脚饰]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-jade-bird-fanshan-m14-259]
+
+  - id: liangzhu-jade-cong-yaoshan-m7-50
+    zone_id: liangzhu-official-collection
+    name: 瑶山M7:50玉琮
+    aliases: [瑶山玉琮, 玉琮M7:50, 瑶山M七五十号玉琮]
+    status: active
+    revision:
+      id: liangzhu-jade-cong-yaoshan-m7-50-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-liangzhu-cong-m7-50-excavation
+          type: excavation
+          statement: 这件玉琮于1987年出土于杭州市余杭区良渚镇瑶山遗址M7:50。
+          keywords: [出土, 1987年, 瑶山遗址, M7, M7:50]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-jade-cong-yaoshan-m7-50]
+        - id: fact-liangzhu-cong-m7-50-dimensions
+          type: dimensions
+          statement: 玉琮高4.2厘米，射径11.4至11.7厘米，孔径6.4厘米。
+          keywords: [尺寸, 高, 射径, 孔径, 厘米]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-jade-cong-yaoshan-m7-50]
+        - id: fact-liangzhu-cong-m7-50-appearance
+          type: appearance
+          statement: 玉琮呈南瓜黄色矮方柱体，内孔较大，转角处有角尺状凸面。
+          keywords: [外形, 南瓜黄, 矮方柱体, 内孔, 角尺状凸面]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-jade-cong-yaoshan-m7-50]
+        - id: fact-liangzhu-cong-m7-50-craft
+          type: craft
+          statement: 玉琮的转角凸面各刻一组简化神兽图纹，器表经过打磨，神兽耳部以阴刻半圆线表示。
+          keywords: [工艺, 神兽图纹, 打磨, 阴刻, 半圆线]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-jade-cong-yaoshan-m7-50]
+
+  - id: liangzhu-jade-bi-fanshan-m14-223
+    zone_id: liangzhu-official-collection
+    name: 反山M14:223玉璧
+    aliases: [玉璧, 反山玉璧, 反山M十四二二三玉璧]
+    status: active
+    revision:
+      id: liangzhu-jade-bi-fanshan-m14-223-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-liangzhu-bi-m14-223-excavation
+          type: excavation
+          statement: 这件玉璧于1986年出土于杭州市余杭区瓶窑镇反山遗址M14:223。
+          keywords: [出土, 1986年, 反山遗址, M14, M14:223]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-jade-bi-fanshan-m14-223]
+        - id: fact-liangzhu-bi-m14-223-dimensions
+          type: dimensions
+          statement: 玉璧直径16.2厘米，中间厚1.3厘米，边缘厚1厘米，孔外径6.2厘米，孔内径6.05厘米。
+          keywords: [尺寸, 直径, 中间厚, 边缘厚, 孔外径, 孔内径]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-jade-bi-fanshan-m14-223]
+        - id: fact-liangzhu-bi-m14-223-appearance
+          type: appearance
+          statement: 玉璧呈南瓜黄色圆饼状，整体规整，表面抛光精美。
+          keywords: [外形, 南瓜黄, 圆饼状, 规整, 抛光]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-jade-bi-fanshan-m14-223]
+        - id: fact-liangzhu-bi-m14-223-craft
+          type: craft
+          statement: 玉璧中部采用对钻成孔，孔壁经打磨修整后上下近乎贯直，两面仍依稀可见线切割痕迹。
+          keywords: [工艺, 对钻, 孔壁, 打磨, 线切割]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-jade-bi-fanshan-m14-223]
+
+  - id: liangzhu-plain-cong-wujiabu
+    zone_id: liangzhu-official-collection
+    name: 吴家埠素面琮
+    aliases: [素面琮, 吴家埠玉琮, 未完工玉琮]
+    status: active
+    revision:
+      id: liangzhu-plain-cong-wujiabu-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-liangzhu-plain-cong-excavation
+          type: excavation
+          statement: 这件素面琮于1978年出土于杭州市余杭区瓶窑镇吴家埠。
+          keywords: [出土, 1978年, 瓶窑镇, 吴家埠]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-plain-cong-wujiabu]
+        - id: fact-liangzhu-plain-cong-dimensions
+          type: dimensions
+          statement: 素面琮高7厘米、宽8.5厘米、射径5.8厘米。
+          keywords: [尺寸, 高, 宽, 射径, 厘米]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-plain-cong-wujiabu]
+        - id: fact-liangzhu-plain-cong-appearance
+          type: appearance
+          statement: 素面琮呈乳白色并带绿色及灰色细筋斑，器形为内圆外方的方柱体，中部有竖向对钻圆孔。
+          keywords: [外形, 乳白色, 筋斑, 内圆外方, 方柱体, 对钻圆孔]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-plain-cong-wujiabu]
+        - id: fact-liangzhu-plain-cong-craft
+          type: craft
+          statement: 素面琮四个立面留有切割印痕，上下两端已经勾画射口圆圈和弧形转角框线。
+          keywords: [工艺, 切割印痕, 射口圆圈, 转角框线]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-plain-cong-wujiabu]
+        - id: fact-liangzhu-plain-cong-status
+          type: craft
+          statement: 馆方根据尚未完成的射口和纹饰确认，这是一件未完工的玉琮半成品。
+          keywords: [状态, 未完工, 半成品, 素面, 射口, 纹饰]
+          confidence: official_cultural_heritage_webpage
+          sources: [source-liangzhu-plain-cong-wujiabu]

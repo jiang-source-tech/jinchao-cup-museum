@@ -1,0 +1,216 @@
+schema_version: 1
+
+museum:
+  id: hangzhou-west-lake-museum
+  name: 杭州西湖博物馆总馆
+  status: active
+
+zones:
+  - id: west-lake-official-collection
+    name: 馆藏精品
+    sort_order: 1
+
+sources:
+  - id: source-west-lake-gui-incense-burner-854
+    title: 杭州西湖博物馆总馆馆藏精品：南宋官窑青瓷簋式炉
+    source_type: official_museum_webpage
+    locator: "https://www.westlakemuseum.com/index.php/gcjp/jpzs2/854-gcjp-008.html"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+  - id: source-west-lake-dasong-guowu-sagger-pad-856
+    title: 杭州西湖博物馆总馆馆藏精品：南宋官窑“大宋国物”垫饼
+    source_type: official_museum_webpage
+    locator: "https://www.westlakemuseum.com/index.php/gcjp/jpzs2/856-gcjp-010.html"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+  - id: source-west-lake-yue-celadon-cup-stand-858
+    title: 杭州西湖博物馆总馆馆藏精品：五代至北宋越窑青釉水波纹盏托
+    source_type: official_museum_webpage
+    locator: "https://www.westlakemuseum.com/index.php/gcjp/jpzs2/858-gcjp-012.html"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+  - id: source-west-lake-three-kingdoms-celadon-funerary-jar-859
+    title: 杭州西湖博物馆总馆馆藏精品：三国青釉堆塑罐
+    source_type: official_museum_webpage
+    locator: "https://www.westlakemuseum.com/index.php/gcjp/jpzs2/859-gcjp-013.html"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+
+exhibits:
+  - id: southern-song-guan-gui-incense-burner
+    zone_id: west-lake-official-collection
+    name: 南宋官窑青瓷簋式炉
+    aliases: [青瓷簋式炉, 官窑簋式炉, 簋式炉, 青瓷鬼式炉]
+    status: active
+    revision:
+      id: southern-song-guan-gui-incense-burner-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-west-lake-gui-era
+          type: era
+          statement: 这件青瓷簋式炉为南宋官窑器物。
+          keywords: [年代, 南宋, 官窑]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-gui-incense-burner-854]
+        - id: fact-west-lake-gui-excavation
+          type: excavation
+          statement: 这件南宋官窑青瓷簋式炉出土于郊坛下窑址。
+          keywords: [出土, 郊坛下窑址, 窑址]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-gui-incense-burner-854]
+        - id: fact-west-lake-gui-dimensions
+          type: dimensions
+          statement: 青瓷簋式炉高10.5厘米、口径17厘米、底径13.5厘米。
+          keywords: [尺寸, 高, 口径, 底径, 厘米]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-gui-incense-burner-854]
+        - id: fact-west-lake-gui-appearance
+          type: appearance
+          statement: 簋式炉仿商周青铜簋式样，侈口束颈，大圈足外撇，腹部有弦纹和龙首形双环耳。
+          keywords: [外形, 青铜簋, 侈口, 束颈, 圈足, 弦纹, 龙首, 双环耳]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-gui-incense-burner-854]
+        - id: fact-west-lake-gui-material
+          type: material
+          statement: 簋式炉为细致灰胎，施粉青色厚釉，器身密布大小适中的纹片。
+          keywords: [材质, 灰胎, 粉青釉, 厚釉, 纹片]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-gui-incense-burner-854]
+        - id: fact-west-lake-gui-usage
+          type: usage
+          statement: 馆方说明，这件簋式炉用于南宋宫廷礼仪活动。
+          keywords: [用途, 宫廷, 礼仪活动]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-gui-incense-burner-854]
+
+  - id: southern-song-dasong-guowu-sagger-pad
+    zone_id: west-lake-official-collection
+    name: 南宋官窑“大宋国物”垫饼
+    aliases: [大宋国物垫饼, 官窑垫饼, 南宋垫饼]
+    status: active
+    revision:
+      id: southern-song-dasong-guowu-sagger-pad-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-west-lake-sagger-pad-era
+          type: era
+          statement: 这件“大宋国物”垫饼为南宋官窑遗物。
+          keywords: [年代, 南宋, 官窑]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-dasong-guowu-sagger-pad-856]
+        - id: fact-west-lake-sagger-pad-excavation
+          type: excavation
+          statement: 这件“大宋国物”垫饼出土于郊坛下窑址。
+          keywords: [出土, 郊坛下窑址, 窑址]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-dasong-guowu-sagger-pad-856]
+        - id: fact-west-lake-sagger-pad-dimensions
+          type: dimensions
+          statement: 垫饼高1厘米、直径5.5厘米、足径3.2厘米。
+          keywords: [尺寸, 高, 直径, 足径, 厘米]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-dasong-guowu-sagger-pad-856]
+        - id: fact-west-lake-sagger-pad-appearance
+          type: appearance
+          statement: 垫饼饼面平整、底有矮足，边沿呈斜弧形，平面刻有“大宋国物”四字。
+          keywords: [外形, 饼面, 矮足, 大宋国物, 刻字, 题铭]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-dasong-guowu-sagger-pad-856]
+        - id: fact-west-lake-sagger-pad-material
+          type: material
+          statement: 垫饼采用质地细致的红褐色瓷土胎。
+          keywords: [材质, 红褐色, 瓷土胎, 胎质]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-dasong-guowu-sagger-pad-856]
+        - id: fact-west-lake-sagger-pad-craft
+          type: craft
+          statement: 垫饼平面刻划“大宋国物”四字，表面还留有垫烧小圈足的印痕。
+          keywords: [工艺, 刻划, 大宋国物, 垫烧, 圈足印痕]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-dasong-guowu-sagger-pad-856]
+
+  - id: five-dynasties-northern-song-yue-celadon-cup-stand
+    zone_id: west-lake-official-collection
+    name: 五代至北宋越窑青釉水波纹盏托
+    aliases: [越窑青釉水波纹盏托, 水波纹盏托, 越窑盏托]
+    status: active
+    revision:
+      id: five-dynasties-northern-song-yue-celadon-cup-stand-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-west-lake-yue-cup-stand-era
+          type: era
+          statement: 馆方将这件青釉水波纹盏托定为五代至北宋时期的浙江越窑产品。
+          keywords: [年代, 五代, 北宋, 浙江, 越窑]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-yue-celadon-cup-stand-858]
+        - id: fact-west-lake-yue-cup-stand-dimensions
+          type: dimensions
+          statement: 盏托高7厘米、托口4.5厘米、盏口13.2厘米。
+          keywords: [尺寸, 高, 托口, 盏口, 厘米]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-yue-celadon-cup-stand-858]
+        - id: fact-west-lake-yue-cup-stand-appearance
+          type: appearance
+          statement: 盏托的托盘呈花瓣状并刻水草形纹饰，中央有鼓腹托座，托座饰连珠纹和覆莲瓣。
+          keywords: [外形, 花瓣, 水草纹, 托座, 连珠纹, 覆莲瓣]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-yue-celadon-cup-stand-858]
+        - id: fact-west-lake-yue-cup-stand-material
+          type: material
+          statement: 盏托通体施青釉，釉色青中泛绿，釉面滋润匀净。
+          keywords: [材质, 青釉, 青中泛绿, 釉面]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-yue-celadon-cup-stand-858]
+        - id: fact-west-lake-yue-cup-stand-usage
+          type: usage
+          statement: 盏托中央凸起的鼓腹托座用于承托杯盘。
+          keywords: [用途, 承托, 杯盘, 托座]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-yue-celadon-cup-stand-858]
+
+  - id: three-kingdoms-celadon-funerary-jar
+    zone_id: west-lake-official-collection
+    name: 三国青釉堆塑罐
+    aliases: [青釉堆塑罐, 堆塑罐, 谷仓, 魂瓶, 三国魂瓶]
+    status: active
+    revision:
+      id: three-kingdoms-celadon-funerary-jar-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-west-lake-funerary-jar-era
+          type: era
+          statement: 馆方将这件青釉堆塑罐定为三国时期器物。
+          keywords: [年代, 三国, 时期]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-three-kingdoms-celadon-funerary-jar-859]
+        - id: fact-west-lake-funerary-jar-dimensions
+          type: dimensions
+          statement: 堆塑罐高35.6厘米、口径12厘米、足径15.4厘米。
+          keywords: [尺寸, 高, 口径, 足径, 厘米]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-three-kingdoms-celadon-funerary-jar-859]
+        - id: fact-west-lake-funerary-jar-appearance
+          type: appearance
+          statement: 堆塑罐深腹平底，上部为连体五罐，肩部堆塑人物、飞鸟和胡人脸。
+          keywords: [外形, 深腹, 平底, 五罐, 堆塑, 人物, 飞鸟, 胡人脸]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-three-kingdoms-celadon-funerary-jar-859]
+        - id: fact-west-lake-funerary-jar-material
+          type: material
+          statement: 这件堆塑罐通体施青釉，器物保存完整，釉面光润。
+          keywords: [材质, 青釉, 釉面, 光润, 完整]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-three-kingdoms-celadon-funerary-jar-859]
+        - id: fact-west-lake-funerary-jar-usage
+          type: usage
+          statement: 馆方说明，堆塑罐又称谷仓或魂瓶，是三国两晋时期长江中下游地区较常见的陪葬器物。
+          keywords: [用途, 谷仓, 魂瓶, 陪葬器物, 长江中下游]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-three-kingdoms-celadon-funerary-jar-859]
+        - id: fact-west-lake-funerary-jar-history
+          type: history
+          statement: 馆方认为，罐上的人物和胡人脸等堆塑反映了当时的中外交流，是研究社会历史的实物资料。
+          keywords: [意义, 中外交流, 社会历史, 实物资料, 胡人脸]
+          confidence: official_museum_webpage
+          sources: [source-west-lake-three-kingdoms-celadon-funerary-jar-859]

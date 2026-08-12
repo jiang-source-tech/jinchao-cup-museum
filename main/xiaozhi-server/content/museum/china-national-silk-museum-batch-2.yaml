@@ -1,0 +1,204 @@
+schema_version: 1
+
+museum:
+  id: china-national-silk-museum
+  name: 中国丝绸博物馆
+  status: active
+
+zones:
+  - id: china-silk-official-collection
+    name: 馆藏精品
+    sort_order: 1
+
+sources:
+  - id: source-china-silk-figured-damask-robe-1819
+    title: 中国丝绸博物馆藏品：环人物纹绫袍
+    source_type: official_museum_webpage
+    locator: "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=1819"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+  - id: source-china-silk-blue-gauze-robe-1827
+    title: 中国丝绸博物馆藏品：深蓝色菱纹罗袍
+    source_type: official_museum_webpage
+    locator: "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=1827"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+  - id: source-china-silk-gold-damask-wide-sleeve-robe-1853
+    title: 中国丝绸博物馆藏品：织金绫大袖袍
+    source_type: official_museum_webpage
+    locator: "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=1853"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+  - id: source-china-silk-shi-robe-fragment-2466
+    title: 中国丝绸博物馆藏品：絁袍残片
+    source_type: official_museum_webpage
+    locator: "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=2466"
+    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+
+exhibits:
+  - id: northern-dynasties-figured-damask-robe
+    zone_id: china-silk-official-collection
+    name: 环人物纹绫袍
+    aliases: [北朝环人物纹绫袍, 套环人物纹绫袍, 北朝绫袍]
+    status: active
+    revision:
+      id: northern-dynasties-figured-damask-robe-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-silk-figured-damask-robe-era
+          type: era
+          statement: 馆方将这件环人物纹绫袍定为北朝时期藏品，文物级别为二级。
+          keywords: [年代, 北朝, 二级文物, 文物级别]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-figured-damask-robe-1819]
+        - id: fact-silk-figured-damask-robe-material
+          type: material
+          statement: 这件绫袍的馆方登记质地为丝，色泽为黄色。
+          keywords: [材质, 质地, 丝, 黄色]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-figured-damask-robe-1819]
+        - id: fact-silk-figured-damask-robe-dimensions
+          type: dimensions
+          statement: 绫袍长124厘米，胸围54厘米，通袖长182厘米。
+          keywords: [尺寸, 长, 胸围, 通袖长, 厘米]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-figured-damask-robe-1819]
+        - id: fact-silk-figured-damask-robe-appearance
+          type: appearance
+          statement: 绫袍为左衽、交领、窄袖，以套环人物纹绫为主要面料，套环中填有几何化人物纹样。
+          keywords: [外形, 左衽, 交领, 窄袖, 套环人物纹, 几何人物纹]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-figured-damask-robe-1819]
+        - id: fact-silk-figured-damask-robe-history
+          type: history
+          statement: 这件环人物纹绫袍由中国丝绸博物馆从青海民间征集。
+          keywords: [来源, 征集, 青海, 民间]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-figured-damask-robe-1819]
+
+  - id: tang-dark-blue-diamond-gauze-robe
+    zone_id: china-silk-official-collection
+    name: 深蓝色菱纹罗袍
+    aliases: [唐深蓝色菱纹罗袍, 菱纹罗袍, 青罗袍, 青罗衫]
+    status: active
+    revision:
+      id: tang-dark-blue-diamond-gauze-robe-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-silk-blue-gauze-robe-era
+          type: era
+          statement: 馆方将这件深蓝色菱纹罗袍定为唐代藏品，文物级别为一级。
+          keywords: [年代, 唐代, 一级文物, 文物级别]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-blue-gauze-robe-1827]
+        - id: fact-silk-blue-gauze-robe-material
+          type: material
+          statement: 这件罗袍的馆方登记质地为丝，色泽为蓝色。
+          keywords: [材质, 质地, 丝, 蓝色, 深蓝色]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-blue-gauze-robe-1827]
+        - id: fact-silk-blue-gauze-robe-appearance
+          type: appearance
+          statement: 罗袍为窄袖交领，采用蓝色菱纹罗面料，纹样均匀细腻并呈现通透效果。
+          keywords: [外形, 窄袖, 交领, 菱纹罗, 纹样, 通透]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-blue-gauze-robe-1827]
+        - id: fact-silk-blue-gauze-robe-craft
+          type: craft
+          statement: 这件罗袍的面料采用四经绞结构织成菱纹罗。
+          keywords: [工艺, 四经绞, 菱纹罗, 织造]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-blue-gauze-robe-1827]
+        - id: fact-silk-blue-gauze-robe-history
+          type: history
+          statement: 这件深蓝色菱纹罗袍由中国丝绸博物馆从青海民间征集。
+          keywords: [来源, 征集, 青海, 民间]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-blue-gauze-robe-1827]
+
+  - id: yuan-gold-damask-wide-sleeve-robe
+    zone_id: china-silk-official-collection
+    name: 织金绫大袖袍
+    aliases: [元代织金绫大袖袍, 织金大袖袍, 元代大袖袍]
+    status: active
+    revision:
+      id: yuan-gold-damask-wide-sleeve-robe-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-silk-gold-damask-robe-era
+          type: era
+          statement: 馆方将这件织金绫大袖袍定为元代藏品，文物级别为一级。
+          keywords: [年代, 元代, 一级文物, 文物级别]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-gold-damask-wide-sleeve-robe-1853]
+        - id: fact-silk-gold-damask-robe-material
+          type: material
+          statement: 这件大袖袍的馆方登记质地为丝，色泽为黄色。
+          keywords: [材质, 质地, 丝, 黄色]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-gold-damask-wide-sleeve-robe-1853]
+        - id: fact-silk-gold-damask-robe-dimensions
+          type: dimensions
+          statement: 这件大袖袍长145厘米、宽200厘米。
+          keywords: [尺寸, 长, 宽, 厘米]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-gold-damask-wide-sleeve-robe-1853]
+        - id: fact-silk-gold-damask-robe-appearance
+          type: appearance
+          statement: 大袖袍为右衽交领、大袖收口，主体有小朵云纹，仍可辨认心形窠中的飞鸟纹样。
+          keywords: [外形, 右衽, 交领, 大袖, 云纹, 心形窠, 飞鸟纹]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-gold-damask-wide-sleeve-robe-1853]
+        - id: fact-silk-gold-damask-robe-usage
+          type: usage
+          statement: 馆方说明，这类织金绫大袖袍是蒙元时期女性的正式礼服。
+          keywords: [用途, 女性, 正式礼服, 蒙元]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-gold-damask-wide-sleeve-robe-1853]
+        - id: fact-silk-gold-damask-robe-craft
+          type: craft
+          statement: 袍服领袖使用两种纳石失织金锦，主体原有织金图案，但金箔现已脱落。
+          keywords: [工艺, 纳石失, 织金锦, 织金, 金箔, 脱落]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-gold-damask-wide-sleeve-robe-1853]
+
+  - id: liao-shi-robe-fragment
+    zone_id: china-silk-official-collection
+    name: 絁袍残片
+    aliases: [辽代絁袍残片, 絁片, 辽代袍残片]
+    status: active
+    revision:
+      id: liao-shi-robe-fragment-r1
+      number: 1
+      status: draft
+      facts:
+        - id: fact-silk-shi-fragment-era
+          type: era
+          statement: 馆方将这件絁袍残片定为辽代藏品。
+          keywords: [年代, 辽代, 时期]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-shi-robe-fragment-2466]
+        - id: fact-silk-shi-fragment-material
+          type: material
+          statement: 这件絁袍残片的馆方登记质地为丝。
+          keywords: [材质, 质地, 丝]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-shi-robe-fragment-2466]
+        - id: fact-silk-shi-fragment-dimensions
+          type: dimensions
+          statement: 絁袍残片长55厘米、宽24厘米。
+          keywords: [尺寸, 长, 宽, 厘米]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-shi-robe-fragment-2466]
+        - id: fact-silk-shi-fragment-craft
+          type: craft
+          statement: 馆方解释，絁是运用交梭工艺形成的重平结构平纹类素织物，织物较为厚重。
+          keywords: [工艺, 絁, 交梭, 重平结构, 平纹, 素织物, 厚重]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-shi-robe-fragment-2466]
+        - id: fact-silk-shi-fragment-research-limit
+          type: research_limit
+          statement: 馆方将其登记为一件絁片，并推断原件可能是一件絁袍。
+          keywords: [推断, 原件, 絁袍, 残片, 不确定]
+          confidence: official_museum_webpage
+          sources: [source-china-silk-shi-robe-fragment-2466]

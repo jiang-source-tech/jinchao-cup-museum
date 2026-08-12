@@ -24,8 +24,11 @@ from core.museum.store import MuseumStore
 CONTENT_DIR = Path(__file__).resolve().parents[1] / "content" / "museum"
 CONTENT_PATHS = (
     CONTENT_DIR / "liangzhu-museum.yaml",
+    CONTENT_DIR / "liangzhu-museum-batch-2.yaml",
     CONTENT_DIR / "hangzhou-west-lake-museum.yaml",
+    CONTENT_DIR / "hangzhou-west-lake-museum-batch-2.yaml",
     CONTENT_DIR / "china-national-silk-museum.yaml",
+    CONTENT_DIR / "china-national-silk-museum-batch-2.yaml",
 )
 OCCURRED_AT = datetime(2026, 8, 11, 12, 0, tzinfo=timezone.utc)
 
@@ -103,14 +106,15 @@ def test_official_hangzhou_content_is_source_backed_and_draft_by_default(tmp_pat
         "hangzhou-west-lake-museum",
         "china-national-silk-museum",
     }
-    assert len(exhibits) == 5
-    assert len(facts) == 26
+    assert len(exhibits) == 17
+    assert len(facts) == 88
     assert all(exhibit.revision.status == "draft" for exhibit in exhibits)
     assert all(fact.source_ids for fact in facts)
     assert {
         urlparse(source.locator).hostname for source in sources
     } == {
         "www.lzmuseum.cn",
+        "www.lzsite.cn",
         "www.westlakemuseum.com",
         "www.chinasilkmuseum.com",
     }

@@ -7,8 +7,11 @@
 | 内容包 | 馆方 | 藏品 |
 | --- | --- | --- |
 | `liangzhu-museum.yaml` | 良渚博物院 | 玉钺组合、玉三叉形器 |
+| `liangzhu-museum-batch-2.yaml` | 良渚博物院 | 反山M14玉鸟、瑶山M7:50玉琮、反山M14:223玉璧、吴家埠素面琮 |
 | `hangzhou-west-lake-museum.yaml` | 杭州西湖博物馆总馆 | 南宋官窑青瓷樽式炉、南宋官窑青瓷八卦熏炉盖 |
+| `hangzhou-west-lake-museum-batch-2.yaml` | 杭州西湖博物馆总馆 | 南宋官窑青瓷簋式炉、“大宋国物”垫饼、越窑青釉水波纹盏托、三国青釉堆塑罐 |
 | `china-national-silk-museum.yaml` | 中国丝绸博物馆 | 清玄色地团花蝴蝶纹袍料 |
+| `china-national-silk-museum-batch-2.yaml` | 中国丝绸博物馆 | 北朝环人物纹绫袍、唐深蓝色菱纹罗袍、元代织金绫大袖袍、辽代絁袍残片 |
 
 ## 识别别名
 
@@ -23,6 +26,8 @@
 - 杭州西湖博物馆总馆“南宋官窑青瓷樽式炉”：`https://www.westlakemuseum.com/index.php/gcjp/jpzs2/850-gcjp-004.html`
 - 杭州西湖博物馆总馆“南宋官窑青瓷八卦熏炉盖”：`https://www.westlakemuseum.com/index.php/gcjp/jpzs2/853-gcjp-007.html`
 - 中国丝绸博物馆“清玄色地团花蝴蝶纹袍料”：`https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=2639`
+
+第二批内容的逐件官方来源直接登记在对应 YAML 的 `sources` 段。良渚第二批采用杭州市余杭区良渚遗址官方典藏页面；丝绸与西湖藏品继续采用各馆官方网站。
 
 ## 整理边界
 
@@ -46,4 +51,4 @@ python scripts/import_museum_content.py import `
   --database data/museum.db
 ```
 
-其他两个内容包使用相同命令。导入后按 `museum-content-contract.md` 执行 `review` 和 `publish`，不要直接修改数据库状态。
+其他内容包使用相同命令。导入后按 `museum-content-contract.md` 执行 `review` 和 `publish`，不要直接修改数据库状态。
