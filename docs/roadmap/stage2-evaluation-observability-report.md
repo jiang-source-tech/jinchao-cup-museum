@@ -87,13 +87,39 @@ pytest -q tests/test_museum_stage2_operations.py tests/test_museum_conversation_
 - 总时延 P50/P95：`65/98 ms`
 - 观测 schema 缺失列：`[]`
 
-## 6. 生产验收待办
+## 6. 生产部署与文本验收（2026-08-13）
 
-阶段 2 代码可以提交，但阶段 2 只有在生产环境完成以下文本验收后才算生产闭环完成：
+本节记录通过 SSH 在唯一生产服务器 `121.43.33.0` 上执行的可复核结果。验收范围是服务端文本链路，不包含真机麦克风、ASR、TTS、扬声器或屏幕。
 
-1. 核对本地、`origin/main` 和服务器三方提交及工作区状态。
-2. 服务器以 fast-forward 更新并按项目规定显式传入 `.env` 启动 Compose。
-3. 检查容器、日志、数据挂载和 `GET http://127.0.0.1:8003/museum/ota/` 健康入口。
-4. 验证生产仍为 17 件展品、88 条公开事实和 88 个 Qdrant 点，且未挂载旧项目或阶段 3 隔离内容。
-5. 在生产服务器执行 readiness、4 个 Canary、指标汇总和自由文本对话，记录回答、事实 ID、来源 ID、状态和时延。
-6. 生产验收不得声明真机麦克风、ASR、TTS 或扬声器通过。
+### 6.1 部署与运行状态
+
+- 本地 `HEAD`、`origin/main` 和服务器 `HEAD` 均为 `2df8ef8`（`完成博物馆阶段二评测与在线观测`），服务器工作区干净。
+- `jinchao-museum-server` 和 `jinchao-museum-qdrant` 均为 `healthy`。
+- `GET http://127.0.0.1:8003/museum/ota/` 返回 HTTP 200，正文包含 `ws://121.43.33.0:8000/museum/v1/`。
+- 生产数据挂载为 `/opt/jinchao-cup-museum-data`，未挂载旧项目数据目录。
+
+### 6.2 内容发布与向量索引门禁
+
+- `check_museum_readiness.py`：`ready=true`，SQLite integrity=`ok`，published facts=`88`，Qdrant expected/actual=`88/88`，无 missing、unexpected、duplicate、invalid 或 mismatch；release=`kr-74a68a2beac54315a4de5687`。
+- `verify_museum_knowledge_release.py --qdrant-url http://qdrant:6333`：通过；manifest 使用 `text-embedding-v4`、1024 维，88/88 payload 一致。
+- Qdrant alias `museum_facts_v1` 指向 `museum_facts_v1__build_0dbcc22f661f411a94e5b02ce6b0d6bb`，该生产 collection 为 88 点。`museum_facts_v1__build_96d2511ee66543aea006e12f6f83ae09` 为 94 点历史构建，`museum_facts_stage3_isolated_v1` 为 171 点阶段 3 隔离索引，二者均未承载生产 alias 流量。
+- 数据库统计：`exhibit` 共 18 条 active 记录，其中 17 条具有 published revision；published `exhibit_fact` 为 88 条，另有 6 条 withdrawn fact；`source_document` 为 21 条。
+
+### 6.3 真实文本自由对话
+
+通过 `scripts/museum_text_chat.py --require-llm --json` 发送 UTF-8 中文（使用 Base64 传输，避免 SSH 客户端编码改写），结果如下：
+
+| 场景 | 结果 | 关键证据 |
+| --- | --- | --- |
+| `玉三叉形器是什么材质？` | 通过 | grounded；答案为“南瓜黄色的玉器”；fact=`fact-liangzhu-trident-material`；source=`source-liangzhu-jade-trident-2019393530`；LLM=`qwen3.7-flash`；guard=`model_answer_accepted` |
+| `玉钺组合现在市场价多少钱？` | 通过 | unsupported；受控拒答；guard=`unsupported_fallback`；未调用 LLM |
+| `南宋官窑青瓷八卦熏炉盖有多高？` | 通过 | grounded；答案为“4.4 厘米”；fact=`fact-west-lake-bagua-dimensions`；source=`source-west-lake-bagua-lid-853`；LLM=`qwen3.7-flash` |
+| `你能介绍一下杭州博物馆的展品吗？` | 受控澄清 | missing_context；提示先说出展品名称；未调用 LLM |
+
+同一文本会话中先问“玉三叉形器是什么材质？”，再问“它是什么年代的？”：第一轮 grounded 且正确继承展品；第二轮识别为 `inherited_session`，但因当前馆方资料没有该展品的年代事实而受控拒答。这证明会话指代链路有效，缺口是内容覆盖而非检索或会话崩溃。
+
+### 6.4 生产日志与结论
+
+文本验收后最近 20 分钟容器日志未发现 `traceback`、`error`、`exception` 或 `failed`。因此，阶段 2 的生产部署、Hybrid RAG 检索、真实 DashScope embedding、Qdrant 发布门禁、真实 LLM 调用、拒答和审计链路通过服务端文本验收。当前生产范围仍是 17 件展品、88 条公开事实；阶段 3 的 100 件扩展数据仍处于隔离索引，尚未切换到生产。
+
+本次结论不等同于真机语音链路通过；真机验收需另行使用 `museum-firmwire` 当前固件执行。
