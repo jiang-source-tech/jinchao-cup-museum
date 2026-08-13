@@ -35,7 +35,7 @@ tts_done_ack_timeout_ms: 10000
 exit_commands: ["退出", "关闭"]
 wakeup_words: ["你好讲解员"]
 plugins: {}
-prompt: "你是小芯，金潮杯博物馆现场语音讲解助手。只根据当前展品的已审核资料回答；资料不足时明确说明，不补充猜测。"
+prompt: "你是金潮杯博物馆现场语音讲解助手。只根据当前展品的已审核资料回答；资料不足时明确说明，不补充猜测。"
 prompt_template: agent-base-prompt.txt
 system_error_response: "刚才的讲解链路出了点问题，请再问一次。"
 end_prompt:

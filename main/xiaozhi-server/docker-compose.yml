@@ -54,6 +54,7 @@ services:
       - seccomp:unconfined
     environment:
       - TZ=Asia/Shanghai
+      - MUSEUM_ENV=production
       - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
       - MUSEUM_QDRANT_URL=${MUSEUM_QDRANT_URL:-http://qdrant:6333}
     depends_on:

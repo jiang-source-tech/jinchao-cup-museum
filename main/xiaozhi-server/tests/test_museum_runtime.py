@@ -63,6 +63,25 @@ def test_demo_content_requires_an_explicit_runtime_flag(tmp_path):
         assert connection.execute("SELECT COUNT(*) FROM exhibit").fetchone()[0] == 1
 
 
+def test_production_runtime_rejects_demo_seed(tmp_path, monkeypatch):
+    monkeypatch.setenv("MUSEUM_ENV", "production")
+    try:
+        create_conversation_runtime(
+            {
+                "business_runtime": {
+                    "type": "museum",
+                    "database_path": str(tmp_path / "museum.db"),
+                    "seed_demo_content": True,
+                    "exhibit_context_mode": "explicit",
+                }
+            }
+        )
+    except RuntimeError as exc:
+        assert "生产环境禁止启用" in str(exc)
+    else:
+        raise AssertionError("production runtime unexpectedly allowed demo seed")
+
+
 def test_published_fact_produces_grounded_answer_and_trace(tmp_path):
     runtime = _runtime(tmp_path)
 

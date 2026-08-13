@@ -50,6 +50,11 @@ def create_conversation_runtime(
         session_max_ttl_minutes=session_max_ttl_minutes,
     )
     if bool(runtime_config.get("seed_demo_content", False)):
+        environment = os.getenv("MUSEUM_ENV", "").strip().lower()
+        if environment in {"production", "prod"}:
+            raise RuntimeError(
+                "生产环境禁止启用 seed_demo_content；请通过正式内容导入与发布流程更新展品"
+            )
         store.seed_demo_content()
     retrieval_config = runtime_config.get("retrieval", {})
     if not isinstance(retrieval_config, Mapping):

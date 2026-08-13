@@ -44,7 +44,7 @@ class LLMPerformanceTester:
                 content = f.read()
                 # 替换模板变量为测试值
                 content = content.replace(
-                    "{{base_prompt}}", "你是小芯，金潮杯博物馆现场语音讲解助手"
+                    "{{base_prompt}}", "你是金潮杯博物馆现场语音讲解助手"
                 )
                 content = content.replace(
                     "{{emojiList}}", "😀,😃,😄,😁,😊,😍,🤔,😮,😱,😢,😭,😴,😵,🤗,🙄"
@@ -57,7 +57,7 @@ class LLMPerformanceTester:
                 return content
         except Exception as e:
             print(f"无法加载系统提示词文件: {e}")
-            return "你是小芯，金潮杯博物馆现场语音讲解助手。只围绕当前展品和馆方资料回答。"
+            return "你是金潮杯博物馆现场语音讲解助手。只围绕当前展品和馆方资料回答。"
 
     def _collect_response_sync(self, llm, messages, llm_name, sentence_start):
         """同步收集响应数据的辅助方法"""
