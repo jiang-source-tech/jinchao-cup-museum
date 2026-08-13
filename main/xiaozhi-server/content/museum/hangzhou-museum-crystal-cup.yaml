@@ -1,0 +1,71 @@
+schema_version: 1
+
+museum:
+  id: hangzhou-museum-demo
+  name: 杭州博物馆（演示数据）
+  status: active
+
+zones:
+  - id: hangzhou-history-demo-zone
+    name: 杭州历史展区（演示点位）
+    sort_order: 1
+
+sources:
+  - id: source-hangzhou-portal-2020
+    title: 杭州出土的战国水晶杯，连现代工艺都难以复制
+    source_type: 杭州市门户网站公开文章
+    locator: "https://z.hangzhou.com.cn/2020/rwwhql/content/content_7734423.htm"
+    rights_note: 仅用于演示事实核对；未取得图片或展陈素材授权。
+  - id: source-people-daily-2026
+    title: 两千多年前的水晶杯
+    source_type: 人民日报公开报道
+    locator: "https://paper.people.com.cn/rmrb/pad/content/202602/19/content_30141292.html"
+    rights_note: 仅用于演示事实核对；未取得图片或展陈素材授权。
+
+exhibits:
+  - id: warring-states-crystal-cup
+    zone_id: hangzhou-history-demo-zone
+    name: 战国水晶杯
+    aliases: [水晶杯, 战国时期水晶杯]
+    status: active
+    revision:
+      id: warring-states-crystal-cup-r2
+      number: 2
+      status: draft
+      facts:
+        - id: fact-crystal-cup-era-r2
+          type: era
+          statement: 这件水晶杯经鉴定为战国中晚期遗物，已有两千多年历史。
+          keywords: [年代, 时期, 战国, 多久, 历史]
+          confidence: reviewed-public-source
+          sources: [source-people-daily-2026]
+        - id: fact-crystal-cup-material-r2
+          type: material
+          statement: 它由一整块天然水晶琢制而成。
+          keywords: [材质, 材料, 水晶, 天然, 做成]
+          confidence: reviewed-public-source
+          sources: [source-hangzhou-portal-2020, source-people-daily-2026]
+        - id: fact-crystal-cup-excavation-r2
+          type: excavation
+          statement: 它于1990年在杭州半山镇石塘村的战国墓葬中出土。
+          keywords: [出土, 发现, 哪里, 地点, "1990", 半山, 石塘]
+          confidence: reviewed-public-source
+          sources: [source-hangzhou-portal-2020, source-people-daily-2026]
+        - id: fact-crystal-cup-dimensions-r2
+          type: dimensions
+          statement: 它高15.4厘米，口径7.8厘米，底径5.4厘米。
+          keywords: [尺寸, 多高, 多大, 口径, 底径, 厘米]
+          confidence: reviewed-public-source
+          sources: [source-hangzhou-portal-2020, source-people-daily-2026]
+        - id: fact-crystal-cup-appearance-r2
+          type: appearance
+          statement: 它器口微敞、杯壁斜直、圈足外撇，外形很像现代常见的玻璃杯。
+          keywords: [外形, 样子, 玻璃杯, 现代, 长什么, 为什么像]
+          confidence: reviewed-public-source
+          sources: [source-hangzhou-portal-2020, source-people-daily-2026]
+        - id: fact-crystal-cup-craft-limit-r2
+          type: research_limit
+          statement: 水晶硬度高、脆性大，开料、掏膛和抛光难度很高；它的具体原料来源及部分制作细节目前仍有未解之处。
+          keywords: [工艺, 制作, 怎么做, 掏膛, 抛光, 原料来源, 未解]
+          confidence: reviewed-public-source
+          sources: [source-hangzhou-portal-2020, source-people-daily-2026]

@@ -6,6 +6,7 @@
 
 | 内容包 | 馆方 | 藏品 |
 | --- | --- | --- |
+| `hangzhou-museum-crystal-cup.yaml` | 杭州博物馆 | 战国水晶杯 |
 | `liangzhu-museum.yaml` | 良渚博物院 | 玉钺组合、玉三叉形器 |
 | `liangzhu-museum-batch-2.yaml` | 良渚博物院 | 反山M14玉鸟、瑶山M7:50玉琮、反山M14:223玉璧、吴家埠素面琮 |
 | `hangzhou-west-lake-museum.yaml` | 杭州西湖博物馆总馆 | 南宋官窑青瓷樽式炉、南宋官窑青瓷八卦熏炉盖 |
@@ -26,6 +27,8 @@
 - 杭州西湖博物馆总馆“南宋官窑青瓷樽式炉”：`https://www.westlakemuseum.com/index.php/gcjp/jpzs2/850-gcjp-004.html`
 - 杭州西湖博物馆总馆“南宋官窑青瓷八卦熏炉盖”：`https://www.westlakemuseum.com/index.php/gcjp/jpzs2/853-gcjp-007.html`
 - 中国丝绸博物馆“清玄色地团花蝴蝶纹袍料”：`https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=2639`
+- 杭州市门户网站“战国水晶杯”：`https://z.hangzhou.com.cn/2020/rwwhql/content/content_7734423.htm`
+- 人民日报“两千多年前的水晶杯”：`https://paper.people.com.cn/rmrb/pad/content/202602/19/content_30141292.html`
 
 第二批内容的逐件官方来源直接登记在对应 YAML 的 `sources` 段。良渚第二批采用杭州市余杭区良渚遗址官方典藏页面；丝绸与西湖藏品继续采用各馆官方网站。
 

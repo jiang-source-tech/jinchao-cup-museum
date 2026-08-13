@@ -18,8 +18,8 @@ def test_isolated_release_publishes_all_content_and_records_manifest(tmp_path):
         occurred_at=datetime.fromisoformat("2026-08-12T12:00:00+00:00"),
     )
 
-    assert result["exhibit_count"] == 100
-    assert result["published_revision_count"] == 100
-    assert result["published_fact_count"] == 171
+    assert result["exhibit_count"] == 101
+    assert result["published_revision_count"] == 101
+    assert result["published_fact_count"] == 177
     assert result["sqlite_integrity"] == "ok"
     assert str(result["collection"]) == "museum_facts_stage3_isolated_v1"

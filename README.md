@@ -7,8 +7,8 @@
 以展品为入口，以审核事实为依据，以自然对话为体验。
 
 <p>
-  <img src="https://img.shields.io/badge/展品-Demo%20100%20件-0f766e?style=for-the-badge" alt="100 件展品">
-  <img src="https://img.shields.io/badge/公开事实-171%20条-2563eb?style=for-the-badge" alt="171 条公开事实">
+  <img src="https://img.shields.io/badge/展品-Demo%20101%20件-0f766e?style=for-the-badge" alt="101 件展品">
+  <img src="https://img.shields.io/badge/公开事实-177%20条-2563eb?style=for-the-badge" alt="177 条公开事实">
   <img src="https://img.shields.io/badge/RAG-Hybrid检索-7c3aed?style=for-the-badge" alt="Hybrid RAG">
   <img src="https://img.shields.io/badge/验收-文本链路通过-16a34a?style=for-the-badge" alt="文本链路通过">
 </p>
@@ -35,14 +35,14 @@
 
 系统会识别展品、检索已发布的馆方事实，并用适合现场聆听的方式回答。资料不足时明确拒答，不让模型用常识补造馆藏信息。
 
-> 当前定位是一个完成度明确的 **100 件馆藏 Demo**，重点是把用户体验、事实边界和整条服务链路做好，而不是盲目扩大展品数量。
+> 当前定位是一个完成度明确的 **101 件馆藏 Demo**，重点是把用户体验、事实边界和整条服务链路做好，而不是盲目扩大展品数量。
 
 ## 已经做到什么
 
 | 能力 | 当前状态 |
 | --- | --- |
-| 生产展品 | 100 件已发布展品 |
-| 知识依据 | 171 条已发布事实、104 个来源 |
+| 生产展品 | 101 件已发布展品 |
+| 知识依据 | 177 条已发布事实、104 个来源 |
 | 检索方式 | SQLite 词法检索 + Qdrant 向量检索的 Hybrid RAG |
 | 向量模型 | 阿里云 DashScope `text-embedding-v4`，1024 维 |
 | 回答模型 | 生产文本验收使用 `qwen3.7-flash` |
