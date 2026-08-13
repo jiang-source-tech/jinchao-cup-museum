@@ -94,4 +94,5 @@ class AnswerResult:
     llm_prompt_version: str = ""
     llm_result: str = "not_called"
     llm_response_summary: str = "{}"
+    llm_ms: int = 0
     retrieval_trace: dict[str, object] = field(default_factory=dict)

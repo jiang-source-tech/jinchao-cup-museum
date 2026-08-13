@@ -167,6 +167,7 @@ class MuseumRuntime:
             stage_latency={
                 "context_ms": context_ms,
                 "retrieval_ms": answer.retrieval_ms,
+                "llm_ms": answer.llm_ms,
                 "composition_ms": answer.composition_ms,
                 "total_ms": duration_ms,
             },
@@ -230,6 +231,7 @@ class MuseumRuntime:
                 "stage_latency": {
                     "context_ms": context_ms,
                     "retrieval_ms": answer.retrieval_ms,
+                    "llm_ms": answer.llm_ms,
                     "composition_ms": answer.composition_ms,
                     "total_ms": duration_ms,
                 },
@@ -340,7 +342,13 @@ class MuseumRuntime:
             fine_intent=understanding.fine_intent,
             intent_confidence=understanding.confidence,
             guard_result="missing_context",
-            stage_latency={"total_ms": duration_ms},
+            stage_latency={
+                "context_ms": 0,
+                "retrieval_ms": 0,
+                "llm_ms": 0,
+                "composition_ms": 0,
+                "total_ms": duration_ms,
+            },
             duration_ms=duration_ms,
             occurred_at=request.occurred_at,
             resolution_status=resolution.status if resolution else "missing",
@@ -410,6 +418,13 @@ class MuseumRuntime:
                 "llm_result": "not_called",
                 "llm_response_summary": "{}",
                 "duration_ms": duration_ms,
+                "stage_latency": {
+                    "context_ms": 0,
+                    "retrieval_ms": 0,
+                    "llm_ms": 0,
+                    "composition_ms": 0,
+                    "total_ms": duration_ms,
+                },
             },
             error_code=reason,
         )
@@ -449,7 +464,9 @@ class MuseumRuntime:
             llm_result=answer.llm_result,
             llm_response_summary=answer.llm_response_summary,
             stage_latency={
+                "context_ms": 0,
                 "retrieval_ms": answer.retrieval_ms,
+                "llm_ms": answer.llm_ms,
                 "composition_ms": answer.composition_ms,
                 "total_ms": duration_ms,
             },
@@ -556,6 +573,13 @@ class MuseumRuntime:
                 "llm_result": answer.llm_result,
                 "llm_response_summary": answer.llm_response_summary,
                 "duration_ms": duration_ms,
+                "stage_latency": {
+                    "context_ms": 0,
+                    "retrieval_ms": answer.retrieval_ms,
+                    "llm_ms": answer.llm_ms,
+                    "composition_ms": answer.composition_ms,
+                    "total_ms": duration_ms,
+                },
             },
         )
 

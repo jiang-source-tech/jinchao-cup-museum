@@ -63,6 +63,24 @@ _METRIC_DEFINITIONS = (
         "maximum_error",
     ),
     (
+        "correct_unsupported_rate",
+        "资料不足正确拒答率",
+        "unsupported_correct_rejection",
+        "minimum",
+    ),
+    (
+        "conversation_context_accuracy",
+        "连续会话上下文准确率",
+        "conversation_context",
+        "minimum",
+    ),
+    (
+        "retrieval_recall_at_3",
+        "真实内容 Retrieval Recall@3",
+        "retrieval_recall_at_3",
+        "minimum",
+    ),
+    (
         "evidence_audit_reproducibility",
         "依据快照可复核率",
         "audit_reproducibility",
@@ -78,6 +96,22 @@ def load_evaluation_fixture(path: str | Path) -> dict[str, Any]:
         fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError(f"无法读取评测集 {fixture_path}: {exc}") from exc
+    coverage_profile = fixture.get("coverage_profile")
+    if coverage_profile:
+        fixture_dir = fixture_path.parent.resolve()
+        coverage_path = (fixture_dir / str(coverage_profile)).resolve()
+        if not coverage_path.is_relative_to(fixture_dir):
+            raise ValueError(f"覆盖档案越出评测集目录: {coverage_profile}")
+        try:
+            coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"无法读取覆盖档案 {coverage_path}: {exc}") from exc
+        _validate_coverage_profile(coverage)
+        fixture["coverage"] = coverage
+        fixture["cases"] = [
+            *fixture.get("cases", []),
+            *_coverage_cases(coverage),
+        ]
     _validate_fixture(fixture)
     return fixture
 
@@ -185,6 +219,8 @@ def run_evaluation(
         thresholds=fixture["thresholds"],
     )
     failed_turn_count = sum(not result["passed"] for result in turn_results)
+    latency = _latency_summary(turn_results)
+    coverage = _coverage_summary(fixture, turn_results)
     model_name = (
         str(getattr(llm, "model_name", "") or llm.__class__.__name__)
         if llm is not None
@@ -202,10 +238,15 @@ def run_evaluation(
             "turn_count": len(turn_results),
             "passed_turn_count": len(turn_results) - failed_turn_count,
             "failed_turn_count": failed_turn_count,
+            "latency": latency,
+            "coverage": coverage,
         },
         "metrics": metrics,
         "overall_pass": failed_turn_count == 0
-        and all(metric["passed"] for metric in metrics),
+        and all(metric["passed"] for metric in metrics)
+        and coverage["passed"]
+        and latency["total_ms"]["p95"]
+        <= float(fixture["thresholds"]["text_chat_p95_ms"]),
         "turns": turn_results,
     }
 
@@ -266,6 +307,49 @@ def render_evaluation_report(
                 f"{_md(metric['label'])} | {_rate(metric['value'])} | "
                 f"{_metric_threshold(metric)} | {metric['denominator']} | "
                 f"{'通过' if metric['passed'] else '未通过'} |"
+            )
+
+        latency = run["summary"]["latency"]
+        lines.extend(
+            [
+                "",
+                "### 时延",
+                "",
+                "| 阶段 | 样本数 | P50 (ms) | P95 (ms) |",
+                "| --- | ---: | ---: | ---: |",
+            ]
+        )
+        for stage, values in latency.items():
+            lines.append(
+                f"| `{_md(stage)}` | {values['count']} | "
+                f"{values['p50']:g} | {values['p95']:g} |"
+            )
+        lines.append(
+            f"\n文本聊天 P95 门槛：<= "
+            f"{float(fixture['thresholds']['text_chat_p95_ms']):g} ms。"
+        )
+
+        coverage = run["summary"]["coverage"]
+        lines.extend(
+            [
+                "",
+                "### 全展品覆盖矩阵",
+                "",
+                "| 展品 ID | 规范名 | 别名 | 事实类型 | 干扰 | 拒答 | 连续追问 | 结论 |",
+                "| --- | --- | ---: | ---: | --- | --- | --- | --- |",
+            ]
+        )
+        for exhibit in coverage["exhibits"]:
+            lines.append(
+                "| "
+                f"`{_md(exhibit['exhibit_id'])}` | "
+                f"{'是' if exhibit['canonical'] else '否'} | "
+                f"{exhibit['alias_count']}/2 | "
+                f"{exhibit['fact_type_count']}/2 | "
+                f"{'是' if exhibit['interference'] else '否'} | "
+                f"{'是' if exhibit['unsupported'] else '否'} | "
+                f"{'是' if exhibit['conversation'] else '否'} | "
+                f"{'通过' if exhibit['passed'] else '未通过'} |"
             )
 
         guard_counts = Counter(
@@ -398,6 +482,8 @@ def _evaluate_turn(
             "llm_response_summary", "{}"
         ),
         "duration_ms": outcome.audit_record.get("duration_ms", 0),
+        "stage_latency": dict(outcome.audit_record.get("stage_latency", {})),
+        "retrieval_trace": dict(outcome.audit_record.get("retrieval_trace", {})),
     }
     failures = _expectation_failures(expected=expected, actual=actual)
     audit_ok = _audit_is_reproducible(actual=actual, trace=trace)
@@ -435,6 +521,28 @@ def _evaluate_turn(
                 and not actual["source_ids"]
                 and _trace_evidence(trace).get("fact_ids", []) == []
             )
+        elif metric == "unsupported_correct_rejection":
+            checks[metric] = (
+                expected.get("knowledge_status") == "unsupported"
+                and actual["knowledge_status"] == "unsupported"
+                and not actual["fact_ids"]
+                and not actual["source_ids"]
+            )
+        elif metric == "conversation_context":
+            checks[metric] = (
+                actual["context_exhibit_id"]
+                == expected.get("context_exhibit_id", "")
+                and actual["context_source"]
+                == expected.get("context_source", actual["context_source"])
+            )
+        elif metric == "retrieval_recall_at_3":
+            expected_fact_ids = set(
+                expected.get("required_fact_ids", expected.get("fact_ids", []))
+            )
+            ranked_fact_ids = _retrieval_top_fact_ids(actual["retrieval_trace"])
+            checks[metric] = bool(expected_fact_ids) and expected_fact_ids.issubset(
+                set(ranked_fact_ids[:3])
+            )
         elif metric == "audit_reproducibility":
             checks[metric] = audit_ok
         else:
@@ -451,6 +559,7 @@ def _evaluate_turn(
         "expected": dict(expected),
         "actual": actual,
         "checks": checks,
+        "coverage": dict(turn.get("coverage", {})),
         "failures": failures,
         "passed": not failures,
     }
@@ -569,6 +678,371 @@ def _trace_evidence(trace: dict[str, Any] | None) -> dict[str, Any]:
     return evidence if isinstance(evidence, dict) else {}
 
 
+def _retrieval_top_fact_ids(trace: Mapping[str, Any]) -> list[str]:
+    mode = str(trace.get("mode", "rules"))
+    key = "fused_candidates" if mode == "hybrid" else "lexical_candidates"
+    candidates = trace.get(key, [])
+    if not isinstance(candidates, list):
+        return []
+    ranked = sorted(
+        (candidate for candidate in candidates if isinstance(candidate, Mapping)),
+        key=lambda candidate: int(candidate.get("rank", 10**9)),
+    )
+    return [str(candidate.get("fact_id", "")) for candidate in ranked]
+
+
+def _latency_summary(
+    turn_results: list[Mapping[str, Any]],
+) -> dict[str, dict[str, float | int]]:
+    samples: dict[str, list[float]] = {"total_ms": []}
+    for turn in turn_results:
+        actual = turn["actual"]
+        samples["total_ms"].append(float(actual.get("duration_ms", 0)))
+        stage_latency = actual.get("stage_latency", {})
+        if isinstance(stage_latency, Mapping):
+            for name, value in stage_latency.items():
+                try:
+                    samples.setdefault(str(name), []).append(float(value))
+                except (TypeError, ValueError):
+                    continue
+        retrieval = actual.get("retrieval_trace", {})
+        retrieval_stages = (
+            retrieval.get("stage_latency_ms", {})
+            if isinstance(retrieval, Mapping)
+            else {}
+        )
+        if isinstance(retrieval_stages, Mapping):
+            for name, value in retrieval_stages.items():
+                try:
+                    samples.setdefault(f"retrieval_{name}_ms", []).append(
+                        float(value)
+                    )
+                except (TypeError, ValueError):
+                    continue
+    return {
+        name: {
+            "count": len(values),
+            "p50": _percentile(values, 50),
+            "p95": _percentile(values, 95),
+        }
+        for name, values in sorted(samples.items())
+        if values
+    }
+
+
+def _percentile(values: list[float], percentile: int) -> float:
+    ordered = sorted(values)
+    if not ordered:
+        return 0.0
+    if len(ordered) == 1:
+        return ordered[0]
+    position = (len(ordered) - 1) * percentile / 100
+    lower = int(position)
+    upper = min(lower + 1, len(ordered) - 1)
+    fraction = position - lower
+    return round(
+        ordered[lower] + (ordered[upper] - ordered[lower]) * fraction,
+        2,
+    )
+
+
+def _coverage_summary(
+    fixture: Mapping[str, Any],
+    turn_results: list[Mapping[str, Any]],
+) -> dict[str, Any]:
+    profile = fixture.get("coverage", {})
+    exhibits = profile.get("exhibits", []) if isinstance(profile, Mapping) else []
+    by_exhibit: dict[str, list[Mapping[str, Any]]] = {}
+    for turn in turn_results:
+        coverage = turn.get("coverage", {})
+        if not isinstance(coverage, Mapping):
+            continue
+        exhibit_id = str(coverage.get("exhibit_id", ""))
+        if exhibit_id:
+            by_exhibit.setdefault(exhibit_id, []).append(turn)
+
+    matrix: list[dict[str, Any]] = []
+    for exhibit in exhibits:
+        exhibit_id = str(exhibit["exhibit_id"])
+        samples = by_exhibit.get(exhibit_id, [])
+        passed_kinds = {
+            str(turn["coverage"].get("kind", ""))
+            for turn in samples
+            if turn["passed"]
+        }
+        passed_aliases = {
+            str(turn["coverage"].get("slot", ""))
+            for turn in samples
+            if turn["passed"] and turn["coverage"].get("kind") == "alias"
+        }
+        passed_fact_types = {
+            str(turn["coverage"].get("fact_type", ""))
+            for turn in samples
+            if turn["passed"] and turn["coverage"].get("kind") == "fact"
+        }
+        row = {
+            "exhibit_id": exhibit_id,
+            "canonical": "canonical" in passed_kinds,
+            "alias_count": len(passed_aliases - {""}),
+            "fact_type_count": len(passed_fact_types - {""}),
+            "interference": "interference" in passed_kinds,
+            "unsupported": "unsupported" in passed_kinds,
+            "conversation": "conversation" in passed_kinds,
+        }
+        row["passed"] = (
+            row["canonical"]
+            and row["alias_count"] >= 2
+            and row["fact_type_count"] >= 2
+            and row["interference"]
+            and row["unsupported"]
+            and row["conversation"]
+        )
+        matrix.append(row)
+    return {
+        "expected_exhibit_count": len(exhibits),
+        "passed_exhibit_count": sum(row["passed"] for row in matrix),
+        "passed": bool(matrix) and all(row["passed"] for row in matrix),
+        "exhibits": matrix,
+    }
+
+
+def _coverage_cases(profile: Mapping[str, Any]) -> list[dict[str, Any]]:
+    cases: list[dict[str, Any]] = []
+    for exhibit in profile["exhibits"]:
+        exhibit_id = str(exhibit["exhibit_id"])
+        prefix = f"stage2-coverage-{exhibit_id}"
+        cases.append(
+            _single_coverage_case(
+                case_id=f"{prefix}-canonical",
+                category="coverage_canonical",
+                exhibit_id=exhibit_id,
+                kind="canonical",
+                sample=exhibit["canonical"],
+                resolution_metric="canonical_resolution",
+            )
+        )
+        for index, sample in enumerate(exhibit["aliases"], start=1):
+            cases.append(
+                _single_coverage_case(
+                    case_id=f"{prefix}-alias-{index}",
+                    category="coverage_alias",
+                    exhibit_id=exhibit_id,
+                    kind="alias",
+                    slot=str(index),
+                    sample=sample,
+                    resolution_metric="alias_resolution",
+                )
+            )
+        for index, sample in enumerate(exhibit["facts"], start=1):
+            cases.append(
+                _single_coverage_case(
+                    case_id=f"{prefix}-fact-{index}",
+                    category="coverage_fact",
+                    exhibit_id=exhibit_id,
+                    kind="fact",
+                    fact_type=str(sample["fact_type"]),
+                    sample=sample,
+                )
+            )
+        cases.append(
+            _single_coverage_case(
+                case_id=f"{prefix}-interference",
+                category="coverage_interference",
+                exhibit_id=exhibit_id,
+                kind="interference",
+                sample=exhibit["interference"],
+            )
+        )
+        unsupported = exhibit["unsupported"]
+        cases.append(
+            {
+                "id": f"{prefix}-unsupported",
+                "category": "coverage_unsupported",
+                "turns": [
+                    {
+                        "text": unsupported["text"],
+                        "metrics": [
+                            "unsupported_no_hallucination",
+                            "unsupported_correct_rejection",
+                            "grounded_boundary",
+                            "audit_reproducibility",
+                        ],
+                        "coverage": {"exhibit_id": exhibit_id, "kind": "unsupported"},
+                        "expected": {
+                            "knowledge_status": "unsupported",
+                            "resolution_status": "explicit",
+                            "context_exhibit_id": exhibit_id,
+                            "fact_ids": [],
+                        },
+                    }
+                ],
+            }
+        )
+        conversation = exhibit["conversation"]
+        cases.append(
+            {
+                "id": f"{prefix}-conversation",
+                "category": "coverage_conversation",
+                "turns": [
+                    _grounded_coverage_turn(
+                        exhibit_id=exhibit_id,
+                        sample=conversation["initial"],
+                    ),
+                    _grounded_coverage_turn(
+                        exhibit_id=exhibit_id,
+                        sample=conversation["followup"],
+                        inherited=True,
+                        coverage={"exhibit_id": exhibit_id, "kind": "conversation"},
+                        extra_metrics=["conversation_context"],
+                    ),
+                ],
+            }
+        )
+    return cases
+
+
+def _single_coverage_case(
+    *,
+    case_id: str,
+    category: str,
+    exhibit_id: str,
+    kind: str,
+    sample: Mapping[str, Any],
+    slot: str = "",
+    fact_type: str = "",
+    resolution_metric: str = "",
+) -> dict[str, Any]:
+    coverage = {"exhibit_id": exhibit_id, "kind": kind}
+    if slot:
+        coverage["slot"] = slot
+    if fact_type:
+        coverage["fact_type"] = fact_type
+    metrics = [
+        metric
+        for metric in (
+            resolution_metric,
+            "grounded_boundary",
+            "retrieval_recall_at_3",
+            "audit_reproducibility",
+        )
+        if metric
+    ]
+    return {
+        "id": case_id,
+        "category": category,
+        "turns": [
+            _grounded_coverage_turn(
+                exhibit_id=exhibit_id,
+                sample=sample,
+                coverage=coverage,
+                extra_metrics=metrics,
+                replace_metrics=True,
+            )
+        ],
+    }
+
+
+def _grounded_coverage_turn(
+    *,
+    exhibit_id: str,
+    sample: Mapping[str, Any],
+    inherited: bool = False,
+    coverage: Mapping[str, Any] | None = None,
+    extra_metrics: list[str] | None = None,
+    replace_metrics: bool = False,
+) -> dict[str, Any]:
+    metrics = list(extra_metrics or [])
+    if not replace_metrics:
+        metrics.extend(
+            ["grounded_boundary", "retrieval_recall_at_3", "audit_reproducibility"]
+        )
+    expected = {
+        "knowledge_status": "grounded",
+        "resolution_status": "inherited" if inherited else "explicit",
+        "context_exhibit_id": exhibit_id,
+        "context_source": "inherited_session" if inherited else "explicit_mention",
+    }
+    if "required_fact_ids" in sample or "allowed_fact_ids" in sample:
+        expected["required_fact_ids"] = list(sample.get("required_fact_ids", []))
+        expected["allowed_fact_ids"] = list(sample.get("allowed_fact_ids", []))
+    else:
+        expected["fact_ids"] = [sample["fact_id"]]
+    return {
+        "text": sample["text"],
+        "metrics": list(dict.fromkeys(metrics)),
+        "coverage": dict(coverage or {}),
+        "expected": expected,
+    }
+
+
+def _validate_coverage_profile(profile: Any) -> None:
+    if not isinstance(profile, dict) or profile.get("version") != 1:
+        raise ValueError("覆盖档案必须是 version=1 的 JSON 对象")
+    exhibits = profile.get("exhibits")
+    if not isinstance(exhibits, list) or not exhibits:
+        raise ValueError("覆盖档案 exhibits 必须是非空数组")
+    exhibit_ids: set[str] = set()
+    for exhibit in exhibits:
+        if not isinstance(exhibit, dict):
+            raise ValueError("覆盖档案 exhibit 必须是对象")
+        exhibit_id = str(exhibit.get("exhibit_id", "")).strip()
+        if not exhibit_id or exhibit_id in exhibit_ids:
+            raise ValueError(f"覆盖档案展品 ID 为空或重复: {exhibit_id!r}")
+        exhibit_ids.add(exhibit_id)
+        aliases = exhibit.get("aliases")
+        facts = exhibit.get("facts")
+        if not isinstance(aliases, list) or len(aliases) < 2:
+            raise ValueError(f"覆盖档案 {exhibit_id} 至少需要两个别名问题")
+        if not isinstance(facts, list) or len(facts) < 2:
+            raise ValueError(f"覆盖档案 {exhibit_id} 至少需要两个事实问题")
+        fact_types = {str(sample.get("fact_type", "")) for sample in facts}
+        if "" in fact_types or len(fact_types) < 2:
+            raise ValueError(f"覆盖档案 {exhibit_id} 事实问题类型必须至少两种")
+        required = ("canonical", "interference", "unsupported", "conversation")
+        if any(not isinstance(exhibit.get(key), dict) for key in required):
+            raise ValueError(f"覆盖档案 {exhibit_id} 缺少必需场景")
+        samples = [
+            exhibit["canonical"],
+            *aliases,
+            *facts,
+            exhibit["interference"],
+            exhibit["unsupported"],
+            exhibit["conversation"].get("initial", {}),
+            exhibit["conversation"].get("followup", {}),
+        ]
+        for sample in samples:
+            if not isinstance(sample, dict) or not str(sample.get("text", "")).strip():
+                raise ValueError(f"覆盖档案 {exhibit_id} 存在空问题")
+        grounded = [
+            exhibit["canonical"],
+            *aliases,
+            *facts,
+            exhibit["interference"],
+            exhibit["conversation"]["initial"],
+            exhibit["conversation"]["followup"],
+        ]
+        for sample in grounded:
+            fact_id = str(sample.get("fact_id", "")).strip()
+            required = sample.get("required_fact_ids", [])
+            allowed = sample.get("allowed_fact_ids", [])
+            if not fact_id and not required:
+                raise ValueError(
+                    f"覆盖档案 {exhibit_id} 有依据问题缺少 fact_id 或 required_fact_ids"
+                )
+            if required and not isinstance(required, list):
+                raise ValueError(
+                    f"覆盖档案 {exhibit_id} required_fact_ids 必须是数组"
+                )
+            if allowed and not isinstance(allowed, list):
+                raise ValueError(
+                    f"覆盖档案 {exhibit_id} allowed_fact_ids 必须是数组"
+                )
+            if allowed and not set(required).issubset(set(allowed)):
+                raise ValueError(
+                    f"覆盖档案 {exhibit_id} required_fact_ids 必须包含在 allowed_fact_ids 中"
+                )
+
+
 def _response_summary(turn: Mapping[str, Any]) -> dict[str, Any]:
     try:
         summary = json.loads(str(turn["actual"]["llm_response_summary"]))
@@ -678,6 +1152,8 @@ def _validate_fixture(fixture: Any) -> None:
     } - set(thresholds)
     if missing_thresholds:
         raise ValueError(f"评测集缺少门槛: {sorted(missing_thresholds)}")
+    if "text_chat_p95_ms" not in thresholds:
+        raise ValueError("评测集缺少门槛: text_chat_p95_ms")
     cases = fixture.get("cases")
     if not isinstance(cases, list) or not cases:
         raise ValueError("评测集 cases 必须是非空数组")

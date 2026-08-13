@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "coverage_profile": "museum_stage2_coverage.json",
   "description": "杭州馆方十七件正式藏品的服务端文本最低覆盖评测集；真实 LLM 与规则基线使用相同输入，但不包含麦克风、ASR、TTS 或扬声器验收，也不代表已经达到完整黄金集规模。",
   "content_packages": [
     "content/museum/liangzhu-museum.yaml",
@@ -11,13 +12,17 @@
   ],
   "thresholds": {
     "canonical_name_accuracy": 1.0,
-    "reviewed_alias_accuracy": 0.95,
+    "reviewed_alias_accuracy": 0.98,
     "asr_alias_accuracy": 0.95,
     "ambiguous_wrong_binding_rate": 0.0,
     "unlisted_silent_inheritance_rate": 0.0,
     "grounded_boundary_violation_rate": 0.0,
     "unsupported_hallucination_rate": 0.0,
-    "evidence_audit_reproducibility": 1.0
+    "correct_unsupported_rate": 0.98,
+    "conversation_context_accuracy": 0.98,
+    "retrieval_recall_at_3": 0.95,
+    "evidence_audit_reproducibility": 1.0,
+    "text_chat_p95_ms": 3000
   },
   "cases": [
     {

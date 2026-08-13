@@ -224,6 +224,7 @@ def _llm_answer_fields(llm_call: MuseumLlmCall) -> dict[str, object]:
         "llm_prompt_version": llm_call.prompt_version,
         "llm_result": llm_call.result,
         "llm_response_summary": llm_call.response_summary,
+        "llm_ms": llm_call.duration_ms,
     }
 
 

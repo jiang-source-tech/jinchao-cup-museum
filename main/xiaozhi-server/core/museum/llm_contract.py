@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import hashlib
 import inspect
 import json
+from time import perf_counter
 from typing import Any
 
 from core.museum.contracts import EvidenceSnapshot
@@ -37,6 +38,7 @@ class MuseumLlmCall:
     prompt_version: str = ""
     result: str = "not_called"
     response_summary: str = "{}"
+    duration_ms: int = 0
 
     @classmethod
     def not_called(cls) -> "MuseumLlmCall":
@@ -53,6 +55,7 @@ def decide_with_museum_llm(
     history: tuple | list,
     understanding: QuestionUnderstanding,
 ) -> MuseumLlmCall:
+    started = perf_counter()
     system_prompt, user_prompt = build_museum_llm_prompts(
         exhibit_name=exhibit_name,
         question=question,
@@ -85,6 +88,7 @@ def decide_with_museum_llm(
                 ensure_ascii=False,
                 sort_keys=True,
             ),
+            duration_ms=_duration_ms(started),
         )
 
     decision = parse_museum_llm_decision(raw_decision)
@@ -100,7 +104,12 @@ def decide_with_museum_llm(
             decision=decision,
             parse_status=result,
         ),
+        duration_ms=_duration_ms(started),
     )
+
+
+def _duration_ms(started: float) -> int:
+    return max(0, round((perf_counter() - started) * 1000))
 
 
 def build_museum_llm_prompts(

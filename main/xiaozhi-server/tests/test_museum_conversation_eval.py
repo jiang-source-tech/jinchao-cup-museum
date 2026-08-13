@@ -72,9 +72,12 @@ def test_hangzhou_conversation_fixture_passes_rules_baseline(tmp_path):
     )
 
     assert fixture["version"] == 2
-    assert result["summary"]["case_count"] >= 30
-    assert result["summary"]["turn_count"] >= 35
+    assert result["summary"]["case_count"] == 197
+    assert result["summary"]["turn_count"] == 224
     assert result["summary"]["failed_turn_count"] == 0
+    assert result["summary"]["coverage"]["expected_exhibit_count"] == 17
+    assert result["summary"]["coverage"]["passed_exhibit_count"] == 17
+    assert result["summary"]["coverage"]["passed"] is True
     assert result["overall_pass"] is True
 
     metrics = {metric["id"]: metric for metric in result["metrics"]}
@@ -85,6 +88,9 @@ def test_hangzhou_conversation_fixture_passes_rules_baseline(tmp_path):
     assert metrics["unlisted_silent_inheritance_rate"]["value"] == 0.0
     assert metrics["grounded_boundary_violation_rate"]["value"] == 0.0
     assert metrics["unsupported_hallucination_rate"]["value"] == 0.0
+    assert metrics["correct_unsupported_rate"]["value"] == 1.0
+    assert metrics["conversation_context_accuracy"]["value"] == 1.0
+    assert metrics["retrieval_recall_at_3"]["value"] >= 0.95
     assert metrics["evidence_audit_reproducibility"]["value"] == 1.0
     assert all(not turn["actual"]["llm_invoked"] for turn in result["turns"])
     assert all(
@@ -184,6 +190,8 @@ def test_evaluation_cli_runs_from_outside_server_root(tmp_path):
             str(SERVER_ROOT / "scripts" / "evaluate_museum_rag.py"),
             "--mode",
             "rules",
+            "--retrieval-mode",
+            "hybrid",
             "--run-id",
             "pytest-cli",
             "--database",
@@ -202,6 +210,7 @@ def test_evaluation_cli_runs_from_outside_server_root(tmp_path):
 
     assert completed.returncode == 0, completed.stderr
     payload = json.loads(json_path.read_text(encoding="utf-8"))
+    assert payload["retrieval_mode"] == "hybrid"
     assert payload["runs"][0]["overall_pass"] is True
-    assert payload["runs"][0]["summary"]["turn_count"] == 71
+    assert payload["runs"][0]["summary"]["turn_count"] == 224
     assert "P0 结论" in report_path.read_text(encoding="utf-8")

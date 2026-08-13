@@ -1,0 +1,312 @@
+{
+  "version": 1,
+  "description": "阶段 2 基线 17 件展品的八类真实文本评测覆盖档案。",
+  "exhibits": [
+    {
+      "exhibit_id": "liangzhu-jade-yue-set",
+      "canonical": {"text": "玉钺组合有多大？", "fact_id": "fact-liangzhu-yue-dimensions"},
+      "aliases": [
+        {"text": "玉钺是在哪里出土的？", "fact_id": "fact-liangzhu-yue-excavation"},
+        {"text": "反山M14玉钺组合有什么用途？", "fact_id": "fact-liangzhu-yue-usage"}
+      ],
+      "facts": [
+        {"text": "玉钺组合长什么样？", "fact_id": "fact-liangzhu-yue-composition", "fact_type": "appearance"},
+        {"text": "玉钺组合是怎么加工的？", "fact_id": "fact-liangzhu-yue-craft", "fact_type": "craft"}
+      ],
+      "interference": {"text": "别把它和同墓出土的小型鸟形玉器混淆，反山M14玉钺组合有多大？", "fact_id": "fact-liangzhu-yue-dimensions"},
+      "unsupported": {"text": "玉钺组合现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "玉钺组合长什么样？", "fact_id": "fact-liangzhu-yue-composition"},
+        "followup": {"text": "它有什么用途？", "fact_id": "fact-liangzhu-yue-usage"}
+      }
+    },
+    {
+      "exhibit_id": "liangzhu-jade-trident",
+      "canonical": {"text": "玉三叉形器是什么材质？", "fact_id": "fact-liangzhu-trident-material"},
+      "aliases": [
+        {"text": "三叉形器有多高？", "fact_id": "fact-liangzhu-trident-dimensions"},
+        {"text": "瑶山M7玉三叉形器是在哪里出土的？", "fact_id": "fact-liangzhu-trident-excavation"}
+      ],
+      "facts": [
+        {"text": "玉三叉形器上面刻了什么？", "fact_id": "fact-liangzhu-trident-craft", "fact_type": "craft"},
+        {"text": "玉三叉形器原来戴在哪儿？", "fact_id": "fact-liangzhu-trident-usage", "fact_type": "usage"}
+      ],
+      "interference": {"text": "别把它和同墓出土的方柱形玉器混淆，瑶山M7玉三叉形器是什么材质？", "fact_id": "fact-liangzhu-trident-material"},
+      "unsupported": {"text": "玉三叉形器的主人叫什么名字？"},
+      "conversation": {
+        "initial": {"text": "玉三叉形器有多大？", "fact_id": "fact-liangzhu-trident-dimensions"},
+        "followup": {"text": "它原来有什么用？", "fact_id": "fact-liangzhu-trident-usage"}
+      }
+    },
+    {
+      "exhibit_id": "liangzhu-jade-bird-fanshan-m14-259",
+      "canonical": {"text": "反山M14玉鸟有多大？", "fact_id": "fact-liangzhu-jade-bird-dimensions"},
+      "aliases": [
+        {"text": "玉鸟是在哪里出土的？", "fact_id": "fact-liangzhu-jade-bird-excavation"},
+        {"text": "良渚玉鸟有什么用途？", "fact_id": "fact-liangzhu-jade-bird-usage"}
+      ],
+      "facts": [
+        {"text": "反山M14玉鸟长什么样？", "fact_id": "fact-liangzhu-jade-bird-appearance", "fact_type": "appearance"},
+        {"text": "反山M14玉鸟是怎么加工的？", "fact_id": "fact-liangzhu-jade-bird-craft", "fact_type": "craft"}
+      ],
+      "interference": {"text": "别把它和同墓出土的圆形玉器混淆，反山M14玉鸟有多大？", "fact_id": "fact-liangzhu-jade-bird-dimensions"},
+      "unsupported": {"text": "反山M14玉鸟现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "反山M14玉鸟长什么样？", "fact_id": "fact-liangzhu-jade-bird-appearance"},
+        "followup": {"text": "它可以怎么佩戴？", "fact_id": "fact-liangzhu-jade-bird-usage"}
+      }
+    },
+    {
+      "exhibit_id": "liangzhu-jade-cong-yaoshan-m7-50",
+      "canonical": {"text": "瑶山M7:50玉琮有多大？", "fact_id": "fact-liangzhu-cong-m7-50-dimensions"},
+      "aliases": [
+        {"text": "瑶山玉琮是在哪里出土的？", "fact_id": "fact-liangzhu-cong-m7-50-excavation"},
+        {"text": "玉琮M7:50长什么样？", "fact_id": "fact-liangzhu-cong-m7-50-appearance"}
+      ],
+      "facts": [
+        {"text": "瑶山M7:50玉琮上面刻了什么？", "fact_id": "fact-liangzhu-cong-m7-50-craft", "fact_type": "craft"},
+        {"text": "瑶山M7:50玉琮有多高？", "fact_id": "fact-liangzhu-cong-m7-50-dimensions", "fact_type": "dimensions"}
+      ],
+      "interference": {"text": "别把它和同墓出土的冠饰混淆，瑶山M7:50玉琮有多大？", "fact_id": "fact-liangzhu-cong-m7-50-dimensions"},
+      "unsupported": {"text": "瑶山M7:50玉琮现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "瑶山M7:50玉琮长什么样？", "fact_id": "fact-liangzhu-cong-m7-50-appearance"},
+        "followup": {"text": "它的纹饰怎么做的？", "fact_id": "fact-liangzhu-cong-m7-50-craft"}
+      }
+    },
+    {
+      "exhibit_id": "liangzhu-jade-bi-fanshan-m14-223",
+      "canonical": {"text": "反山M14:223玉璧有多大？", "fact_id": "fact-liangzhu-bi-m14-223-dimensions"},
+      "aliases": [
+        {"text": "玉璧是在哪里出土的？", "fact_id": "fact-liangzhu-bi-m14-223-excavation"},
+        {"text": "反山玉璧长什么样？", "fact_id": "fact-liangzhu-bi-m14-223-appearance"}
+      ],
+      "facts": [
+        {"text": "反山M14:223玉璧是怎么加工的？", "fact_id": "fact-liangzhu-bi-m14-223-craft", "fact_type": "craft"},
+        {"text": "反山M14:223玉璧直径多大？", "fact_id": "fact-liangzhu-bi-m14-223-dimensions", "fact_type": "dimensions"}
+      ],
+      "interference": {"text": "别把它和同墓出土的小型鸟形玉器混淆，反山M14:223玉璧有多大？", "fact_id": "fact-liangzhu-bi-m14-223-dimensions"},
+      "unsupported": {"text": "反山M14:223玉璧现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "反山M14:223玉璧长什么样？", "fact_id": "fact-liangzhu-bi-m14-223-appearance"},
+        "followup": {"text": "它中间的孔怎么加工？", "fact_id": "fact-liangzhu-bi-m14-223-craft"}
+      }
+    },
+    {
+      "exhibit_id": "liangzhu-plain-cong-wujiabu",
+      "canonical": {"text": "吴家埠素面琮有多大？", "fact_id": "fact-liangzhu-plain-cong-dimensions"},
+      "aliases": [
+        {"text": "素面琮是在哪里出土的？", "fact_id": "fact-liangzhu-plain-cong-excavation"},
+        {"text": "吴家埠玉琮长什么样？", "fact_id": "fact-liangzhu-plain-cong-appearance"}
+      ],
+      "facts": [
+        {"text": "吴家埠素面琮为什么说没有做完？", "required_fact_ids": ["fact-liangzhu-plain-cong-status"], "allowed_fact_ids": ["fact-liangzhu-plain-cong-status", "fact-liangzhu-plain-cong-craft"], "fact_type": "craft"},
+        {"text": "吴家埠素面琮有多高？", "fact_id": "fact-liangzhu-plain-cong-dimensions", "fact_type": "dimensions"}
+      ],
+      "interference": {"text": "别把它和有纹饰的成品混淆，吴家埠素面琮有多大？", "fact_id": "fact-liangzhu-plain-cong-dimensions"},
+      "unsupported": {"text": "吴家埠素面琮现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "吴家埠素面琮长什么样？", "fact_id": "fact-liangzhu-plain-cong-appearance"},
+        "followup": {"text": "它为什么被认为是半成品？", "required_fact_ids": ["fact-liangzhu-plain-cong-status"], "allowed_fact_ids": ["fact-liangzhu-plain-cong-status", "fact-liangzhu-plain-cong-craft"]}
+      }
+    },
+    {
+      "exhibit_id": "southern-song-guan-zun-incense-burner",
+      "canonical": {"text": "南宋官窑青瓷樽式炉有多高？", "fact_id": "fact-west-lake-zun-dimensions"},
+      "aliases": [
+        {"text": "青瓷樽式炉是在哪里出土的？", "fact_id": "fact-west-lake-zun-excavation"},
+        {"text": "官窑樽式炉是什么时候的？", "fact_id": "fact-west-lake-zun-era"}
+      ],
+      "facts": [
+        {"text": "南宋官窑青瓷樽式炉长什么样？", "fact_id": "fact-west-lake-zun-appearance", "fact_type": "appearance"},
+        {"text": "南宋官窑青瓷樽式炉是什么材质？", "fact_id": "fact-west-lake-zun-material", "fact_type": "material"}
+      ],
+      "interference": {"text": "别把它和带镂孔的炉盖混淆，老虎洞窑址出土的青瓷樽式炉有多高？", "fact_id": "fact-west-lake-zun-dimensions"},
+      "unsupported": {"text": "南宋官窑青瓷樽式炉是谁亲手设计的？"},
+      "conversation": {
+        "initial": {"text": "南宋官窑青瓷樽式炉有多高？", "fact_id": "fact-west-lake-zun-dimensions"},
+        "followup": {"text": "它是在哪里出土的？", "fact_id": "fact-west-lake-zun-excavation"}
+      }
+    },
+    {
+      "exhibit_id": "southern-song-guan-bagua-incense-lid",
+      "canonical": {"text": "南宋官窑青瓷八卦熏炉盖有多高？", "fact_id": "fact-west-lake-bagua-dimensions"},
+      "aliases": [
+        {"text": "青瓷八卦熏炉盖是在哪里出土的？", "fact_id": "fact-west-lake-bagua-excavation"},
+        {"text": "官窑八卦熏炉盖是什么时候的？", "fact_id": "fact-west-lake-bagua-era"}
+      ],
+      "facts": [
+        {"text": "南宋官窑青瓷八卦熏炉盖长什么样？", "fact_id": "fact-west-lake-bagua-appearance", "fact_type": "appearance"},
+        {"text": "南宋官窑青瓷八卦熏炉盖有什么用？", "fact_id": "fact-west-lake-bagua-usage", "fact_type": "usage"}
+      ],
+      "interference": {"text": "别把它和完整的香炉器身混淆，郊坛下窑址的青瓷八卦熏炉盖有多高？", "fact_id": "fact-west-lake-bagua-dimensions"},
+      "unsupported": {"text": "南宋官窑青瓷八卦熏炉盖现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "南宋官窑青瓷八卦熏炉盖长什么样？", "fact_id": "fact-west-lake-bagua-appearance"},
+        "followup": {"text": "它上面的孔有什么用？", "fact_id": "fact-west-lake-bagua-usage"}
+      }
+    },
+    {
+      "exhibit_id": "southern-song-guan-gui-incense-burner",
+      "canonical": {"text": "南宋官窑青瓷簋式炉有多大？", "fact_id": "fact-west-lake-gui-dimensions"},
+      "aliases": [
+        {"text": "青瓷簋式炉是在哪里出土的？", "fact_id": "fact-west-lake-gui-excavation"},
+        {"text": "官窑簋式炉有什么用途？", "fact_id": "fact-west-lake-gui-usage"}
+      ],
+      "facts": [
+        {"text": "南宋官窑青瓷簋式炉长什么样？", "fact_id": "fact-west-lake-gui-appearance", "fact_type": "appearance"},
+        {"text": "南宋官窑青瓷簋式炉是什么材质？", "fact_id": "fact-west-lake-gui-material", "fact_type": "material"}
+      ],
+      "interference": {"text": "别把它和竖条纹炉身混淆，仿青铜簋样式的青瓷簋式炉有多大？", "fact_id": "fact-west-lake-gui-dimensions"},
+      "unsupported": {"text": "南宋官窑青瓷簋式炉现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "南宋官窑青瓷簋式炉长什么样？", "fact_id": "fact-west-lake-gui-appearance"},
+        "followup": {"text": "它有什么用途？", "fact_id": "fact-west-lake-gui-usage"}
+      }
+    },
+    {
+      "exhibit_id": "southern-song-dasong-guowu-sagger-pad",
+      "canonical": {"text": "南宋官窑“大宋国物”垫饼有多大？", "fact_id": "fact-west-lake-sagger-pad-dimensions"},
+      "aliases": [
+        {"text": "大宋国物垫饼是在哪里出土的？", "fact_id": "fact-west-lake-sagger-pad-excavation"},
+        {"text": "官窑垫饼是什么时候的？", "fact_id": "fact-west-lake-sagger-pad-era"}
+      ],
+      "facts": [
+        {"text": "南宋官窑“大宋国物”垫饼长什么样？", "fact_id": "fact-west-lake-sagger-pad-appearance", "fact_type": "appearance"},
+        {"text": "南宋官窑“大宋国物”垫饼上面刻了什么？", "fact_id": "fact-west-lake-sagger-pad-craft", "fact_type": "craft"}
+      ],
+      "interference": {"text": "别把它和带孔的器盖混淆，刻着大宋国物四字的官窑垫饼有多大？", "fact_id": "fact-west-lake-sagger-pad-dimensions"},
+      "unsupported": {"text": "南宋官窑“大宋国物”垫饼现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "南宋官窑“大宋国物”垫饼是什么材质？", "fact_id": "fact-west-lake-sagger-pad-material"},
+        "followup": {"text": "它上面刻了什么字？", "fact_id": "fact-west-lake-sagger-pad-craft"}
+      }
+    },
+    {
+      "exhibit_id": "five-dynasties-northern-song-yue-celadon-cup-stand",
+      "canonical": {"text": "五代至北宋越窑青釉水波纹盏托有多大？", "fact_id": "fact-west-lake-yue-cup-stand-dimensions"},
+      "aliases": [
+        {"text": "越窑青釉水波纹盏托是什么时候的？", "fact_id": "fact-west-lake-yue-cup-stand-era"},
+        {"text": "水波纹盏托有什么用途？", "fact_id": "fact-west-lake-yue-cup-stand-usage"}
+      ],
+      "facts": [
+        {"text": "五代至北宋越窑青釉水波纹盏托长什么样？", "fact_id": "fact-west-lake-yue-cup-stand-appearance", "fact_type": "appearance"},
+        {"text": "五代至北宋越窑青釉水波纹盏托是什么材质？", "fact_id": "fact-west-lake-yue-cup-stand-material", "fact_type": "material"}
+      ],
+      "interference": {"text": "虽然同样是青瓷，但五代至北宋越窑青釉水波纹盏托有多大？", "fact_id": "fact-west-lake-yue-cup-stand-dimensions"},
+      "unsupported": {"text": "五代至北宋越窑青釉水波纹盏托现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "五代至北宋越窑青釉水波纹盏托长什么样？", "fact_id": "fact-west-lake-yue-cup-stand-appearance"},
+        "followup": {"text": "它用来承托什么？", "fact_id": "fact-west-lake-yue-cup-stand-usage"}
+      }
+    },
+    {
+      "exhibit_id": "three-kingdoms-celadon-funerary-jar",
+      "canonical": {"text": "三国青釉堆塑罐有多大？", "fact_id": "fact-west-lake-funerary-jar-dimensions"},
+      "aliases": [
+        {"text": "青釉堆塑罐是什么时候的？", "fact_id": "fact-west-lake-funerary-jar-era"},
+        {"text": "魂瓶有什么用途？", "fact_id": "fact-west-lake-funerary-jar-usage"}
+      ],
+      "facts": [
+        {"text": "三国青釉堆塑罐长什么样？", "fact_id": "fact-west-lake-funerary-jar-appearance", "fact_type": "appearance"},
+        {"text": "三国青釉堆塑罐是什么材质？", "fact_id": "fact-west-lake-funerary-jar-material", "fact_type": "material"}
+      ],
+      "interference": {"text": "别把它和承托茶盏的小型器物混淆，又叫魂瓶的三国青釉堆塑罐有多大？", "fact_id": "fact-west-lake-funerary-jar-dimensions"},
+      "unsupported": {"text": "三国青釉堆塑罐现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "三国青釉堆塑罐长什么样？", "fact_id": "fact-west-lake-funerary-jar-appearance"},
+        "followup": {"text": "它原来有什么用？", "fact_id": "fact-west-lake-funerary-jar-usage"}
+      }
+    },
+    {
+      "exhibit_id": "qing-butterfly-medallion-robe-fabric",
+      "canonical": {"text": "清玄色地团花蝴蝶纹袍料是什么年代的？", "fact_id": "fact-china-silk-butterfly-era"},
+      "aliases": [
+        {"text": "团花蝴蝶纹袍料是什么材质？", "fact_id": "fact-china-silk-butterfly-material"},
+        {"text": "蝴蝶纹袍料有多大？", "fact_id": "fact-china-silk-butterfly-dimensions"}
+      ],
+      "facts": [
+        {"text": "清玄色地团花蝴蝶纹袍料长什么样？", "fact_id": "fact-china-silk-butterfly-appearance", "fact_type": "appearance"},
+        {"text": "清玄色地团花蝴蝶纹袍料是怎么绣出来的？", "fact_id": "fact-china-silk-butterfly-craft", "fact_type": "craft"}
+      ],
+      "interference": {"text": "别把它和单色菱纹袍服混淆，有彩翼粉蝶纹样的清玄色地团花蝴蝶纹袍料是什么年代的？", "fact_id": "fact-china-silk-butterfly-era"},
+      "unsupported": {"text": "清玄色地团花蝴蝶纹袍料现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "清玄色地团花蝴蝶纹袍料长什么样？", "fact_id": "fact-china-silk-butterfly-appearance"},
+        "followup": {"text": "它是怎么绣出来的？", "fact_id": "fact-china-silk-butterfly-craft"}
+      }
+    },
+    {
+      "exhibit_id": "northern-dynasties-figured-damask-robe",
+      "canonical": {"text": "环人物纹绫袍有多大？", "fact_id": "fact-silk-figured-damask-robe-dimensions"},
+      "aliases": [
+        {"text": "北朝环人物纹绫袍是什么时候的？", "fact_id": "fact-silk-figured-damask-robe-era"},
+        {"text": "套环人物纹绫袍是什么材质？", "fact_id": "fact-silk-figured-damask-robe-material"}
+      ],
+      "facts": [
+        {"text": "环人物纹绫袍长什么样？", "fact_id": "fact-silk-figured-damask-robe-appearance", "fact_type": "appearance"},
+        {"text": "环人物纹绫袍有多大？", "fact_id": "fact-silk-figured-damask-robe-dimensions", "fact_type": "dimensions"}
+      ],
+      "interference": {"text": "别把它和金色大袖礼服混淆，带几何化人物纹样的北朝环人物纹绫袍有多大？", "fact_id": "fact-silk-figured-damask-robe-dimensions"},
+      "unsupported": {"text": "环人物纹绫袍现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "环人物纹绫袍长什么样？", "fact_id": "fact-silk-figured-damask-robe-appearance"},
+        "followup": {"text": "它有多大？", "fact_id": "fact-silk-figured-damask-robe-dimensions"}
+      }
+    },
+    {
+      "exhibit_id": "tang-dark-blue-diamond-gauze-robe",
+      "canonical": {"text": "深蓝色菱纹罗袍是什么年代的？", "fact_id": "fact-silk-blue-gauze-robe-era"},
+      "aliases": [
+        {"text": "唐深蓝色菱纹罗袍是什么材质？", "fact_id": "fact-silk-blue-gauze-robe-material"},
+        {"text": "菱纹罗袍长什么样？", "fact_id": "fact-silk-blue-gauze-robe-appearance"}
+      ],
+      "facts": [
+        {"text": "深蓝色菱纹罗袍是怎么织出来的？", "fact_id": "fact-silk-blue-gauze-robe-craft", "fact_type": "craft"},
+        {"text": "深蓝色菱纹罗袍长什么样？", "fact_id": "fact-silk-blue-gauze-robe-appearance", "fact_type": "appearance"}
+      ],
+      "interference": {"text": "别把它和彩色蝴蝶纹衣料混淆，采用四经绞结构的唐深蓝色菱纹罗袍是什么年代的？", "fact_id": "fact-silk-blue-gauze-robe-era"},
+      "unsupported": {"text": "深蓝色菱纹罗袍现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "深蓝色菱纹罗袍长什么样？", "fact_id": "fact-silk-blue-gauze-robe-appearance"},
+        "followup": {"text": "它是怎么织成菱纹的？", "fact_id": "fact-silk-blue-gauze-robe-craft"}
+      }
+    },
+    {
+      "exhibit_id": "yuan-gold-damask-wide-sleeve-robe",
+      "canonical": {"text": "织金绫大袖袍有多大？", "fact_id": "fact-silk-gold-damask-robe-dimensions"},
+      "aliases": [
+        {"text": "元代织金绫大袖袍是什么时候的？", "fact_id": "fact-silk-gold-damask-robe-era"},
+        {"text": "织金大袖袍是什么材质？", "fact_id": "fact-silk-gold-damask-robe-material"}
+      ],
+      "facts": [
+        {"text": "织金绫大袖袍长什么样？", "fact_id": "fact-silk-gold-damask-robe-appearance", "fact_type": "appearance"},
+        {"text": "织金绫大袖袍什么场合穿？", "fact_id": "fact-silk-gold-damask-robe-usage", "fact_type": "usage"}
+      ],
+      "interference": {"text": "别把它和北朝人物纹窄袖袍混淆，作为蒙元女性正式礼服的织金绫大袖袍有多大？", "fact_id": "fact-silk-gold-damask-robe-dimensions"},
+      "unsupported": {"text": "织金绫大袖袍现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "织金绫大袖袍长什么样？", "fact_id": "fact-silk-gold-damask-robe-appearance"},
+        "followup": {"text": "它在什么场合穿？", "fact_id": "fact-silk-gold-damask-robe-usage"}
+      }
+    },
+    {
+      "exhibit_id": "liao-shi-robe-fragment",
+      "canonical": {"text": "絁袍残片有多大？", "fact_id": "fact-silk-shi-fragment-dimensions"},
+      "aliases": [
+        {"text": "辽代絁袍残片是什么时候的？", "fact_id": "fact-silk-shi-fragment-era"},
+        {"text": "絁片是什么材质？", "fact_id": "fact-silk-shi-fragment-material"}
+      ],
+      "facts": [
+        {"text": "絁袍残片是怎么织出来的？", "required_fact_ids": ["fact-silk-shi-fragment-craft"], "allowed_fact_ids": ["fact-silk-shi-fragment-craft", "fact-silk-shi-fragment-research-limit"], "fact_type": "craft"},
+        {"text": "絁袍残片有多大？", "fact_id": "fact-silk-shi-fragment-dimensions", "fact_type": "dimensions"}
+      ],
+      "interference": {"text": "别把它和完整的金色大袖礼服混淆，采用交梭工艺的辽代絁袍残片有多大？", "fact_id": "fact-silk-shi-fragment-dimensions"},
+      "unsupported": {"text": "絁袍残片现在市场价多少钱？"},
+      "conversation": {
+        "initial": {"text": "絁袍残片是怎么织出来的？", "required_fact_ids": ["fact-silk-shi-fragment-craft"], "allowed_fact_ids": ["fact-silk-shi-fragment-craft", "fact-silk-shi-fragment-research-limit"]},
+        "followup": {"text": "它有多大？", "fact_id": "fact-silk-shi-fragment-dimensions"}
+      }
+    }
+  ]
+}

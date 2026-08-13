@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 import sys
 
+from qdrant_client import QdrantClient
+
 
 SERVER_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = SERVER_ROOT.parents[1]
@@ -19,7 +21,18 @@ from core.museum.evaluation import (  # noqa: E402
     render_evaluation_report,
     run_evaluation,
 )
+from core.museum.knowledge_release import prepare_index_records  # noqa: E402
+from core.museum.qdrant_index import QdrantFactIndex  # noqa: E402
+from core.museum.retrieval import HybridEvidenceRetriever  # noqa: E402
 from scripts.museum_text_chat import initialize_chat_llm  # noqa: E402
+
+
+class DeterministicEvaluationEmbedder:
+    model = "local-evaluation-constant"
+    dimension = 4
+
+    def embed(self, _text: str) -> list[float]:
+        return [1.0, 0.0, 0.0, 0.0]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -43,6 +56,12 @@ def build_parser() -> argparse.ArgumentParser:
         choices=("rules", "llm", "both"),
         default="rules",
         help="运行规则基线、真实 LLM 或两者",
+    )
+    parser.add_argument(
+        "--retrieval-mode",
+        choices=("rules", "hybrid"),
+        default="rules",
+        help="选择 SQLite 规则检索或内存 Qdrant 混合检索",
     )
     parser.add_argument(
         "--report",
@@ -98,6 +117,11 @@ def run(args: argparse.Namespace) -> int:
         database_path=args.database,
         server_root=SERVER_ROOT,
         fixture=fixture,
+        retriever_factory=(
+            _local_hybrid_retriever
+            if args.retrieval_mode == "hybrid"
+            else None
+        ),
     )
 
     llm = None
@@ -121,6 +145,7 @@ def run(args: argparse.Namespace) -> int:
         "llm_mode": selected_mode,
         "fixture": str(Path(args.fixture).resolve()),
         "database": str(Path(args.database).resolve()),
+        "retrieval_mode": args.retrieval_mode,
         "manual_fluency_review": manual_fluency_review,
         "runs": runs,
     }
@@ -170,6 +195,29 @@ def _prepare_database_path(path: Path, *, replace: bool) -> None:
         )
     for candidate in present:
         candidate.unlink()
+
+
+def _local_hybrid_retriever(store):
+    embedder = DeterministicEvaluationEmbedder()
+    index = QdrantFactIndex(
+        url="http://unused.local",
+        collection_name="museum_eval_facts",
+        dimension=embedder.dimension,
+        client=QdrantClient(location=":memory:"),
+    )
+    records = prepare_index_records(
+        store.published_fact_index_records(),
+        embedding_model=embedder.model,
+        embedding_dimension=embedder.dimension,
+    )
+    index.rebuild(records, [embedder.embed("") for _ in records])
+    return HybridEvidenceRetriever(
+        store=store,
+        embedder=embedder,
+        index=index,
+        mode="hybrid",
+        dense_score_threshold=0.0,
+    )
 
 
 def _manual_fluency_review(args: argparse.Namespace) -> dict | None:
