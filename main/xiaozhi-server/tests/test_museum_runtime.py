@@ -151,10 +151,13 @@ def test_unsupported_question_returns_explicit_fallback(tmp_path):
     )
 
     assert outcome.handled is True
-    assert "不能替它补一个答案" in outcome.spoken_text
+    assert "不能替馆方补写答案" in outcome.spoken_text
     assert outcome.audit_record["knowledge_status"] == "unsupported"
     assert outcome.audit_record["fact_ids"] == []
     assert outcome.display_state["grounding"]["status"] == "unsupported"
+
+    assert "没有可供游客使用的已发布讲解内容" in outcome.spoken_text
+    assert "馆方没有资料" not in outcome.spoken_text
 
     store = MuseumStore(tmp_path / "museum.db")
     with store.connection() as connection:
@@ -163,7 +166,7 @@ def test_unsupported_question_returns_explicit_fallback(tmp_path):
         _request(text="战国水晶杯是什么材质做的？")
     )
     assert no_sourced_facts.audit_record["knowledge_status"] == "unsupported"
-    assert "不能替它补一个答案" in no_sourced_facts.spoken_text
+    assert "不能替馆方补写答案" in no_sourced_facts.spoken_text
 
 
 def test_llm_cannot_use_an_era_fact_to_answer_a_price_question(tmp_path):
