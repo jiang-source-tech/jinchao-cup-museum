@@ -1,6 +1,15 @@
 from __future__ import annotations
 
+from datetime import datetime
+from pathlib import Path
+
 from core.museum.exhibit_resolver import ExhibitResolver
+from core.museum.content_import import (
+    import_draft_content,
+    load_content_package,
+    publish_revision,
+    review_revision,
+)
 from core.museum.store import MuseumStore
 
 
@@ -96,6 +105,12 @@ def test_unlisted_exhibit_reference_does_not_inherit_old_context(tmp_path):
     )
     assert possessive.status == "not_found"
 
+    introductory = resolver.resolve(
+        question="介绍一下不存在的测试展品",
+        current_exhibit_id=None,
+    )
+    assert introductory.status == "not_found"
+
 
 def test_ambiguous_alias_does_not_bind_a_random_exhibit(tmp_path):
     store = MuseumStore(tmp_path / "museum.db")
@@ -146,4 +161,47 @@ def test_ambiguous_alias_does_not_bind_a_random_exhibit(tmp_path):
     assert set(result.candidate_ids) == {
         "warring-states-crystal-cup",
         "demo-glass-cup",
+    }
+
+
+def test_structured_ambiguous_alias_returns_all_published_candidates(tmp_path):
+    store = MuseumStore(tmp_path / "museum.db")
+    package_path = (
+        Path(__file__).parents[1]
+        / "content"
+        / "museum"
+        / "china-national-silk-museum-stage3-catalog.json"
+    )
+    package = load_content_package(package_path)
+    import_draft_content(store, package)
+    occurred_at = datetime.fromisoformat("2026-08-12T12:00:00+00:00")
+    for exhibit in package.exhibits:
+        review_revision(
+            store,
+            revision_id=exhibit.revision.id,
+            reviewed_by="test-reviewer",
+            reviewed_at=occurred_at,
+        )
+        publish_revision(
+            store,
+            revision_id=exhibit.revision.id,
+            published_by="test-publisher",
+            published_at=occurred_at,
+        )
+
+    result = ExhibitResolver(store).resolve(
+        question="介绍一下碗",
+        current_exhibit_id=None,
+    )
+
+    assert result.status == "ambiguous"
+    assert result.matched_text == "碗"
+    assert set(result.candidate_ids) == {
+        "china-silk-catalog-3287",
+        "china-silk-catalog-3288",
+        "china-silk-catalog-3289",
+        "china-silk-catalog-3290",
+        "china-silk-catalog-3291",
+        "china-silk-catalog-3292",
+        "china-silk-catalog-3293",
     }

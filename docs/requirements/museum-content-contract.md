@@ -1,8 +1,8 @@
-# 博物馆内容包合同 v1
+# 博物馆内容包合同 v2
 
 ## 1. 用途
 
-内容包用于在不修改 Python 代码的情况下，将博物馆、展区、展品、别名、资料来源、内容版本和事实导入 SQLite。v1 内容包本身只允许事务化导入 `draft`；审核、发布、撤回和回滚继续由同一 CLI 的独立生命周期命令执行，不能通过文件字段绕过发布门。
+内容包用于在不修改 Python 代码的情况下，将博物馆、展区、展品、别名、资料来源、内容版本和事实导入 SQLite。V1 继续兼容已有内容；2026 年 8 月 12 日之后新增的真实馆藏批次使用 V2。两种内容包都只允许事务化导入 `draft`；审核、发布、撤回和回滚继续由独立生命周期命令执行，不能通过文件字段绕过发布门。
 
 对应实现：
 
@@ -21,7 +21,7 @@
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `schema_version` | integer | 当前只能为 `1` |
+| `schema_version` | integer | 已有内容允许 `1`；新增内容使用 `2` |
 | `museum` | object | 本批次所属博物馆 |
 | `zones` | array | 本批次使用的展区 |
 | `sources` | array | 本批次事实引用的来源 |
@@ -77,7 +77,16 @@ sources:
     rights_note: 自动化测试专用，不用于游客回答。
 ```
 
-字段均为非空字符串。`locator` 可以是 URL、馆方档案号或其他稳定定位符；导入器不抓取外部内容，只保存来源元数据。
+V2 在上述字段之外增加：
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| `publisher` | 是 | 发布机构或出版者 |
+| `published_date` | 否 | 已知时填写 `YYYY-MM-DD` |
+| `accessed_at` | 是 | 项目核对来源的日期，格式 `YYYY-MM-DD` |
+| `language` | 否 | 默认 `zh-CN` |
+
+`locator` 可以是 URL、馆方档案号或其他稳定定位符；导入器不抓取外部内容，只保存来源元数据。
 
 ### 4.4 exhibits
 
@@ -96,7 +105,21 @@ exhibits:
       facts: []
 ```
 
-`aliases` 在 v1 中是字符串数组。别名类型、优先级和来源元数据尚未写入独立别名表；在建立对应存储和迁移前，不接受对象形式的别名，避免导入时静默丢字段。
+V1 的 `aliases` 仍是字符串数组。V2 使用审核对象：
+
+```yaml
+aliases:
+  - text: 测试铜铃
+    kind: common
+    binding: unique
+    sources: [fixture-source-bronze]
+  - text: 铜铃
+    kind: abbreviation
+    binding: ambiguous
+    sources: [fixture-source-bronze]
+```
+
+`kind` 允许 `common`、`abbreviation`、`asr_variant`、`historical`。`binding=unique` 才进入自动展品绑定；`binding=ambiguous` 只存档，不允许解析器静默选择展品。V2 每个别名至少绑定一个来源。
 
 展品 `status` 只允许 `active` 或 `archived`。即使展品标记为 `active`，只要它没有 `published` revision，就不会进入游客侧 `ExhibitResolver` 索引。
 
@@ -121,6 +144,7 @@ facts:
     statement: 这是一条用于验证青铜材质检索的测试事实。
     keywords: [材质, 青铜]
     confidence: test_fixture
+    certainty: confirmed
     sources: [fixture-source-bronze]
 ```
 
@@ -145,12 +169,13 @@ usage
 - `statement` 非空；
 - `keywords` 至少一项；
 - `sources` 至少一项；
+- V2 的 `certainty` 必填，只允许 `confirmed`、`qualified`、`disputed`、`unknown`；
 - 每个来源 ID 都存在于同一内容包的 `sources` 中；
 - fact ID 在整个内容包中唯一。
 
 ## 5. 别名与名称冲突
 
-导入器使用与当前展品解析相同的规范化规则：忽略常见中英文标点和空白，并将英文字母转为小写。
+导入器使用与当前展品解析相同的规范化规则：先执行 Unicode NFKC 和大小写折叠，再移除 Unicode 非字母数字字符及下划线。
 
 以下情况被拒绝：
 
@@ -196,7 +221,8 @@ usage
 museum
   -> zone
   -> source_document
-  -> exhibit
+    -> exhibit
+  -> exhibit_alias
   -> content_revision(draft)
   -> exhibit_fact
   -> fact_source
@@ -312,6 +338,16 @@ python scripts/import_museum_content.py audit `
 
 增加 `--json` 可输出单行结构化结果，供脚本或 CI 使用。成功结果写入标准输出；失败结果写入标准错误，并包含 `status`、`error`、`message` 和 `issues`。校验或数据库冲突时进程返回码为 `2`，成功返回 `0`。
 
+### 8.9 批量预检
+
+```powershell
+python scripts/audit_museum_content_batch.py `
+  --directory content/museum `
+  --json
+```
+
+该命令把目录内内容包作为一个发布候选集合，在临时隔离数据库中顺序导入，检查跨包 ID、来源、展区、revision、事实及唯一别名冲突，并输出馆、展品、事实、来源、V1/V2、唯一/歧义别名和确定性等级统计。它不会连接或修改生产数据库。
+
 ## 9. 生命周期审计
 
 `content_revision_event` 以追加事件记录内容状态变化：
@@ -326,10 +362,12 @@ rollback
 
 每条事件保存 revision、展品、原状态、目标状态、执行人、原因和发生时间。状态变更和事件写入使用同一 SQLite 事务，不允许出现“状态已变化但没有事件”或“事件存在但状态未变化”。
 
-## 10. v1 仍未实现
+## 10. 兼容与限制
 
-- 独立别名表和别名类型元数据；
+- V1 导入时会把字符串别名双写到 `exhibit_alias`，类型默认为 `common`、绑定方式默认为 `unique`、来源为空；已有数据库启动时执行相同回填。
+- V2 来源元数据、别名对象和事实确定性写入结构化字段；`aliases_json` 暂时保留，只包含可自动绑定的 `unique` 别名，以兼容现有检索和解析代码。
+- 现有 V1 内容不会因为缺少 V2 元数据而被自动伪造为完整 V2；批量报告会明确列出 schema 版本数量。
 - 内容管理后台；
-- 向量索引或外部向量数据库。
+- 持久化知识 release 激活表和事务化数据库/向量双系统发布。
 
-`REQ-013 / AC-013-1` 至 `AC-013-5` 已形成完整自动化闭环；以上剩余能力属于后续独立需求，不影响 `REQ-013` 完成状态。
+V2 合同只是扩展到 100 件真实馆藏的前置条件，不代表来源已经人工复核，也不代表生产内容已扩容。

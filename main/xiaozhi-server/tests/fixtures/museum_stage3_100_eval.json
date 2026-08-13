@@ -1,0 +1,3507 @@
+{
+  "version": 2,
+  "name": "museum-stage3-100-exhibit-evaluation",
+  "content_packages": [
+    "content/museum/china-national-silk-museum-batch-2.yaml",
+    "content/museum/china-national-silk-museum-stage3-catalog.json",
+    "content/museum/china-national-silk-museum.yaml",
+    "content/museum/hangzhou-west-lake-museum-batch-2.yaml",
+    "content/museum/hangzhou-west-lake-museum.yaml",
+    "content/museum/liangzhu-museum-batch-2.yaml",
+    "content/museum/liangzhu-museum.yaml"
+  ],
+  "thresholds": {
+    "canonical_name_accuracy": 1.0,
+    "reviewed_alias_accuracy": 0.95,
+    "asr_alias_accuracy": 0.95,
+    "ambiguous_wrong_binding_rate": 0.0,
+    "unlisted_silent_inheritance_rate": 0.0,
+    "grounded_boundary_violation_rate": 0.0,
+    "unsupported_hallucination_rate": 0.0,
+    "evidence_audit_reproducibility": 1.0
+  },
+  "cases": [
+    {
+      "id": "stage3-northern-dynasties-figured-damask-robe",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "环人物纹绫袍是什么年代的？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "northern-dynasties-figured-damask-robe",
+            "required_fact_ids": [
+              "fact-silk-figured-damask-robe-era"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "northern-dynasties-figured-damask-robe",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-tang-dark-blue-diamond-gauze-robe",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "深蓝色菱纹罗袍是什么年代的？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "tang-dark-blue-diamond-gauze-robe",
+            "required_fact_ids": [
+              "fact-silk-blue-gauze-robe-era"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "tang-dark-blue-diamond-gauze-robe",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-yuan-gold-damask-wide-sleeve-robe",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "织金绫大袖袍是什么年代的？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "yuan-gold-damask-wide-sleeve-robe",
+            "required_fact_ids": [
+              "fact-silk-gold-damask-robe-era"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "yuan-gold-damask-wide-sleeve-robe",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-liao-shi-robe-fragment",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "絁袍残片是什么年代的？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liao-shi-robe-fragment",
+            "required_fact_ids": [
+              "fact-silk-shi-fragment-era"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "liao-shi-robe-fragment",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-31590",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下晚清民国雪青缎地彩绣喜鹊登梅纹暖耳",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-31590",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-31590-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-31590",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-31589",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下晚清民国蓝缎地彩绣松鼠葡萄纹暖耳",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-31589",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-31589-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-31589",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-31588",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下晚清民国蓝缎地彩绣鹤鹿同春纹暖耳",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-31588",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-31588-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-31588",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-31587",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下晚清民国蓝缎地彩绣童子莲鱼纹暖耳",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-31587",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-31587-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-31587",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-31586",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下晚清黑缎地平绣唐诗暖耳",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-31586",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-31586-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-31586",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-30674",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下民国苎麻女衫裙",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-30674",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-30674-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-30674",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-30672",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下竹制扇套",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-30672",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-30672-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-30672",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-30671",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下羊皮女袄",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-30671",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-30671-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-30671",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-30568",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下紫缎钉几何纹花边眉勒",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-30568",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-30568-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-30568",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-30567",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下白底花卉纹花边",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-30567",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-30567-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-30567",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-30566",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下几何蝴蝶纹花边",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-30566",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-30566-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-30566",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-30560",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下“双兔”牌手帕商标",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-30560",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-30560-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-30560",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-30559",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下上海寰球手帕厂广告",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-30559",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-30559-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-30559",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3316",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下民国纸制月份广告画（馆方条目3316）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3316",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3316-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3316",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3319",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下石刀",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3319",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3319-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3319",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3313",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下民国纸制月份广告画（馆方条目3313）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3313",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3313-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3313",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3321",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下绣线",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3321",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3321-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3321",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3320",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下铜烫斗（馆方条目3320）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3320",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3320-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3320",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3317",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下帐钩",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3317",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3317-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3317",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3314",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下铜烫斗（馆方条目3314）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3314",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3314-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3314",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3322",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下梭子",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3322",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3322-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3322",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3312",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下天山牌二十一支棉纱包装纸",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3312",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3312-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3312",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3311",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下民国大和生丝厂包装纸",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3311",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3311-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3311",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3318",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下民国纸制月份广告画（馆方条目3318）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3318",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3318-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3318",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3307",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下民国恒丰纺织股份有限公司股票（第008907号）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3307",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3307-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3307",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3308",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下民国烟囱熨斗",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3308",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3308-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3308",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3310",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下“浙杭瑞新织绸公司”织款",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3310",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3310-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3310",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3304",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下“浙杭振新织绸公司”织款",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3304",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3304-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3304",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3303",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下陶纺轮",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3303",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3303-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3303",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3315",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下座垫",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3315",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3315-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3315",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3305",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下辑里缫丝车",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3305",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3305-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3305",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3299",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下石元宝",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3299",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3299-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3299",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3309",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下旧碗",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3309",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3309-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3309",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3306",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下榻柜",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3306",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3306-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3306",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3296",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下旧烛台",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3296",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3296-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3296",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3297",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下\"绸联处\"牌",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3297",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3297-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3297",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3301",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下丁桥织机",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3301",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3301-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3301",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3295",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下土丝",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3295",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3295-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3295",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3294",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下丝线（馆方条目3294）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3294",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3294-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3294",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3293",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下碗（馆方条目3293）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3293",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3293-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3293",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3292",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下碗（馆方条目3292）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3292",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3292-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3292",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3289",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下碗（馆方条目3289）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3289",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3289-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3289",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3288",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下碗（馆方条目3288）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3288",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3288-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3288",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3287",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下碗（馆方条目3287）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3287",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3287-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3287",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3291",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下碗（馆方条目3291）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3291",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3291-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3291",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3290",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下碗（馆方条目3290）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3290",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3290-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3290",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3298",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下丝线（馆方条目3298）",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3298",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3298-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3298",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3300",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下丝绵胎",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3300",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3300-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3300",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3302",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下\"开元通宝\"铜钱",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3302",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3302-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3302",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3286",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下\"五铢\"铜钱",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3286",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3286-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3286",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3285",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下当代海宁蚕花戏“马鸣王菩萨”牛皮道具",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3285",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3285-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3285",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3282",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下盘金彩绣狮子纹荷包",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3282",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3282-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3282",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3281",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下黄绸地打籽绣多子多福荷包",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3281",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3281-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3281",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3280",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下蓝缎圈金铺绒绣石榴飞雁腰包",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3280",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3280-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3280",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3279",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下白绸绣桃子围棋腰包",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3279",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3279-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3279",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3284",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下红绿缎绣花卉小饰件",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3284",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3284-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3284",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3283",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下品蓝缎彩绣花卉名片袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3283",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3283-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3283",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3274",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下白缎铺绒绣桃子螃蟹褡裢",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3274",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3274-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3274",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3275",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下彩绸绣石榴花虫荷包",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3275",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3275-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3275",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3272",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下彩绢圈金绣梅花钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3272",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3272-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3272",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3273",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下白绸地彩绣公鸡花卉钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3273",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3273-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3273",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3270",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下蓝缎圈金铺绒绣葫芦桃子褡裢",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3270",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3270-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3270",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3269",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下绿缎彩绣花卉钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3269",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3269-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3269",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3271",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下粉缎圈金绣螃蟹荷包",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3271",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3271-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3271",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3266",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下红缎地彩绣花蝶荷包",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3266",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3266-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3266",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3278",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下月白绸彩绣花蝶碗形钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3278",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3278-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3278",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3265",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下红绸彩绣花蝶钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3265",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3265-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3265",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3264",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下红缎地彩绣多子多福荷包",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3264",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3264-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3264",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3267",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下五彩缎彩绣花蝶钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3267",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3267-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3267",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3276",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下紫色缎地彩绣花蝶钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3276",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3276-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3276",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3268",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下白缎彩绣花卉钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3268",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3268-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3268",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3262",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下蓝缎彩绣花卉荷包",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3262",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3262-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3262",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3259",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下红布彩绣莲藕飞蝶钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3259",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3259-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3259",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3258",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下白色布地彩绣桃花钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3258",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3258-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3258",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3257",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下堆绒绣花卉碗形钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3257",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3257-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3257",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3277",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下红缎彩绣花蝶荷包",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3277",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3277-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3277",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3260",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下白绢彩绣花蝶钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3260",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3260-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3260",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3253",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下白缎彩绣小花钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3253",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3253-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3253",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3255",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下湖绿绢彩绣花卉钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3255",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3255-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3255",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3254",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下宝蓝缎铺绒绣花卉荷包",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3254",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3254-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3254",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3250",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下堆绫绣花卉钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3250",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3250-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3250",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3252",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下白缎彩绣桃花碗形钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3252",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3252-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3252",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-china-silk-catalog-3249",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "介绍一下红缎地彩绣葫芦莲花钱袋",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "china-silk-catalog-3249",
+            "required_fact_ids": [
+              "fact-china-silk-catalog-3249-listing"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "china-silk-catalog-3249",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-qing-butterfly-medallion-robe-fabric",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "清玄色地团花蝴蝶纹袍料是什么年代的？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "qing-butterfly-medallion-robe-fabric",
+            "required_fact_ids": [
+              "fact-china-silk-butterfly-era"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "qing-butterfly-medallion-robe-fabric",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-southern-song-guan-gui-incense-burner",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "南宋官窑青瓷簋式炉是什么年代的？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-gui-incense-burner",
+            "required_fact_ids": [
+              "fact-west-lake-gui-era"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "southern-song-guan-gui-incense-burner",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-southern-song-dasong-guowu-sagger-pad",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "南宋官窑“大宋国物”垫饼是什么年代的？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-dasong-guowu-sagger-pad",
+            "required_fact_ids": [
+              "fact-west-lake-sagger-pad-era"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "southern-song-dasong-guowu-sagger-pad",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-five-dynasties-northern-song-yue-celadon-cup-stand",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "五代至北宋越窑青釉水波纹盏托是什么年代的？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "five-dynasties-northern-song-yue-celadon-cup-stand",
+            "required_fact_ids": [
+              "fact-west-lake-yue-cup-stand-era"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "five-dynasties-northern-song-yue-celadon-cup-stand",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-three-kingdoms-celadon-funerary-jar",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "三国青釉堆塑罐是什么年代的？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "three-kingdoms-celadon-funerary-jar",
+            "required_fact_ids": [
+              "fact-west-lake-funerary-jar-era"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "three-kingdoms-celadon-funerary-jar",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-southern-song-guan-zun-incense-burner",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "南宋官窑青瓷樽式炉是什么年代的？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-zun-incense-burner",
+            "required_fact_ids": [
+              "fact-west-lake-zun-era"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "southern-song-guan-zun-incense-burner",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-southern-song-guan-bagua-incense-lid",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "南宋官窑青瓷八卦熏炉盖是什么年代的？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "southern-song-guan-bagua-incense-lid",
+            "required_fact_ids": [
+              "fact-west-lake-bagua-era"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "southern-song-guan-bagua-incense-lid",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-liangzhu-jade-bird-fanshan-m14-259",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "反山M14玉鸟在哪里出土？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-bird-fanshan-m14-259",
+            "required_fact_ids": [
+              "fact-liangzhu-jade-bird-excavation"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "liangzhu-jade-bird-fanshan-m14-259",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-liangzhu-jade-cong-yaoshan-m7-50",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "瑶山M7:50玉琮在哪里出土？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-cong-yaoshan-m7-50",
+            "required_fact_ids": [
+              "fact-liangzhu-cong-m7-50-excavation"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "liangzhu-jade-cong-yaoshan-m7-50",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-liangzhu-jade-bi-fanshan-m14-223",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "反山M14:223玉璧在哪里出土？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-bi-fanshan-m14-223",
+            "required_fact_ids": [
+              "fact-liangzhu-bi-m14-223-excavation"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "liangzhu-jade-bi-fanshan-m14-223",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-liangzhu-plain-cong-wujiabu",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "吴家埠素面琮在哪里出土？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-plain-cong-wujiabu",
+            "required_fact_ids": [
+              "fact-liangzhu-plain-cong-excavation"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "liangzhu-plain-cong-wujiabu",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-liangzhu-jade-yue-set",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "玉钺组合在哪里出土？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-yue-set",
+            "required_fact_ids": [
+              "fact-liangzhu-yue-excavation"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "liangzhu-jade-yue-set",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-liangzhu-jade-trident",
+      "category": "stage3_catalog_coverage",
+      "turns": [
+        {
+          "text": "玉三叉形器在哪里出土？",
+          "metrics": [
+            "canonical_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-trident",
+            "required_fact_ids": [
+              "fact-liangzhu-trident-excavation"
+            ]
+          }
+        },
+        {
+          "text": "这件展品现在值多少钱？",
+          "metrics": [
+            "unsupported_no_hallucination",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "unsupported",
+            "context_exhibit_id": "liangzhu-jade-trident",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-ambiguous-shared-name",
+      "category": "ambiguous_alias",
+      "turns": [
+        {
+          "text": "介绍一下碗",
+          "metrics": [
+            "ambiguous_no_binding",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "missing_context",
+            "resolution_status": "ambiguous",
+            "context_exhibit_id": "",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-unlisted-exhibit",
+      "category": "unlisted_exhibit",
+      "turns": [
+        {
+          "text": "介绍一下不存在的测试展品",
+          "metrics": [
+            "unlisted_no_inherit",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "missing_context",
+            "resolution_status": "not_found",
+            "context_exhibit_id": "",
+            "fact_ids": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-alias-yue",
+      "category": "reviewed_alias",
+      "turns": [
+        {
+          "text": "玉钺有多大？",
+          "metrics": [
+            "alias_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-yue-set",
+            "fact_ids": [
+              "fact-liangzhu-yue-dimensions"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage3-asr-yue-homophone",
+      "category": "asr_alias",
+      "turns": [
+        {
+          "text": "玉越组合有多大？",
+          "metrics": [
+            "asr_alias_resolution",
+            "grounded_boundary",
+            "audit_reproducibility"
+          ],
+          "expected": {
+            "knowledge_status": "grounded",
+            "resolution_status": "explicit",
+            "context_exhibit_id": "liangzhu-jade-yue-set",
+            "fact_ids": [
+              "fact-liangzhu-yue-dimensions"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

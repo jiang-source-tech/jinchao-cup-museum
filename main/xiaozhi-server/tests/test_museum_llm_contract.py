@@ -91,7 +91,9 @@ def test_llm_json_contract_and_audit_metadata_are_persisted(tmp_path):
     ]
 
 
-def test_invalid_llm_response_uses_deterministic_fallback_and_is_auditable(tmp_path):
+def test_llm_rejection_or_invalid_response_cannot_override_retrieved_evidence(
+    tmp_path,
+):
     database = tmp_path / "museum.db"
     runtime = create_conversation_runtime(
         {
@@ -116,6 +118,29 @@ def test_invalid_llm_response_uses_deterministic_fallback_and_is_auditable(tmp_p
     summary = json.loads(outcome.audit_record["llm_response_summary"])
     assert summary["parse_status"] == "invalid_response"
     assert summary["chars"] == len("not-json")
+
+    unsupported_llm = _JsonLlm(
+        json.dumps(
+            {
+                "status": "unsupported",
+                "fact_ids": [],
+                "social_intent": "",
+                "answer": "",
+            },
+            ensure_ascii=False,
+        )
+    )
+    unsupported_outcome = runtime.handle_turn(
+        _request(llm=unsupported_llm, request_id="llm-contract-false-unsupported")
+    )
+
+    assert unsupported_outcome.knowledge_status == "grounded"
+    assert unsupported_outcome.fact_ids == ("fact-crystal-cup-material",)
+    assert unsupported_outcome.audit_record["llm_result"] == "parsed"
+    assert (
+        unsupported_outcome.audit_record["guard_result"]
+        == "model_unsupported_grounded_fallback"
+    )
 
 
 def test_llm_contract_rejects_wrong_field_shapes(tmp_path):

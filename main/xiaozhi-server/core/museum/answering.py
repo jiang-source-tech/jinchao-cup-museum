@@ -153,7 +153,12 @@ class GroundedAnswerService:
                 guard_result = "model_fact_ids_rejected"
                 decision = None
         elif decision is not None and decision.status == "unsupported":
-            guard_result = "model_unsupported_fallback"
+            evidence = retrieved_evidence
+            guard_result = (
+                "model_unsupported_grounded_fallback"
+                if evidence is not None
+                else "model_unsupported_fallback"
+            )
         if decision is None:
             evidence = retrieved_evidence
             if guard_result == "published_facts_only":

@@ -1,0 +1,3548 @@
+{
+  "schema_version": 2,
+  "museum": {
+    "id": "china-national-silk-museum",
+    "name": "中国丝绸博物馆",
+    "status": "active"
+  },
+  "zones": [
+    {
+      "id": "china-silk-official-collection",
+      "name": "馆藏精品",
+      "sort_order": 1
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-china-silk-catalog-31590",
+      "title": "中国丝绸博物馆中国历代藏品：晚清民国雪青缎地彩绣喜鹊登梅纹暖耳",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=31590",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-31589",
+      "title": "中国丝绸博物馆中国历代藏品：晚清民国蓝缎地彩绣松鼠葡萄纹暖耳",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=31589",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-31588",
+      "title": "中国丝绸博物馆中国历代藏品：晚清民国蓝缎地彩绣鹤鹿同春纹暖耳",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=31588",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-31587",
+      "title": "中国丝绸博物馆中国历代藏品：晚清民国蓝缎地彩绣童子莲鱼纹暖耳",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=31587",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-31586",
+      "title": "中国丝绸博物馆中国历代藏品：晚清黑缎地平绣唐诗暖耳",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=31586",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-30674",
+      "title": "中国丝绸博物馆中国历代藏品：民国苎麻女衫裙",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=30674",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-30672",
+      "title": "中国丝绸博物馆中国历代藏品：竹制扇套",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=30672",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-30671",
+      "title": "中国丝绸博物馆中国历代藏品：羊皮女袄",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=30671",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-30568",
+      "title": "中国丝绸博物馆中国历代藏品：紫缎钉几何纹花边眉勒",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=30568",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-30567",
+      "title": "中国丝绸博物馆中国历代藏品：白底花卉纹花边",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=30567",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-30566",
+      "title": "中国丝绸博物馆中国历代藏品：几何蝴蝶纹花边",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=30566",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-30560",
+      "title": "中国丝绸博物馆中国历代藏品：“双兔”牌手帕商标",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=30560",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-30559",
+      "title": "中国丝绸博物馆中国历代藏品：上海寰球手帕厂广告",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=30559",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3316",
+      "title": "中国丝绸博物馆中国历代藏品：民国纸制月份广告画",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3316",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3319",
+      "title": "中国丝绸博物馆中国历代藏品：石刀",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3319",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3313",
+      "title": "中国丝绸博物馆中国历代藏品：民国纸制月份广告画",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3313",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3321",
+      "title": "中国丝绸博物馆中国历代藏品：绣线",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3321",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3320",
+      "title": "中国丝绸博物馆中国历代藏品：铜烫斗",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3320",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3317",
+      "title": "中国丝绸博物馆中国历代藏品：帐钩",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3317",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3314",
+      "title": "中国丝绸博物馆中国历代藏品：铜烫斗",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3314",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3322",
+      "title": "中国丝绸博物馆中国历代藏品：梭子",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3322",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3312",
+      "title": "中国丝绸博物馆中国历代藏品：天山牌二十一支棉纱包装纸",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3312",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3311",
+      "title": "中国丝绸博物馆中国历代藏品：民国大和生丝厂包装纸",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3311",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3318",
+      "title": "中国丝绸博物馆中国历代藏品：民国纸制月份广告画",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3318",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3307",
+      "title": "中国丝绸博物馆中国历代藏品：民国恒丰纺织股份有限公司股票（第008907号）",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3307",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3308",
+      "title": "中国丝绸博物馆中国历代藏品：民国烟囱熨斗",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3308",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3310",
+      "title": "中国丝绸博物馆中国历代藏品：“浙杭瑞新织绸公司”织款",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3310",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3304",
+      "title": "中国丝绸博物馆中国历代藏品：“浙杭振新织绸公司”织款",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3304",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3303",
+      "title": "中国丝绸博物馆中国历代藏品：陶纺轮",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3303",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3315",
+      "title": "中国丝绸博物馆中国历代藏品：座垫",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3315",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3305",
+      "title": "中国丝绸博物馆中国历代藏品：辑里缫丝车",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3305",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3299",
+      "title": "中国丝绸博物馆中国历代藏品：石元宝",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3299",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3309",
+      "title": "中国丝绸博物馆中国历代藏品：旧碗",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3309",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3306",
+      "title": "中国丝绸博物馆中国历代藏品：榻柜",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3306",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3296",
+      "title": "中国丝绸博物馆中国历代藏品：旧烛台",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3296",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3297",
+      "title": "中国丝绸博物馆中国历代藏品：\"绸联处\"牌",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3297",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3301",
+      "title": "中国丝绸博物馆中国历代藏品：丁桥织机",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3301",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3295",
+      "title": "中国丝绸博物馆中国历代藏品：土丝",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3295",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3294",
+      "title": "中国丝绸博物馆中国历代藏品：丝线",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3294",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3293",
+      "title": "中国丝绸博物馆中国历代藏品：碗",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3293",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3292",
+      "title": "中国丝绸博物馆中国历代藏品：碗",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3292",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3289",
+      "title": "中国丝绸博物馆中国历代藏品：碗",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3289",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3288",
+      "title": "中国丝绸博物馆中国历代藏品：碗",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3288",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3287",
+      "title": "中国丝绸博物馆中国历代藏品：碗",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3287",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3291",
+      "title": "中国丝绸博物馆中国历代藏品：碗",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3291",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3290",
+      "title": "中国丝绸博物馆中国历代藏品：碗",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3290",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3298",
+      "title": "中国丝绸博物馆中国历代藏品：丝线",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3298",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3300",
+      "title": "中国丝绸博物馆中国历代藏品：丝绵胎",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3300",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3302",
+      "title": "中国丝绸博物馆中国历代藏品：\"开元通宝\"铜钱",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3302",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3286",
+      "title": "中国丝绸博物馆中国历代藏品：\"五铢\"铜钱",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3286",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3285",
+      "title": "中国丝绸博物馆中国历代藏品：当代海宁蚕花戏“马鸣王菩萨”牛皮道具",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3285",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3282",
+      "title": "中国丝绸博物馆中国历代藏品：盘金彩绣狮子纹荷包",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3282",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3281",
+      "title": "中国丝绸博物馆中国历代藏品：黄绸地打籽绣多子多福荷包",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3281",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3280",
+      "title": "中国丝绸博物馆中国历代藏品：蓝缎圈金铺绒绣石榴飞雁腰包",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3280",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3279",
+      "title": "中国丝绸博物馆中国历代藏品：白绸绣桃子围棋腰包",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3279",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3284",
+      "title": "中国丝绸博物馆中国历代藏品：红绿缎绣花卉小饰件",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3284",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3283",
+      "title": "中国丝绸博物馆中国历代藏品：品蓝缎彩绣花卉名片袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3283",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3274",
+      "title": "中国丝绸博物馆中国历代藏品：白缎铺绒绣桃子螃蟹褡裢",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3274",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3275",
+      "title": "中国丝绸博物馆中国历代藏品：彩绸绣石榴花虫荷包",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3275",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3272",
+      "title": "中国丝绸博物馆中国历代藏品：彩绢圈金绣梅花钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3272",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3273",
+      "title": "中国丝绸博物馆中国历代藏品：白绸地彩绣公鸡花卉钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3273",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3270",
+      "title": "中国丝绸博物馆中国历代藏品：蓝缎圈金铺绒绣葫芦桃子褡裢",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3270",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3269",
+      "title": "中国丝绸博物馆中国历代藏品：绿缎彩绣花卉钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3269",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3271",
+      "title": "中国丝绸博物馆中国历代藏品：粉缎圈金绣螃蟹荷包",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3271",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3266",
+      "title": "中国丝绸博物馆中国历代藏品：红缎地彩绣花蝶荷包",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3266",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3278",
+      "title": "中国丝绸博物馆中国历代藏品：月白绸彩绣花蝶碗形钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3278",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3265",
+      "title": "中国丝绸博物馆中国历代藏品：红绸彩绣花蝶钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3265",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3264",
+      "title": "中国丝绸博物馆中国历代藏品：红缎地彩绣多子多福荷包",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3264",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3267",
+      "title": "中国丝绸博物馆中国历代藏品：五彩缎彩绣花蝶钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3267",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3276",
+      "title": "中国丝绸博物馆中国历代藏品：紫色缎地彩绣花蝶钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3276",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3268",
+      "title": "中国丝绸博物馆中国历代藏品：白缎彩绣花卉钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3268",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3262",
+      "title": "中国丝绸博物馆中国历代藏品：蓝缎彩绣花卉荷包",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3262",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3259",
+      "title": "中国丝绸博物馆中国历代藏品：红布彩绣莲藕飞蝶钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3259",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3258",
+      "title": "中国丝绸博物馆中国历代藏品：白色布地彩绣桃花钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3258",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3257",
+      "title": "中国丝绸博物馆中国历代藏品：堆绒绣花卉碗形钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3257",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3277",
+      "title": "中国丝绸博物馆中国历代藏品：红缎彩绣花蝶荷包",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3277",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3260",
+      "title": "中国丝绸博物馆中国历代藏品：白绢彩绣花蝶钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3260",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3253",
+      "title": "中国丝绸博物馆中国历代藏品：白缎彩绣小花钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3253",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3255",
+      "title": "中国丝绸博物馆中国历代藏品：湖绿绢彩绣花卉钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3255",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3254",
+      "title": "中国丝绸博物馆中国历代藏品：宝蓝缎铺绒绣花卉荷包",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3254",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3250",
+      "title": "中国丝绸博物馆中国历代藏品：堆绫绣花卉钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3250",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3252",
+      "title": "中国丝绸博物馆中国历代藏品：白缎彩绣桃花碗形钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3252",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    },
+    {
+      "id": "source-china-silk-catalog-3249",
+      "title": "中国丝绸博物馆中国历代藏品：红缎地彩绣葫芦莲花钱袋",
+      "source_type": "official_museum_webpage",
+      "locator": "https://www.chinasilkmuseum.com/zggd/info_21.aspx?itemid=3249",
+      "rights_note": "仅保存馆方公开名称与来源定位，不保存页面图片。",
+      "publisher": "中国丝绸博物馆",
+      "accessed_at": "2026-08-12",
+      "language": "zh-CN"
+    }
+  ],
+  "exhibits": [
+    {
+      "id": "china-silk-catalog-31590",
+      "zone_id": "china-silk-official-collection",
+      "name": "晚清民国雪青缎地彩绣喜鹊登梅纹暖耳",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-31590-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-31590-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“晚清民国雪青缎地彩绣喜鹊登梅纹暖耳”为该公开条目的展示名称。",
+            "keywords": [
+              "晚清民国雪青缎地彩绣喜鹊登梅纹暖耳",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 31590"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-31590"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-31589",
+      "zone_id": "china-silk-official-collection",
+      "name": "晚清民国蓝缎地彩绣松鼠葡萄纹暖耳",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-31589-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-31589-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“晚清民国蓝缎地彩绣松鼠葡萄纹暖耳”为该公开条目的展示名称。",
+            "keywords": [
+              "晚清民国蓝缎地彩绣松鼠葡萄纹暖耳",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 31589"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-31589"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-31588",
+      "zone_id": "china-silk-official-collection",
+      "name": "晚清民国蓝缎地彩绣鹤鹿同春纹暖耳",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-31588-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-31588-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“晚清民国蓝缎地彩绣鹤鹿同春纹暖耳”为该公开条目的展示名称。",
+            "keywords": [
+              "晚清民国蓝缎地彩绣鹤鹿同春纹暖耳",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 31588"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-31588"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-31587",
+      "zone_id": "china-silk-official-collection",
+      "name": "晚清民国蓝缎地彩绣童子莲鱼纹暖耳",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-31587-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-31587-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“晚清民国蓝缎地彩绣童子莲鱼纹暖耳”为该公开条目的展示名称。",
+            "keywords": [
+              "晚清民国蓝缎地彩绣童子莲鱼纹暖耳",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 31587"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-31587"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-31586",
+      "zone_id": "china-silk-official-collection",
+      "name": "晚清黑缎地平绣唐诗暖耳",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-31586-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-31586-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“晚清黑缎地平绣唐诗暖耳”为该公开条目的展示名称。",
+            "keywords": [
+              "晚清黑缎地平绣唐诗暖耳",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 31586"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-31586"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-30674",
+      "zone_id": "china-silk-official-collection",
+      "name": "民国苎麻女衫裙",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-30674-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-30674-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“民国苎麻女衫裙”为该公开条目的展示名称。",
+            "keywords": [
+              "民国苎麻女衫裙",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 30674"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-30674"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-30672",
+      "zone_id": "china-silk-official-collection",
+      "name": "竹制扇套",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-30672-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-30672-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“竹制扇套”为该公开条目的展示名称。",
+            "keywords": [
+              "竹制扇套",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 30672"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-30672"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-30671",
+      "zone_id": "china-silk-official-collection",
+      "name": "羊皮女袄",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-30671-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-30671-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“羊皮女袄”为该公开条目的展示名称。",
+            "keywords": [
+              "羊皮女袄",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 30671"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-30671"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-30568",
+      "zone_id": "china-silk-official-collection",
+      "name": "紫缎钉几何纹花边眉勒",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-30568-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-30568-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“紫缎钉几何纹花边眉勒”为该公开条目的展示名称。",
+            "keywords": [
+              "紫缎钉几何纹花边眉勒",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 30568"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-30568"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-30567",
+      "zone_id": "china-silk-official-collection",
+      "name": "白底花卉纹花边",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-30567-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-30567-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“白底花卉纹花边”为该公开条目的展示名称。",
+            "keywords": [
+              "白底花卉纹花边",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 30567"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-30567"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-30566",
+      "zone_id": "china-silk-official-collection",
+      "name": "几何蝴蝶纹花边",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-30566-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-30566-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“几何蝴蝶纹花边”为该公开条目的展示名称。",
+            "keywords": [
+              "几何蝴蝶纹花边",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 30566"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-30566"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-30560",
+      "zone_id": "china-silk-official-collection",
+      "name": "“双兔”牌手帕商标",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-30560-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-30560-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以““双兔”牌手帕商标”为该公开条目的展示名称。",
+            "keywords": [
+              "“双兔”牌手帕商标",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 30560"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-30560"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-30559",
+      "zone_id": "china-silk-official-collection",
+      "name": "上海寰球手帕厂广告",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-30559-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-30559-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“上海寰球手帕厂广告”为该公开条目的展示名称。",
+            "keywords": [
+              "上海寰球手帕厂广告",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 30559"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-30559"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3316",
+      "zone_id": "china-silk-official-collection",
+      "name": "民国纸制月份广告画（馆方条目3316）",
+      "aliases": [
+        {
+          "text": "民国纸制月份广告画",
+          "kind": "common",
+          "binding": "ambiguous",
+          "sources": [
+            "source-china-silk-catalog-3316"
+          ]
+        }
+      ],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3316-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3316-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“民国纸制月份广告画”为该公开条目的展示名称。",
+            "keywords": [
+              "民国纸制月份广告画",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3316"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3316"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3319",
+      "zone_id": "china-silk-official-collection",
+      "name": "石刀",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3319-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3319-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“石刀”为该公开条目的展示名称。",
+            "keywords": [
+              "石刀",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3319"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3319"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3313",
+      "zone_id": "china-silk-official-collection",
+      "name": "民国纸制月份广告画（馆方条目3313）",
+      "aliases": [
+        {
+          "text": "民国纸制月份广告画",
+          "kind": "common",
+          "binding": "ambiguous",
+          "sources": [
+            "source-china-silk-catalog-3313"
+          ]
+        }
+      ],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3313-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3313-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“民国纸制月份广告画”为该公开条目的展示名称。",
+            "keywords": [
+              "民国纸制月份广告画",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3313"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3313"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3321",
+      "zone_id": "china-silk-official-collection",
+      "name": "绣线",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3321-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3321-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“绣线”为该公开条目的展示名称。",
+            "keywords": [
+              "绣线",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3321"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3321"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3320",
+      "zone_id": "china-silk-official-collection",
+      "name": "铜烫斗（馆方条目3320）",
+      "aliases": [
+        {
+          "text": "铜烫斗",
+          "kind": "common",
+          "binding": "ambiguous",
+          "sources": [
+            "source-china-silk-catalog-3320"
+          ]
+        }
+      ],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3320-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3320-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“铜烫斗”为该公开条目的展示名称。",
+            "keywords": [
+              "铜烫斗",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3320"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3320"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3317",
+      "zone_id": "china-silk-official-collection",
+      "name": "帐钩",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3317-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3317-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“帐钩”为该公开条目的展示名称。",
+            "keywords": [
+              "帐钩",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3317"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3317"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3314",
+      "zone_id": "china-silk-official-collection",
+      "name": "铜烫斗（馆方条目3314）",
+      "aliases": [
+        {
+          "text": "铜烫斗",
+          "kind": "common",
+          "binding": "ambiguous",
+          "sources": [
+            "source-china-silk-catalog-3314"
+          ]
+        }
+      ],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3314-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3314-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“铜烫斗”为该公开条目的展示名称。",
+            "keywords": [
+              "铜烫斗",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3314"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3314"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3322",
+      "zone_id": "china-silk-official-collection",
+      "name": "梭子",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3322-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3322-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“梭子”为该公开条目的展示名称。",
+            "keywords": [
+              "梭子",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3322"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3322"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3312",
+      "zone_id": "china-silk-official-collection",
+      "name": "天山牌二十一支棉纱包装纸",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3312-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3312-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“天山牌二十一支棉纱包装纸”为该公开条目的展示名称。",
+            "keywords": [
+              "天山牌二十一支棉纱包装纸",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3312"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3312"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3311",
+      "zone_id": "china-silk-official-collection",
+      "name": "民国大和生丝厂包装纸",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3311-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3311-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“民国大和生丝厂包装纸”为该公开条目的展示名称。",
+            "keywords": [
+              "民国大和生丝厂包装纸",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3311"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3311"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3318",
+      "zone_id": "china-silk-official-collection",
+      "name": "民国纸制月份广告画（馆方条目3318）",
+      "aliases": [
+        {
+          "text": "民国纸制月份广告画",
+          "kind": "common",
+          "binding": "ambiguous",
+          "sources": [
+            "source-china-silk-catalog-3318"
+          ]
+        }
+      ],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3318-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3318-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“民国纸制月份广告画”为该公开条目的展示名称。",
+            "keywords": [
+              "民国纸制月份广告画",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3318"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3318"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3307",
+      "zone_id": "china-silk-official-collection",
+      "name": "民国恒丰纺织股份有限公司股票（第008907号）",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3307-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3307-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“民国恒丰纺织股份有限公司股票（第008907号）”为该公开条目的展示名称。",
+            "keywords": [
+              "民国恒丰纺织股份有限公司股票（第008907号）",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3307"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3307"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3308",
+      "zone_id": "china-silk-official-collection",
+      "name": "民国烟囱熨斗",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3308-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3308-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“民国烟囱熨斗”为该公开条目的展示名称。",
+            "keywords": [
+              "民国烟囱熨斗",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3308"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3308"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3310",
+      "zone_id": "china-silk-official-collection",
+      "name": "“浙杭瑞新织绸公司”织款",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3310-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3310-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以““浙杭瑞新织绸公司”织款”为该公开条目的展示名称。",
+            "keywords": [
+              "“浙杭瑞新织绸公司”织款",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3310"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3310"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3304",
+      "zone_id": "china-silk-official-collection",
+      "name": "“浙杭振新织绸公司”织款",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3304-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3304-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以““浙杭振新织绸公司”织款”为该公开条目的展示名称。",
+            "keywords": [
+              "“浙杭振新织绸公司”织款",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3304"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3304"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3303",
+      "zone_id": "china-silk-official-collection",
+      "name": "陶纺轮",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3303-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3303-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“陶纺轮”为该公开条目的展示名称。",
+            "keywords": [
+              "陶纺轮",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3303"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3303"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3315",
+      "zone_id": "china-silk-official-collection",
+      "name": "座垫",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3315-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3315-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“座垫”为该公开条目的展示名称。",
+            "keywords": [
+              "座垫",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3315"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3315"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3305",
+      "zone_id": "china-silk-official-collection",
+      "name": "辑里缫丝车",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3305-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3305-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“辑里缫丝车”为该公开条目的展示名称。",
+            "keywords": [
+              "辑里缫丝车",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3305"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3305"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3299",
+      "zone_id": "china-silk-official-collection",
+      "name": "石元宝",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3299-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3299-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“石元宝”为该公开条目的展示名称。",
+            "keywords": [
+              "石元宝",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3299"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3299"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3309",
+      "zone_id": "china-silk-official-collection",
+      "name": "旧碗",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3309-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3309-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“旧碗”为该公开条目的展示名称。",
+            "keywords": [
+              "旧碗",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3309"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3309"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3306",
+      "zone_id": "china-silk-official-collection",
+      "name": "榻柜",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3306-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3306-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“榻柜”为该公开条目的展示名称。",
+            "keywords": [
+              "榻柜",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3306"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3306"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3296",
+      "zone_id": "china-silk-official-collection",
+      "name": "旧烛台",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3296-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3296-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“旧烛台”为该公开条目的展示名称。",
+            "keywords": [
+              "旧烛台",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3296"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3296"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3297",
+      "zone_id": "china-silk-official-collection",
+      "name": "\"绸联处\"牌",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3297-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3297-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“\"绸联处\"牌”为该公开条目的展示名称。",
+            "keywords": [
+              "\"绸联处\"牌",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3297"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3297"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3301",
+      "zone_id": "china-silk-official-collection",
+      "name": "丁桥织机",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3301-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3301-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“丁桥织机”为该公开条目的展示名称。",
+            "keywords": [
+              "丁桥织机",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3301"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3301"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3295",
+      "zone_id": "china-silk-official-collection",
+      "name": "土丝",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3295-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3295-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“土丝”为该公开条目的展示名称。",
+            "keywords": [
+              "土丝",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3295"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3295"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3294",
+      "zone_id": "china-silk-official-collection",
+      "name": "丝线（馆方条目3294）",
+      "aliases": [
+        {
+          "text": "丝线",
+          "kind": "common",
+          "binding": "ambiguous",
+          "sources": [
+            "source-china-silk-catalog-3294"
+          ]
+        }
+      ],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3294-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3294-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“丝线”为该公开条目的展示名称。",
+            "keywords": [
+              "丝线",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3294"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3294"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3293",
+      "zone_id": "china-silk-official-collection",
+      "name": "碗（馆方条目3293）",
+      "aliases": [
+        {
+          "text": "碗",
+          "kind": "common",
+          "binding": "ambiguous",
+          "sources": [
+            "source-china-silk-catalog-3293"
+          ]
+        }
+      ],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3293-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3293-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“碗”为该公开条目的展示名称。",
+            "keywords": [
+              "碗",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3293"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3293"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3292",
+      "zone_id": "china-silk-official-collection",
+      "name": "碗（馆方条目3292）",
+      "aliases": [
+        {
+          "text": "碗",
+          "kind": "common",
+          "binding": "ambiguous",
+          "sources": [
+            "source-china-silk-catalog-3292"
+          ]
+        }
+      ],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3292-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3292-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“碗”为该公开条目的展示名称。",
+            "keywords": [
+              "碗",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3292"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3292"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3289",
+      "zone_id": "china-silk-official-collection",
+      "name": "碗（馆方条目3289）",
+      "aliases": [
+        {
+          "text": "碗",
+          "kind": "common",
+          "binding": "ambiguous",
+          "sources": [
+            "source-china-silk-catalog-3289"
+          ]
+        }
+      ],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3289-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3289-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“碗”为该公开条目的展示名称。",
+            "keywords": [
+              "碗",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3289"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3289"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3288",
+      "zone_id": "china-silk-official-collection",
+      "name": "碗（馆方条目3288）",
+      "aliases": [
+        {
+          "text": "碗",
+          "kind": "common",
+          "binding": "ambiguous",
+          "sources": [
+            "source-china-silk-catalog-3288"
+          ]
+        }
+      ],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3288-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3288-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“碗”为该公开条目的展示名称。",
+            "keywords": [
+              "碗",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3288"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3288"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3287",
+      "zone_id": "china-silk-official-collection",
+      "name": "碗（馆方条目3287）",
+      "aliases": [
+        {
+          "text": "碗",
+          "kind": "common",
+          "binding": "ambiguous",
+          "sources": [
+            "source-china-silk-catalog-3287"
+          ]
+        }
+      ],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3287-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3287-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“碗”为该公开条目的展示名称。",
+            "keywords": [
+              "碗",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3287"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3287"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3291",
+      "zone_id": "china-silk-official-collection",
+      "name": "碗（馆方条目3291）",
+      "aliases": [
+        {
+          "text": "碗",
+          "kind": "common",
+          "binding": "ambiguous",
+          "sources": [
+            "source-china-silk-catalog-3291"
+          ]
+        }
+      ],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3291-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3291-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“碗”为该公开条目的展示名称。",
+            "keywords": [
+              "碗",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3291"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3291"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3290",
+      "zone_id": "china-silk-official-collection",
+      "name": "碗（馆方条目3290）",
+      "aliases": [
+        {
+          "text": "碗",
+          "kind": "common",
+          "binding": "ambiguous",
+          "sources": [
+            "source-china-silk-catalog-3290"
+          ]
+        }
+      ],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3290-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3290-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“碗”为该公开条目的展示名称。",
+            "keywords": [
+              "碗",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3290"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3290"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3298",
+      "zone_id": "china-silk-official-collection",
+      "name": "丝线（馆方条目3298）",
+      "aliases": [
+        {
+          "text": "丝线",
+          "kind": "common",
+          "binding": "ambiguous",
+          "sources": [
+            "source-china-silk-catalog-3298"
+          ]
+        }
+      ],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3298-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3298-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“丝线”为该公开条目的展示名称。",
+            "keywords": [
+              "丝线",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3298"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3298"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3300",
+      "zone_id": "china-silk-official-collection",
+      "name": "丝绵胎",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3300-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3300-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“丝绵胎”为该公开条目的展示名称。",
+            "keywords": [
+              "丝绵胎",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3300"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3300"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3302",
+      "zone_id": "china-silk-official-collection",
+      "name": "\"开元通宝\"铜钱",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3302-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3302-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“\"开元通宝\"铜钱”为该公开条目的展示名称。",
+            "keywords": [
+              "\"开元通宝\"铜钱",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3302"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3302"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3286",
+      "zone_id": "china-silk-official-collection",
+      "name": "\"五铢\"铜钱",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3286-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3286-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“\"五铢\"铜钱”为该公开条目的展示名称。",
+            "keywords": [
+              "\"五铢\"铜钱",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3286"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3286"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3285",
+      "zone_id": "china-silk-official-collection",
+      "name": "当代海宁蚕花戏“马鸣王菩萨”牛皮道具",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3285-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3285-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“当代海宁蚕花戏“马鸣王菩萨”牛皮道具”为该公开条目的展示名称。",
+            "keywords": [
+              "当代海宁蚕花戏“马鸣王菩萨”牛皮道具",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3285"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3285"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3282",
+      "zone_id": "china-silk-official-collection",
+      "name": "盘金彩绣狮子纹荷包",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3282-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3282-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“盘金彩绣狮子纹荷包”为该公开条目的展示名称。",
+            "keywords": [
+              "盘金彩绣狮子纹荷包",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3282"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3282"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3281",
+      "zone_id": "china-silk-official-collection",
+      "name": "黄绸地打籽绣多子多福荷包",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3281-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3281-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“黄绸地打籽绣多子多福荷包”为该公开条目的展示名称。",
+            "keywords": [
+              "黄绸地打籽绣多子多福荷包",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3281"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3281"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3280",
+      "zone_id": "china-silk-official-collection",
+      "name": "蓝缎圈金铺绒绣石榴飞雁腰包",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3280-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3280-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“蓝缎圈金铺绒绣石榴飞雁腰包”为该公开条目的展示名称。",
+            "keywords": [
+              "蓝缎圈金铺绒绣石榴飞雁腰包",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3280"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3280"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3279",
+      "zone_id": "china-silk-official-collection",
+      "name": "白绸绣桃子围棋腰包",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3279-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3279-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“白绸绣桃子围棋腰包”为该公开条目的展示名称。",
+            "keywords": [
+              "白绸绣桃子围棋腰包",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3279"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3279"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3284",
+      "zone_id": "china-silk-official-collection",
+      "name": "红绿缎绣花卉小饰件",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3284-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3284-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“红绿缎绣花卉小饰件”为该公开条目的展示名称。",
+            "keywords": [
+              "红绿缎绣花卉小饰件",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3284"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3284"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3283",
+      "zone_id": "china-silk-official-collection",
+      "name": "品蓝缎彩绣花卉名片袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3283-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3283-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“品蓝缎彩绣花卉名片袋”为该公开条目的展示名称。",
+            "keywords": [
+              "品蓝缎彩绣花卉名片袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3283"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3283"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3274",
+      "zone_id": "china-silk-official-collection",
+      "name": "白缎铺绒绣桃子螃蟹褡裢",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3274-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3274-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“白缎铺绒绣桃子螃蟹褡裢”为该公开条目的展示名称。",
+            "keywords": [
+              "白缎铺绒绣桃子螃蟹褡裢",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3274"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3274"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3275",
+      "zone_id": "china-silk-official-collection",
+      "name": "彩绸绣石榴花虫荷包",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3275-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3275-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“彩绸绣石榴花虫荷包”为该公开条目的展示名称。",
+            "keywords": [
+              "彩绸绣石榴花虫荷包",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3275"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3275"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3272",
+      "zone_id": "china-silk-official-collection",
+      "name": "彩绢圈金绣梅花钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3272-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3272-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“彩绢圈金绣梅花钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "彩绢圈金绣梅花钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3272"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3272"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3273",
+      "zone_id": "china-silk-official-collection",
+      "name": "白绸地彩绣公鸡花卉钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3273-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3273-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“白绸地彩绣公鸡花卉钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "白绸地彩绣公鸡花卉钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3273"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3273"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3270",
+      "zone_id": "china-silk-official-collection",
+      "name": "蓝缎圈金铺绒绣葫芦桃子褡裢",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3270-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3270-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“蓝缎圈金铺绒绣葫芦桃子褡裢”为该公开条目的展示名称。",
+            "keywords": [
+              "蓝缎圈金铺绒绣葫芦桃子褡裢",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3270"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3270"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3269",
+      "zone_id": "china-silk-official-collection",
+      "name": "绿缎彩绣花卉钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3269-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3269-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“绿缎彩绣花卉钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "绿缎彩绣花卉钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3269"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3269"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3271",
+      "zone_id": "china-silk-official-collection",
+      "name": "粉缎圈金绣螃蟹荷包",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3271-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3271-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“粉缎圈金绣螃蟹荷包”为该公开条目的展示名称。",
+            "keywords": [
+              "粉缎圈金绣螃蟹荷包",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3271"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3271"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3266",
+      "zone_id": "china-silk-official-collection",
+      "name": "红缎地彩绣花蝶荷包",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3266-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3266-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“红缎地彩绣花蝶荷包”为该公开条目的展示名称。",
+            "keywords": [
+              "红缎地彩绣花蝶荷包",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3266"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3266"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3278",
+      "zone_id": "china-silk-official-collection",
+      "name": "月白绸彩绣花蝶碗形钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3278-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3278-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“月白绸彩绣花蝶碗形钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "月白绸彩绣花蝶碗形钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3278"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3278"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3265",
+      "zone_id": "china-silk-official-collection",
+      "name": "红绸彩绣花蝶钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3265-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3265-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“红绸彩绣花蝶钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "红绸彩绣花蝶钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3265"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3265"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3264",
+      "zone_id": "china-silk-official-collection",
+      "name": "红缎地彩绣多子多福荷包",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3264-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3264-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“红缎地彩绣多子多福荷包”为该公开条目的展示名称。",
+            "keywords": [
+              "红缎地彩绣多子多福荷包",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3264"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3264"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3267",
+      "zone_id": "china-silk-official-collection",
+      "name": "五彩缎彩绣花蝶钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3267-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3267-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“五彩缎彩绣花蝶钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "五彩缎彩绣花蝶钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3267"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3267"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3276",
+      "zone_id": "china-silk-official-collection",
+      "name": "紫色缎地彩绣花蝶钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3276-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3276-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“紫色缎地彩绣花蝶钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "紫色缎地彩绣花蝶钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3276"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3276"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3268",
+      "zone_id": "china-silk-official-collection",
+      "name": "白缎彩绣花卉钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3268-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3268-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“白缎彩绣花卉钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "白缎彩绣花卉钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3268"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3268"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3262",
+      "zone_id": "china-silk-official-collection",
+      "name": "蓝缎彩绣花卉荷包",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3262-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3262-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“蓝缎彩绣花卉荷包”为该公开条目的展示名称。",
+            "keywords": [
+              "蓝缎彩绣花卉荷包",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3262"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3262"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3259",
+      "zone_id": "china-silk-official-collection",
+      "name": "红布彩绣莲藕飞蝶钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3259-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3259-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“红布彩绣莲藕飞蝶钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "红布彩绣莲藕飞蝶钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3259"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3259"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3258",
+      "zone_id": "china-silk-official-collection",
+      "name": "白色布地彩绣桃花钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3258-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3258-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“白色布地彩绣桃花钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "白色布地彩绣桃花钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3258"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3258"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3257",
+      "zone_id": "china-silk-official-collection",
+      "name": "堆绒绣花卉碗形钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3257-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3257-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“堆绒绣花卉碗形钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "堆绒绣花卉碗形钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3257"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3257"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3277",
+      "zone_id": "china-silk-official-collection",
+      "name": "红缎彩绣花蝶荷包",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3277-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3277-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“红缎彩绣花蝶荷包”为该公开条目的展示名称。",
+            "keywords": [
+              "红缎彩绣花蝶荷包",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3277"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3277"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3260",
+      "zone_id": "china-silk-official-collection",
+      "name": "白绢彩绣花蝶钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3260-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3260-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“白绢彩绣花蝶钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "白绢彩绣花蝶钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3260"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3260"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3253",
+      "zone_id": "china-silk-official-collection",
+      "name": "白缎彩绣小花钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3253-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3253-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“白缎彩绣小花钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "白缎彩绣小花钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3253"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3253"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3255",
+      "zone_id": "china-silk-official-collection",
+      "name": "湖绿绢彩绣花卉钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3255-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3255-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“湖绿绢彩绣花卉钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "湖绿绢彩绣花卉钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3255"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3255"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3254",
+      "zone_id": "china-silk-official-collection",
+      "name": "宝蓝缎铺绒绣花卉荷包",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3254-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3254-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“宝蓝缎铺绒绣花卉荷包”为该公开条目的展示名称。",
+            "keywords": [
+              "宝蓝缎铺绒绣花卉荷包",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3254"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3254"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3250",
+      "zone_id": "china-silk-official-collection",
+      "name": "堆绫绣花卉钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3250-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3250-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“堆绫绣花卉钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "堆绫绣花卉钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3250"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3250"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3252",
+      "zone_id": "china-silk-official-collection",
+      "name": "白缎彩绣桃花碗形钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3252-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3252-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“白缎彩绣桃花碗形钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "白缎彩绣桃花碗形钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3252"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3252"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "china-silk-catalog-3249",
+      "zone_id": "china-silk-official-collection",
+      "name": "红缎地彩绣葫芦莲花钱袋",
+      "aliases": [],
+      "status": "active",
+      "revision": {
+        "id": "china-silk-catalog-3249-r1",
+        "number": 1,
+        "status": "draft",
+        "facts": [
+          {
+            "id": "fact-china-silk-catalog-3249-listing",
+            "type": "history",
+            "statement": "中国丝绸博物馆“中国历代”藏品库以“红缎地彩绣葫芦莲花钱袋”为该公开条目的展示名称。",
+            "keywords": [
+              "红缎地彩绣葫芦莲花钱袋",
+              "中国丝绸博物馆",
+              "中国历代",
+              "馆方收录",
+              "itemid 3249"
+            ],
+            "confidence": "official_museum_webpage",
+            "certainty": "confirmed",
+            "sources": [
+              "source-china-silk-catalog-3249"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

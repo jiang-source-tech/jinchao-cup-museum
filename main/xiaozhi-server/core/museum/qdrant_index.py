@@ -97,29 +97,7 @@ class QdrantFactIndex:
             on_disk_payload=True,
         )
         try:
-            indexed = 0
-            for offset in range(0, len(records), 100):
-                points = [
-                    models.PointStruct(
-                        id=str(
-                            uuid.uuid5(POINT_NAMESPACE, str(record["fact_id"]))
-                        ),
-                        vector=vector,
-                        payload=record,
-                    )
-                    for record, vector in zip(
-                        records[offset : offset + 100],
-                        vectors[offset : offset + 100],
-                        strict=True,
-                    )
-                ]
-                if points:
-                    self._client.upsert(
-                        collection_name=build_name,
-                        points=points,
-                        wait=True,
-                    )
-                    indexed += len(points)
+            indexed = self._upsert(records, vectors, build_name)
             counted = int(
                 self._client.count(
                     collection_name=build_name,
@@ -139,6 +117,60 @@ class QdrantFactIndex:
         except Exception:
             if self._client.collection_exists(build_name):
                 self._client.delete_collection(build_name)
+            raise
+
+    def create_physical_collection(
+        self,
+        records: Iterable[dict[str, Any]],
+        vectors: Iterable[list[float]],
+    ) -> int:
+        records = tuple(records)
+        vectors = tuple(vectors)
+        if len(records) != len(vectors):
+            raise ValueError("record and vector counts differ")
+        if self._client.collection_exists(self.collection_name):
+            raise FileExistsError(
+                f"refusing to overwrite existing Qdrant collection: "
+                f"{self.collection_name}"
+            )
+        aliases_before = tuple(
+            sorted(
+                (alias.alias_name, alias.collection_name)
+                for alias in self._client.get_aliases().aliases
+            )
+        )
+        self._client.create_collection(
+            collection_name=self.collection_name,
+            vectors_config=models.VectorParams(
+                size=self.dimension,
+                distance=models.Distance.COSINE,
+            ),
+            on_disk_payload=True,
+        )
+        try:
+            indexed = self._upsert(records, vectors, self.collection_name)
+            counted = int(
+                self._client.count(
+                    collection_name=self.collection_name,
+                    exact=True,
+                ).count
+            )
+            if counted != indexed:
+                raise RuntimeError(
+                    f"Qdrant build count mismatch: indexed={indexed}, counted={counted}"
+                )
+            aliases_after = tuple(
+                sorted(
+                    (alias.alias_name, alias.collection_name)
+                    for alias in self._client.get_aliases().aliases
+                )
+            )
+            if aliases_after != aliases_before:
+                raise RuntimeError("isolated Qdrant build unexpectedly changed aliases")
+            return indexed
+        except Exception:
+            if self._client.collection_exists(self.collection_name):
+                self._client.delete_collection(self.collection_name)
             raise
 
     def count(self) -> int:
@@ -196,6 +228,35 @@ class QdrantFactIndex:
             if current_alias is not None
             else None
         )
+
+    def _upsert(
+        self,
+        records: tuple[dict[str, Any], ...],
+        vectors: tuple[list[float], ...],
+        collection_name: str,
+    ) -> int:
+        indexed = 0
+        for offset in range(0, len(records), 100):
+            points = [
+                models.PointStruct(
+                    id=str(uuid.uuid5(POINT_NAMESPACE, str(record["fact_id"]))),
+                    vector=vector,
+                    payload=record,
+                )
+                for record, vector in zip(
+                    records[offset : offset + 100],
+                    vectors[offset : offset + 100],
+                    strict=True,
+                )
+            ]
+            if points:
+                self._client.upsert(
+                    collection_name=collection_name,
+                    points=points,
+                    wait=True,
+                )
+                indexed += len(points)
+        return indexed
 
     def _delete_stale_builds(
         self,

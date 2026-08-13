@@ -47,13 +47,32 @@ CREATE TABLE IF NOT EXISTS exhibit (
     status TEXT NOT NULL CHECK (status IN ('active', 'archived'))
 );
 
+CREATE TABLE IF NOT EXISTS exhibit_alias (
+    exhibit_id TEXT NOT NULL REFERENCES exhibit(id),
+    alias_text TEXT NOT NULL,
+    normalized_text TEXT NOT NULL,
+    alias_kind TEXT NOT NULL CHECK (
+        alias_kind IN ('common', 'abbreviation', 'asr_variant', 'historical')
+    ),
+    binding TEXT NOT NULL CHECK (binding IN ('unique', 'ambiguous')),
+    source_ids_json TEXT NOT NULL DEFAULT '[]',
+    PRIMARY KEY (exhibit_id, normalized_text)
+);
+
+CREATE INDEX IF NOT EXISTS exhibit_alias_by_normalized_text
+ON exhibit_alias(normalized_text, binding);
+
 CREATE TABLE IF NOT EXISTS source_document (
     id TEXT PRIMARY KEY,
     museum_id TEXT NOT NULL REFERENCES museum(id),
     title TEXT NOT NULL,
     source_type TEXT NOT NULL,
     locator TEXT NOT NULL,
-    rights_note TEXT NOT NULL
+    rights_note TEXT NOT NULL,
+    publisher TEXT NOT NULL DEFAULT '',
+    published_date TEXT NOT NULL DEFAULT '',
+    accessed_at TEXT NOT NULL DEFAULT '',
+    language TEXT NOT NULL DEFAULT 'zh-CN'
 );
 
 CREATE TABLE IF NOT EXISTS content_revision (
@@ -95,7 +114,10 @@ CREATE TABLE IF NOT EXISTS exhibit_fact (
     fact_type TEXT NOT NULL,
     statement TEXT NOT NULL,
     keywords_json TEXT NOT NULL DEFAULT '[]',
-    confidence TEXT NOT NULL
+    confidence TEXT NOT NULL,
+    certainty TEXT NOT NULL DEFAULT 'confirmed' CHECK (
+        certainty IN ('confirmed', 'qualified', 'disputed', 'unknown')
+    )
 );
 
 CREATE TABLE IF NOT EXISTS fact_source (
@@ -389,6 +411,37 @@ class MuseumStore:
             )
             _ensure_column(
                 connection,
+                "source_document",
+                "publisher",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            _ensure_column(
+                connection,
+                "source_document",
+                "published_date",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            _ensure_column(
+                connection,
+                "source_document",
+                "accessed_at",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            _ensure_column(
+                connection,
+                "source_document",
+                "language",
+                "TEXT NOT NULL DEFAULT 'zh-CN'",
+            )
+            _ensure_column(
+                connection,
+                "exhibit_fact",
+                "certainty",
+                "TEXT NOT NULL DEFAULT 'confirmed'",
+            )
+            _backfill_exhibit_aliases(connection)
+            _ensure_column(
+                connection,
                 "interaction_trace",
                 "llm_response_summary",
                 "TEXT NOT NULL DEFAULT '{}'",
@@ -577,6 +630,35 @@ class MuseumStore:
             ).fetchall()
         return tuple(
             (str(row["id"]), str(row["name"]), str(row["aliases_json"] or "[]"))
+            for row in rows
+        )
+
+    def ambiguous_aliases(self) -> tuple[tuple[str, str, str], ...]:
+        with self.connection() as connection:
+            rows = connection.execute(
+                """
+                SELECT ea.exhibit_id, e.name AS exhibit_name, ea.alias_text
+                FROM exhibit_alias ea
+                JOIN exhibit e ON e.id = ea.exhibit_id
+                JOIN zone z ON z.id = e.zone_id
+                JOIN museum m ON m.id = z.museum_id
+                WHERE ea.binding = 'ambiguous'
+                  AND e.status = 'active'
+                  AND m.status = 'active'
+                  AND EXISTS (
+                      SELECT 1 FROM content_revision cr
+                      WHERE cr.exhibit_id = e.id
+                        AND cr.status IN ('published', 'withdrawn')
+                  )
+                ORDER BY ea.normalized_text, ea.exhibit_id
+                """
+            ).fetchall()
+        return tuple(
+            (
+                str(row["exhibit_id"]),
+                str(row["exhibit_name"]),
+                str(row["alias_text"]),
+            )
             for row in rows
         )
 
@@ -1512,6 +1594,28 @@ def _ensure_column(
         connection.execute(
             f"ALTER TABLE {table_name} ADD COLUMN {column_name} {declaration}"
         )
+
+
+def _backfill_exhibit_aliases(connection: sqlite3.Connection) -> None:
+    rows = connection.execute(
+        "SELECT id, aliases_json FROM exhibit ORDER BY id"
+    ).fetchall()
+    for row in rows:
+        exhibit_id = str(row["id"])
+        for alias in _json_list(row["aliases_json"]):
+            alias_text = str(alias).strip()
+            normalized = _normalize_issue_question(alias_text)
+            if not normalized:
+                continue
+            connection.execute(
+                """
+                INSERT OR IGNORE INTO exhibit_alias(
+                    exhibit_id, alias_text, normalized_text,
+                    alias_kind, binding, source_ids_json
+                ) VALUES (?, ?, ?, 'common', 'unique', '[]')
+                """,
+                (exhibit_id, alias_text, normalized),
+            )
 
 
 def _rebuild_exhibit_fact_fts(connection: sqlite3.Connection) -> None:

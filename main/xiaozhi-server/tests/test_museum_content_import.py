@@ -11,6 +11,7 @@ from core.business_runtime_factory import create_conversation_runtime
 from core.conversation_runtime import TurnRequest
 from core.museum.content_import import (
     ContentPackageValidationError,
+    audit_content_batch,
     audit_interaction_evidence,
     import_draft_content,
     load_content_package,
@@ -91,6 +92,124 @@ def _second_revision_payload(first_payload: dict) -> dict:
         }
     )
     return payload
+
+
+def _v2_content_payload() -> dict:
+    payload = _minimal_content_payload()
+    payload["schema_version"] = 2
+    payload["sources"][0].update(
+        {
+            "publisher": "测试博物馆",
+            "published_date": "2026-08-01",
+            "accessed_at": "2026-08-12",
+            "language": "zh-CN",
+        }
+    )
+    payload["exhibits"][0]["aliases"] = [
+        {
+            "text": "JSON 测试别名",
+            "kind": "common",
+            "binding": "unique",
+            "sources": ["json-fixture-source"],
+        },
+        {
+            "text": "测试展品",
+            "kind": "abbreviation",
+            "binding": "ambiguous",
+            "sources": ["json-fixture-source"],
+        },
+    ]
+    payload["exhibits"][0]["revision"]["facts"][0]["certainty"] = (
+        "qualified"
+    )
+    return payload
+
+
+def test_v2_persists_structured_sources_aliases_and_certainty(tmp_path):
+    store = MuseumStore(tmp_path / "museum.db")
+    package = parse_content_package(_v2_content_payload())
+
+    import_draft_content(store, package)
+
+    with store.connection() as connection:
+        source = connection.execute(
+            "SELECT * FROM source_document WHERE id = 'json-fixture-source'"
+        ).fetchone()
+        aliases = connection.execute(
+            """
+            SELECT alias_text, alias_kind, binding, source_ids_json
+            FROM exhibit_alias
+            WHERE exhibit_id = 'json-fixture-exhibit'
+            ORDER BY alias_text
+            """
+        ).fetchall()
+        fact = connection.execute(
+            "SELECT certainty FROM exhibit_fact WHERE id = 'json-fixture-fact'"
+        ).fetchone()
+
+    assert source["publisher"] == "测试博物馆"
+    assert source["accessed_at"] == "2026-08-12"
+    assert {(row["alias_text"], row["binding"]) for row in aliases} == {
+        ("JSON 测试别名", "unique"),
+        ("测试展品", "ambiguous"),
+    }
+    assert json.loads(aliases[0]["source_ids_json"]) == [
+        "json-fixture-source"
+    ]
+    assert fact["certainty"] == "qualified"
+    assert package.exhibits[0].aliases == ("JSON 测试别名",)
+
+
+def test_v2_requires_source_dates_alias_evidence_and_fact_certainty():
+    payload = _v2_content_payload()
+    del payload["sources"][0]["accessed_at"]
+    payload["exhibits"][0]["aliases"][0]["sources"] = []
+    del payload["exhibits"][0]["revision"]["facts"][0]["certainty"]
+
+    with pytest.raises(ContentPackageValidationError) as error:
+        parse_content_package(payload)
+
+    message = str(error.value)
+    assert "sources[0].accessed_at 缺失" in message
+    assert "aliases[0].sources 至少需要一项" in message
+    assert ".facts[0].certainty 缺失" in message
+
+
+def test_batch_audit_detects_cross_package_unique_alias_conflicts(tmp_path):
+    first = _v2_content_payload()
+    second = _v2_content_payload()
+    second["museum"]["id"] = "second-museum"
+    second["museum"]["name"] = "第二测试博物馆"
+    second["zones"][0]["id"] = "second-gallery"
+    second["sources"][0]["id"] = "second-source"
+    second["exhibits"][0]["id"] = "second-exhibit"
+    second["exhibits"][0]["zone_id"] = "second-gallery"
+    second["exhibits"][0]["name"] = "第二测试展品"
+    second["exhibits"][0]["revision"]["id"] = "second-exhibit-r1"
+    second["exhibits"][0]["revision"]["facts"][0]["id"] = "second-fact"
+    second["exhibits"][0]["revision"]["facts"][0]["sources"] = [
+        "second-source"
+    ]
+    for alias in second["exhibits"][0]["aliases"]:
+        alias["sources"] = ["second-source"]
+    first["exhibits"][0]["aliases"][0]["text"] = "共享测试称呼"
+    first["exhibits"][0]["aliases"][0]["binding"] = "ambiguous"
+    second["exhibits"][0]["aliases"][0]["text"] = "共享测试称呼"
+    second["exhibits"][0]["aliases"][0]["binding"] = "unique"
+
+    first_path = tmp_path / "first.yaml"
+    second_path = tmp_path / "second.yaml"
+    first_path.write_text(
+        json.dumps(first, ensure_ascii=False), encoding="utf-8"
+    )
+    second_path.write_text(
+        json.dumps(second, ensure_ascii=False), encoding="utf-8"
+    )
+
+    audit = audit_content_batch([first_path, second_path])
+
+    assert audit.ok is False
+    assert any("跨内容包唯一称呼与共享称呼冲突" in issue for issue in audit.issues)
 
 
 def _turn_request(*, request_id: str, device_id: str) -> TurnRequest:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
 
 class TextEmbedder(Protocol):
@@ -11,6 +11,13 @@ class TextEmbedder(Protocol):
     def embed(self, text: str) -> list[float]: ...
 
     def embed_many(self, texts: list[str]) -> list[list[float]]: ...
+
+
+@dataclass(frozen=True)
+class EmbeddingBatchResult:
+    vectors: tuple[tuple[float, ...], ...]
+    request_id: str
+    usage: dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -24,8 +31,12 @@ class DashScopeTextEmbedder:
         return self.embed_many([text])[0]
 
     def embed_many(self, texts: list[str]) -> list[list[float]]:
+        result = self.embed_many_with_usage(texts)
+        return [list(vector) for vector in result.vectors]
+
+    def embed_many_with_usage(self, texts: list[str]) -> EmbeddingBatchResult:
         if not texts:
-            return []
+            return EmbeddingBatchResult(vectors=(), request_id="", usage={})
         if not self.api_key:
             raise RuntimeError("DASHSCOPE_API_KEY is not configured")
 
@@ -52,4 +63,11 @@ class DashScopeTextEmbedder:
             raise RuntimeError("DashScope embedding response count mismatch")
         if any(len(vector) != self.dimension for vector in vectors):
             raise RuntimeError("DashScope embedding dimension mismatch")
-        return vectors
+        usage = getattr(response, "usage", None) or {}
+        if not isinstance(usage, dict):
+            usage = dict(usage)
+        return EmbeddingBatchResult(
+            vectors=tuple(tuple(float(value) for value in vector) for vector in vectors),
+            request_id=str(getattr(response, "request_id", "") or ""),
+            usage=dict(usage),
+        )

@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 import json
 from pathlib import Path
 import re
 import sqlite3
+from tempfile import TemporaryDirectory
 from typing import Any
+import unicodedata
 
 import yaml
 
@@ -28,6 +30,9 @@ _FACT_TYPES = {
     "research_limit",
     "usage",
 }
+_FACT_CERTAINTY_LEVELS = {"confirmed", "qualified", "disputed", "unknown"}
+_ALIAS_KINDS = {"common", "abbreviation", "asr_variant", "historical"}
+_ALIAS_BINDINGS = {"unique", "ambiguous"}
 
 
 class ContentPackageValidationError(ValueError):
@@ -61,6 +66,18 @@ class SourceDefinition:
     source_type: str
     locator: str
     rights_note: str
+    publisher: str = ""
+    published_date: str = ""
+    accessed_at: str = ""
+    language: str = "zh-CN"
+
+
+@dataclass(frozen=True)
+class AliasDefinition:
+    text: str
+    kind: str = "common"
+    binding: str = "unique"
+    source_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -71,6 +88,7 @@ class FactDefinition:
     keywords: tuple[str, ...]
     confidence: str
     source_ids: tuple[str, ...]
+    certainty: str = "confirmed"
 
 
 @dataclass(frozen=True)
@@ -90,6 +108,7 @@ class ExhibitDefinition:
     status: str
     image_uri: str | None
     revision: RevisionDefinition
+    alias_definitions: tuple[AliasDefinition, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -124,6 +143,23 @@ class ContentImportResult:
     @property
     def source_count(self) -> int:
         return len(self.source_ids)
+
+
+@dataclass(frozen=True)
+class ContentBatchAudit:
+    ok: bool
+    package_paths: tuple[str, ...]
+    package_count: int
+    schema_version_counts: dict[int, int]
+    museum_ids: tuple[str, ...]
+    exhibit_ids: tuple[str, ...]
+    revision_ids: tuple[str, ...]
+    fact_ids: tuple[str, ...]
+    source_ids: tuple[str, ...]
+    unique_alias_count: int
+    ambiguous_alias_count: int
+    certainty_counts: dict[str, int]
+    issues: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -244,8 +280,8 @@ def parse_content_package(payload: Any) -> MuseumContentPackage:
         issues=issues,
     )
     schema_version = _integer(root.get("schema_version"), "schema_version", issues)
-    if schema_version != 1:
-        issues.append("schema_version 仅支持 1")
+    if schema_version not in {1, 2}:
+        issues.append("schema_version 仅支持 1 或 2")
 
     museum_data = _mapping(root.get("museum"), "museum", issues)
     _check_keys(
@@ -271,11 +307,11 @@ def parse_content_package(payload: Any) -> MuseumContentPackage:
         for index, item in enumerate(_list(root.get("zones"), "zones", issues))
     )
     sources = tuple(
-        _parse_source(item, index, issues)
+        _parse_source(item, index, schema_version, issues)
         for index, item in enumerate(_list(root.get("sources"), "sources", issues))
     )
     exhibits = tuple(
-        _parse_exhibit(item, index, issues)
+        _parse_exhibit(item, index, schema_version, issues)
         for index, item in enumerate(_list(root.get("exhibits"), "exhibits", issues))
     )
     if not zones:
@@ -305,6 +341,88 @@ def validate_content_package_for_store(
         issues = _database_issues(connection, package)
     if issues:
         raise ContentPackageValidationError(issues)
+
+
+def audit_content_batch(paths: Iterable[str | Path]) -> ContentBatchAudit:
+    normalized_paths = tuple(
+        str(Path(path).resolve()) for path in paths
+    )
+    if not normalized_paths:
+        raise ContentPackageValidationError(["批量预检至少需要一个内容包"])
+
+    packages: list[tuple[str, MuseumContentPackage]] = []
+    issues: list[str] = []
+    for path in normalized_paths:
+        try:
+            packages.append((path, load_content_package(path)))
+        except ContentPackageValidationError as exc:
+            issues.extend(f"{path}: {issue}" for issue in exc.issues)
+
+    mention_owners: dict[str, list[tuple[str, str, str]]] = {}
+    for path, package in packages:
+        for exhibit in package.exhibits:
+            mentions = ((exhibit.name, "name", "unique"),) + tuple(
+                (alias.text, "alias", alias.binding)
+                for alias in exhibit.alias_definitions
+            )
+            for mention, mention_type, binding in mentions:
+                normalized = _normalize_mention(mention)
+                existing = mention_owners.setdefault(normalized, [])
+                conflicts = [
+                    owner
+                    for owner in existing
+                    if owner[0] != exhibit.id
+                    and (binding == "unique" or owner[2] == "unique")
+                ]
+                if conflicts:
+                    issues.append(
+                        "跨内容包唯一称呼与共享称呼冲突："
+                        f"{mention}（{mention_type}）同时属于 "
+                        f"{conflicts[0][0]} 和 {exhibit.id}；文件 {path}"
+                    )
+                existing.append((exhibit.id, path, binding))
+
+    with TemporaryDirectory(prefix="museum-content-audit-") as temp_dir:
+        store = MuseumStore(Path(temp_dir) / "audit.db")
+        for path, package in packages:
+            try:
+                import_draft_content(store, package)
+            except ContentPackageValidationError as exc:
+                issues.extend(f"{path}: {issue}" for issue in exc.issues)
+
+    exhibits = tuple(
+        exhibit for _path, package in packages for exhibit in package.exhibits
+    )
+    facts = tuple(
+        fact for exhibit in exhibits for fact in exhibit.revision.facts
+    )
+    aliases = tuple(
+        alias for exhibit in exhibits for alias in exhibit.alias_definitions
+    )
+    schema_version_counts: dict[int, int] = {}
+    certainty_counts: dict[str, int] = {}
+    for _path, package in packages:
+        schema_version_counts[package.schema_version] = (
+            schema_version_counts.get(package.schema_version, 0) + 1
+        )
+    for fact in facts:
+        certainty_counts[fact.certainty] = certainty_counts.get(fact.certainty, 0) + 1
+    unique_issues = tuple(dict.fromkeys(issues))
+    return ContentBatchAudit(
+        ok=not unique_issues,
+        package_paths=normalized_paths,
+        package_count=len(packages),
+        schema_version_counts=dict(sorted(schema_version_counts.items())),
+        museum_ids=tuple(sorted({package.museum.id for _path, package in packages})),
+        exhibit_ids=tuple(sorted({exhibit.id for exhibit in exhibits})),
+        revision_ids=tuple(sorted({exhibit.revision.id for exhibit in exhibits})),
+        fact_ids=tuple(sorted({fact.id for fact in facts})),
+        source_ids=tuple(sorted({source.id for _path, package in packages for source in package.sources})),
+        unique_alias_count=sum(alias.binding == "unique" for alias in aliases),
+        ambiguous_alias_count=sum(alias.binding == "ambiguous" for alias in aliases),
+        certainty_counts=dict(sorted(certainty_counts.items())),
+        issues=unique_issues,
+    )
 
 
 def import_draft_content(
@@ -766,16 +884,25 @@ def _parse_zone(value: Any, index: int, issues: list[str]) -> ZoneDefinition:
     )
 
 
-def _parse_source(value: Any, index: int, issues: list[str]) -> SourceDefinition:
+def _parse_source(
+    value: Any,
+    index: int,
+    schema_version: int,
+    issues: list[str],
+) -> SourceDefinition:
     path = f"sources[{index}]"
     data = _mapping(value, path, issues)
     _check_keys(
         data,
         required={"id", "title", "source_type", "locator", "rights_note"},
-        optional=set(),
+        optional={"publisher", "published_date", "accessed_at", "language"},
         path=path,
         issues=issues,
     )
+    if schema_version == 2:
+        for field in ("publisher", "accessed_at"):
+            if not str(data.get(field, "")).strip():
+                issues.append(f"{path}.{field} 缺失")
     return SourceDefinition(
         id=_identifier(data.get("id"), f"{path}.id", issues),
         title=_text(data.get("title"), f"{path}.title", issues),
@@ -786,10 +913,27 @@ def _parse_source(value: Any, index: int, issues: list[str]) -> SourceDefinition
         rights_note=_text(
             data.get("rights_note"), f"{path}.rights_note", issues
         ),
+        publisher=_optional_text(
+            data.get("publisher"), f"{path}.publisher", issues
+        ) or "",
+        published_date=_optional_date(
+            data.get("published_date"), f"{path}.published_date", issues
+        ),
+        accessed_at=_optional_date(
+            data.get("accessed_at"), f"{path}.accessed_at", issues
+        ),
+        language=_optional_text(
+            data.get("language"), f"{path}.language", issues
+        ) or "zh-CN",
     )
 
 
-def _parse_exhibit(value: Any, index: int, issues: list[str]) -> ExhibitDefinition:
+def _parse_exhibit(
+    value: Any,
+    index: int,
+    schema_version: int,
+    issues: list[str],
+) -> ExhibitDefinition:
     path = f"exhibits[{index}]"
     data = _mapping(value, path, issues)
     _check_keys(
@@ -815,8 +959,11 @@ def _parse_exhibit(value: Any, index: int, issues: list[str]) -> ExhibitDefiniti
     )
     if revision_status and revision_status != "draft":
         issues.append(f"{path}.revision.status 必须是 draft")
+    alias_definitions = _parse_aliases(
+        data.get("aliases"), path, schema_version, issues
+    )
     facts = tuple(
-        _parse_fact(item, path, fact_index, issues)
+        _parse_fact(item, path, fact_index, schema_version, issues)
         for fact_index, item in enumerate(
             _list(revision_data.get("facts"), f"{path}.revision.facts", issues)
         )
@@ -827,7 +974,9 @@ def _parse_exhibit(value: Any, index: int, issues: list[str]) -> ExhibitDefiniti
         id=_identifier(data.get("id"), f"{path}.id", issues),
         zone_id=_identifier(data.get("zone_id"), f"{path}.zone_id", issues),
         name=_text(data.get("name"), f"{path}.name", issues),
-        aliases=_string_list(data.get("aliases"), f"{path}.aliases", issues),
+        aliases=tuple(
+            alias.text for alias in alias_definitions if alias.binding == "unique"
+        ),
         status=_enum(
             data.get("status"),
             f"{path}.status",
@@ -845,6 +994,7 @@ def _parse_exhibit(value: Any, index: int, issues: list[str]) -> ExhibitDefiniti
             status=revision_status,
             facts=facts,
         ),
+        alias_definitions=alias_definitions,
     )
 
 
@@ -852,6 +1002,7 @@ def _parse_fact(
     value: Any,
     exhibit_path: str,
     index: int,
+    schema_version: int,
     issues: list[str],
 ) -> FactDefinition:
     path = f"{exhibit_path}.revision.facts[{index}]"
@@ -859,7 +1010,7 @@ def _parse_fact(
     _check_keys(
         data,
         required={"id", "type", "statement", "keywords", "confidence", "sources"},
-        optional=set(),
+        optional={"certainty"},
         path=path,
         issues=issues,
     )
@@ -875,6 +1026,14 @@ def _parse_fact(
         issues.append(f"{path}.keywords 至少需要一项")
     if not source_ids:
         issues.append(f"{path}.sources 至少需要一项")
+    certainty = str(data.get("certainty", "confirmed")).strip()
+    if schema_version == 2 and "certainty" not in data:
+        issues.append(f"{path}.certainty 缺失")
+    if certainty not in _FACT_CERTAINTY_LEVELS:
+        issues.append(
+            f"{path}.certainty 不支持 {certainty}；允许值为 "
+            f"{', '.join(sorted(_FACT_CERTAINTY_LEVELS))}"
+        )
     return FactDefinition(
         id=_identifier(data.get("id"), f"{path}.id", issues),
         fact_type=fact_type,
@@ -882,7 +1041,53 @@ def _parse_fact(
         keywords=keywords,
         confidence=_text(data.get("confidence"), f"{path}.confidence", issues),
         source_ids=source_ids,
+        certainty=certainty,
     )
+
+
+def _parse_aliases(
+    value: Any,
+    exhibit_path: str,
+    schema_version: int,
+    issues: list[str],
+) -> tuple[AliasDefinition, ...]:
+    path = f"{exhibit_path}.aliases"
+    items = _list(value, path, issues)
+    aliases: list[AliasDefinition] = []
+    for index, item in enumerate(items):
+        item_path = f"{path}[{index}]"
+        if schema_version == 1:
+            aliases.append(AliasDefinition(text=_text(item, item_path, issues)))
+            continue
+        data = _mapping(item, item_path, issues)
+        _check_keys(
+            data,
+            required={"text", "kind", "binding", "sources"},
+            optional=set(),
+            path=item_path,
+            issues=issues,
+        )
+        source_ids = _identifier_list(
+            data.get("sources"), f"{item_path}.sources", issues
+        )
+        kind = _enum(data.get("kind"), f"{item_path}.kind", _ALIAS_KINDS, issues)
+        binding = _enum(
+            data.get("binding"),
+            f"{item_path}.binding",
+            _ALIAS_BINDINGS,
+            issues,
+        )
+        if not source_ids:
+            issues.append(f"{item_path}.sources 至少需要一项")
+        aliases.append(
+            AliasDefinition(
+                text=_text(data.get("text"), f"{item_path}.text", issues),
+                kind=kind,
+                binding=binding,
+                source_ids=source_ids,
+            )
+        )
+    return tuple(alias for alias in aliases if alias.text)
 
 
 def _validate_relationships(
@@ -909,32 +1114,47 @@ def _validate_relationships(
 
     zone_ids = {zone.id for zone in zones}
     source_ids = {source.id for source in sources}
-    mention_owners: dict[str, tuple[str, str]] = {}
+    mention_owners: dict[str, list[tuple[str, str]]] = {}
     for exhibit in exhibits:
         if exhibit.zone_id not in zone_ids:
             issues.append(
                 f"展品 {exhibit.id} 引用了内容包中不存在的展区 {exhibit.zone_id}"
             )
         seen_mentions: set[str] = set()
-        for mention in (exhibit.name, *exhibit.aliases):
+        mentions = ((exhibit.name, "unique"),) + tuple(
+            (alias.text, alias.binding)
+            for alias in exhibit.alias_definitions
+        )
+        for mention, binding in mentions:
             normalized = _normalize_mention(mention)
             if normalized in seen_mentions:
                 issues.append(f"展品 {exhibit.id} 内部存在重复名称或别名 {mention}")
                 continue
             seen_mentions.add(normalized)
-            existing = mention_owners.get(normalized)
-            if existing is not None and existing[0] != exhibit.id:
+            existing = mention_owners.setdefault(normalized, [])
+            conflicts = [
+                owner
+                for owner in existing
+                if owner[0] != exhibit.id
+                and (binding == "unique" or owner[1] == "unique")
+            ]
+            if conflicts:
                 issues.append(
                     "别名或名称冲突："
-                    f"{mention} 同时属于 {existing[0]} 和 {exhibit.id}"
+                    f"{mention} 同时属于 {conflicts[0][0]} 和 {exhibit.id}"
                 )
-            else:
-                mention_owners[normalized] = (exhibit.id, mention)
+            existing.append((exhibit.id, binding))
         for fact in exhibit.revision.facts:
             for source_id in fact.source_ids:
                 if source_id not in source_ids:
                     issues.append(
                         f"事实 {fact.id} 引用了内容包中不存在的来源 {source_id}"
+                    )
+        for alias in exhibit.alias_definitions:
+            for source_id in alias.source_ids:
+                if source_id not in source_ids:
+                    issues.append(
+                        f"别名 {alias.text} 引用了内容包中不存在的来源 {source_id}"
                     )
 
 
@@ -975,6 +1195,10 @@ def _database_issues(
                 "source_type": source.source_type,
                 "locator": source.locator,
                 "rights_note": source.rights_note,
+                "publisher": source.publisher,
+                "published_date": source.published_date,
+                "accessed_at": source.accessed_at,
+                "language": source.language,
             },
             label="来源",
             issues=issues,
@@ -1002,6 +1226,37 @@ def _database_issues(
                     )
             if actual_aliases != expected_aliases:
                 issues.append(f"展品 {exhibit.id} 已存在且 aliases 不一致")
+            alias_rows = connection.execute(
+                """
+                SELECT alias_text, normalized_text, alias_kind,
+                       binding, source_ids_json
+                FROM exhibit_alias
+                WHERE exhibit_id = ?
+                """,
+                (exhibit.id,),
+            ).fetchall()
+            actual_alias_metadata = {
+                str(alias_row["normalized_text"]): (
+                    str(alias_row["alias_text"]),
+                    str(alias_row["alias_kind"]),
+                    str(alias_row["binding"]),
+                    tuple(sorted(_json_ids(alias_row["source_ids_json"]))),
+                )
+                for alias_row in alias_rows
+            }
+            expected_alias_metadata = {
+                _normalize_mention(alias.text): (
+                    alias.text,
+                    alias.kind,
+                    alias.binding,
+                    tuple(sorted(alias.source_ids)),
+                )
+                for alias in exhibit.alias_definitions
+            }
+            if actual_alias_metadata != expected_alias_metadata:
+                issues.append(
+                    f"展品 {exhibit.id} 已存在且 alias metadata 不一致"
+                )
 
         revision_conflict = connection.execute(
             """
@@ -1024,9 +1279,15 @@ def _database_issues(
                 issues.append(f"事实 {fact.id} 已存在")
 
     package_mentions = {
-        _normalize_mention(mention): exhibit.id
+        _normalize_mention(mention): (exhibit.id, binding)
         for exhibit in package.exhibits
-        for mention in (exhibit.name, *exhibit.aliases)
+        for mention, binding in (
+            ((exhibit.name, "unique"),)
+            + tuple(
+                (alias.text, alias.binding)
+                for alias in exhibit.alias_definitions
+            )
+        )
     }
     rows = connection.execute(
         """
@@ -1045,13 +1306,26 @@ def _database_issues(
     ).fetchall()
     for row in rows:
         existing_id = str(row["id"])
-        existing_mentions = (
-            str(row["name"]),
-            *tuple(json.loads(str(row["aliases_json"] or "[]"))),
+        existing_mentions = [(str(row["name"]), "unique")]
+        alias_rows = connection.execute(
+            """
+            SELECT alias_text, binding
+            FROM exhibit_alias
+            WHERE exhibit_id = ?
+            """,
+            (existing_id,),
+        ).fetchall()
+        existing_mentions.extend(
+            (str(alias_row["alias_text"]), str(alias_row["binding"]))
+            for alias_row in alias_rows
         )
-        for mention in existing_mentions:
+        for mention, existing_binding in existing_mentions:
             package_owner = package_mentions.get(_normalize_mention(mention))
-            if package_owner is not None and package_owner != existing_id:
+            if (
+                package_owner is not None
+                and package_owner[0] != existing_id
+                and (package_owner[1] == "unique" or existing_binding == "unique")
+            ):
                 issues.append(
                     f"别名或名称冲突：{mention} 已属于已发布展品 {existing_id}"
                 )
@@ -1081,8 +1355,9 @@ def _insert_package(
             connection.execute(
                 """
                 INSERT INTO source_document(
-                    id, museum_id, title, source_type, locator, rights_note
-                ) VALUES (?, ?, ?, ?, ?, ?)
+                    id, museum_id, title, source_type, locator, rights_note,
+                    publisher, published_date, accessed_at, language
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     source.id,
@@ -1091,6 +1366,10 @@ def _insert_package(
                     source.source_type,
                     source.locator,
                     source.rights_note,
+                    source.publisher,
+                    source.published_date,
+                    source.accessed_at,
+                    source.language,
                 ),
             )
     for exhibit in package.exhibits:
@@ -1111,6 +1390,24 @@ def _insert_package(
                     exhibit.status,
                 ),
             )
+        for alias in exhibit.alias_definitions:
+            connection.execute(
+                """
+                INSERT INTO exhibit_alias(
+                    exhibit_id, alias_text, normalized_text,
+                    alias_kind, binding, source_ids_json
+                ) VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(exhibit_id, normalized_text) DO NOTHING
+                """,
+                (
+                    exhibit.id,
+                    alias.text,
+                    _normalize_mention(alias.text),
+                    alias.kind,
+                    alias.binding,
+                    json.dumps(list(alias.source_ids), ensure_ascii=False),
+                ),
+            )
         connection.execute(
             """
             INSERT INTO content_revision(
@@ -1125,8 +1422,8 @@ def _insert_package(
                 """
                 INSERT INTO exhibit_fact(
                     id, revision_id, fact_type, statement,
-                    keywords_json, confidence
-                ) VALUES (?, ?, ?, ?, ?, ?)
+                    keywords_json, confidence, certainty
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     fact.id,
@@ -1135,6 +1432,7 @@ def _insert_package(
                     fact.statement,
                     json.dumps(list(fact.keywords), ensure_ascii=False),
                     fact.confidence,
+                    fact.certainty,
                 ),
             )
             for source_id in fact.source_ids:
@@ -1437,6 +1735,16 @@ def _required_argument(value: str, name: str) -> str:
     return normalized
 
 
+def _json_ids(value: Any) -> tuple[str, ...]:
+    try:
+        decoded = json.loads(str(value or "[]"))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return ()
+    if not isinstance(decoded, list):
+        return ()
+    return tuple(str(item) for item in decoded)
+
+
 def _audit_id_tuple(value: Any, *, field: str, request_id: str) -> tuple[str, ...]:
     if not isinstance(value, list):
         raise ContentPackageValidationError(
@@ -1488,6 +1796,17 @@ def _optional_text(value: Any, path: str, issues: list[str]) -> str | None:
     if value is None:
         return None
     return _text(value, path, issues)
+
+
+def _optional_date(value: Any, path: str, issues: list[str]) -> str:
+    text = _optional_text(value, path, issues) or ""
+    if not text:
+        return ""
+    try:
+        date.fromisoformat(text)
+    except ValueError:
+        issues.append(f"{path} 必须是 YYYY-MM-DD 日期")
+    return text
 
 
 def _identifier(value: Any, path: str, issues: list[str]) -> str:
@@ -1568,4 +1887,5 @@ def _report_duplicate_ids(
 
 
 def _normalize_mention(value: str) -> str:
-    return re.sub(r"[\s，。！？、；：,.!?;:]", "", value).lower()
+    normalized = unicodedata.normalize("NFKC", value).casefold()
+    return re.sub(r"[\W_]+", "", normalized, flags=re.UNICODE)

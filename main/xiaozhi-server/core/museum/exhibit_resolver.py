@@ -58,6 +58,24 @@ class ExhibitResolver:
                 context_source="explicit_mention",
             )
 
+        ambiguous_matches = [
+            (exhibit_id, exhibit_name, alias)
+            for exhibit_id, exhibit_name, alias in self._store.ambiguous_aliases()
+            if _normalize_text(alias) in normalized_question
+        ]
+        if ambiguous_matches:
+            return ExhibitResolution(
+                status="ambiguous",
+                matched_text=max(
+                    (match[2] for match in ambiguous_matches),
+                    key=lambda value: len(_normalize_text(value)),
+                ),
+                candidate_ids=tuple(
+                    dict.fromkeys(match[0] for match in ambiguous_matches)
+                ),
+                context_source="ambiguous",
+            )
+
         if _looks_like_new_exhibit_reference(
             normalized_question,
             current_exhibit_id=current_exhibit_id,
@@ -124,6 +142,8 @@ _QUESTION_MARKERS = (
     "的尺寸",
     "的外形",
     "的出土地",
+    "介绍一下",
+    "讲讲",
 )
 _SWITCH_CUES = ("换成", "换到", "改问", "改聊", "另一个", "另一件", "另外一件", "关于")
 _POLITE_PREFIXES = ("请问", "我想知道", "我想了解", "能不能告诉我", "能否告诉我")
@@ -165,6 +185,9 @@ def _looks_like_new_exhibit_reference(
     current_exhibit_id: str | None = None,
 ) -> bool:
     """Detect likely exhibit switching without guessing from arbitrary nouns."""
+    for prefix in ("介绍一下", "讲讲"):
+        if question.startswith(prefix) and len(question) > len(prefix) + 1:
+            return True
     for cue in _SWITCH_CUES:
         if cue not in question:
             continue
@@ -201,10 +224,11 @@ def _unknown_reference_text(question: str) -> str | None:
                 return tail[:24]
     for marker in _QUESTION_MARKERS:
         if marker in question:
-            subject = question.split(marker, 1)[0]
+            before, after = question.split(marker, 1)
+            subject = after if marker in {"介绍一下", "讲讲"} else before
             subject = _strip_polite_prefix(subject)
             if len(subject) >= 2:
-                return subject[-24:]
+                return subject[:24] if marker in {"介绍一下", "讲讲"} else subject[-24:]
     return None
 
 
