@@ -171,8 +171,8 @@ class GroundedAnswerService:
             return AnswerResult(
                 knowledge_status="unsupported",
                 spoken_text=(
-                    f"关于{exhibit_name}，当前没有可供游客使用的已发布讲解内容，"
-                    "我不能替馆方补写答案。你可以换个问题，或者稍后再试。"
+                    f"关于{exhibit_name}，馆方已发布的讲解暂时没有覆盖这个问题，"
+                    "我不能替馆方补写答案。你可以换个角度问问这件展品。"
                 ),
                 evidence=None,
                 retrieval_ms=retrieval_ms,

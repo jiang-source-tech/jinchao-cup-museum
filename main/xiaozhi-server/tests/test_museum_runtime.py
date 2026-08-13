@@ -156,7 +156,7 @@ def test_unsupported_question_returns_explicit_fallback(tmp_path):
     assert outcome.audit_record["fact_ids"] == []
     assert outcome.display_state["grounding"]["status"] == "unsupported"
 
-    assert "没有可供游客使用的已发布讲解内容" in outcome.spoken_text
+    assert "已发布的讲解暂时没有覆盖这个问题" in outcome.spoken_text
     assert "馆方没有资料" not in outcome.spoken_text
 
     store = MuseumStore(tmp_path / "museum.db")
