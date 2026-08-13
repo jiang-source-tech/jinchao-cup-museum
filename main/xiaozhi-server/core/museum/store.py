@@ -251,11 +251,18 @@ _TYPE_TERMS = {
     "craft": ("工艺", "制作", "怎么做", "雕琢", "加工"),
     "research_limit": ("工艺", "制作", "怎么做", "掏膛", "抛光", "原料来源"),
     "price": ("多少钱", "价格", "售价", "卖了多少", "值多少钱", "市场价"),
+    "history": ("公开名称", "登记", "藏品库", "展示名称"),
 }
 _HIGH_PRIORITY_TYPES = {"price"}
 
 _INTRO_TERMS = ("介绍", "讲讲", "看看", "了解")
-_INTRO_TYPES = {"era": 30, "material": 29, "appearance": 28, "excavation": 20}
+_INTRO_TYPES = {
+    "era": 30,
+    "material": 29,
+    "appearance": 28,
+    "excavation": 20,
+    "history": 31,
+}
 _RETRIEVAL_FAILURE_STATUSES = {
     "temporary_failure",
     "retrieval_failure",
@@ -953,12 +960,23 @@ class MuseumStore:
             )
             if intro:
                 score += _INTRO_TYPES.get(row["fact_type"], 0)
+            elif matched_types and row["fact_type"] in matched_types and score == 0:
+                # A classified fact question should still retrieve the scoped
+                # published fact when wording has no exact keyword overlap.
+                score = 1
             if score > 0:
                 scored.append((score, row))
 
         if not scored:
             return ()
         scored.sort(key=lambda item: (-item[0], item[1]["id"]))
+        if intro and any(row["fact_type"] == "history" for _score, row in scored):
+            history_item = next(
+                item for item in scored if item[1]["fact_type"] == "history"
+            )
+            scored = [history_item] + [
+                item for item in scored if item is not history_item
+            ]
         return tuple(
             (str(row["id"]), float(score))
             for score, row in scored[:limit]

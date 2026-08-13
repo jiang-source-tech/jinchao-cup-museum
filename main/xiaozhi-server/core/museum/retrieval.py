@@ -20,7 +20,8 @@ _DENSE_FACT_TYPES_BY_INTENT = {
     "craft": ("craft", "research_limit"),
     "appearance": ("appearance",),
     "usage": ("usage",),
-    "overview": ("era", "material", "appearance", "excavation"),
+    "overview": ("history", "era", "material", "appearance", "excavation"),
+    "history": ("history",),
 }
 
 

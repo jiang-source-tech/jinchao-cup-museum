@@ -258,3 +258,24 @@ def test_dense_failure_falls_back_and_persists_retrieval_audit(tmp_path):
     assert retrieval_trace["selected_fact_ids"] == [
         "fact-crystal-cup-material"
     ]
+
+
+def test_overview_keeps_published_history_fact(tmp_path):
+    store = _store(tmp_path)
+    with store.connection() as connection:
+        connection.execute(
+            "UPDATE exhibit_fact SET fact_type = 'history' WHERE id = ?",
+            ("fact-crystal-cup-era",),
+        )
+        connection.execute(
+            "UPDATE exhibit_fact_fts SET fact_type = 'history' WHERE fact_id = ?",
+            ("fact-crystal-cup-era",),
+        )
+    answer = GroundedAnswerService(store).answer(
+        exhibit_id=DEMO_EXHIBIT_ID,
+        exhibit_name="战国水晶杯",
+        question="介绍一下战国水晶杯。",
+    )
+
+    assert answer.evidence is not None
+    assert "fact-crystal-cup-era" in answer.evidence.fact_ids

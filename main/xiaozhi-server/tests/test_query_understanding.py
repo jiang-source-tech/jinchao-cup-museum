@@ -62,6 +62,13 @@ def test_overview_and_social_are_separate_from_fact_lookup():
     assert social.fine_intent == "social"
 
 
+def test_history_listing_questions_map_to_history_fact_type():
+    result = understand_question("这个展品公开叫什么？")
+
+    assert result.fine_intent == "history"
+    assert result.fact_types == ("history",)
+
+
 def test_polite_social_words_do_not_hide_an_exhibit_question():
     result = understand_question("你好，请讲讲这件展品的历史")
 
