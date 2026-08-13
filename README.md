@@ -212,14 +212,6 @@ python scripts/run_museum_canary.py --require-llm --run-id local-canary
 - [服务端与固件协议](docs/protocol/server-firmware-contract.md)
 - [内容合同](docs/requirements/museum-content-contract.md)
 
-## 项目边界
-
-- 当前交付范围固定为 **100 件 Demo 馆藏**，不以扩展到300件作为本次目标。
-- 内容只从已审核、可追溯来源进入正式回答。
-- 文本验收通过不代表真机语音链路通过。
-- 不建设微信小程序，不恢复旧学生陪伴、课程、待办或长期个人画像业务。
-- 服务端与独立固件仓库的协议、设备身份、OTA 和音频链路必须同步核对。
-
 ## License
 
 本项目采用 [MIT License](LICENSE)。
