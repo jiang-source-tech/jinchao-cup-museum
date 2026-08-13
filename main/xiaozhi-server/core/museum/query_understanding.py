@@ -201,6 +201,7 @@ _FACT_TYPES_BY_INTENT = {
     "appearance": ("appearance",),
     "usage": ("usage",),
     "price": ("price",),
+    "history": ("history",),
 }
 
 _RETRIEVAL_TERMS_BY_INTENT = {
@@ -209,7 +210,20 @@ _RETRIEVAL_TERMS_BY_INTENT = {
     "craft": ("工艺", "制作", "怎么做"),
     "material": ("材质",),
     "usage": ("用途",),
+    "history": ("公开名称", "登记"),
 }
+
+_COLLOQUIAL_INTENT_HINTS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("price", ("多少钱", "价格", "售价", "卖了多少钱")),
+    ("dimensions", ("多大", "大小", "尺寸", "尺寸是多少", "多高", "口径")),
+    ("excavation", ("从哪儿找到", "在哪里发现", "挖出来", "出土")),
+    ("craft", ("怎么弄出来", "怎么做出来", "制作手法", "如何加工", "怎么加工")),
+    ("material", ("是什么材质", "是什么东西做的", "用的是什么料子", "什么原料", "什么材料")),
+    ("usage", ("以前拿来做什么", "原本派什么用场", "是干嘛的", "做什么用", "有什么用")),
+    ("era", ("大概是哪会儿", "距今多久", "属于哪个年代", "哪个时期", "什么年代")),
+    ("appearance", ("看起来有什么特征", "长得怎么样", "造型", "外形")),
+    ("history", ("公开叫什么", "公开名称", "登记的是什么", "馆方藏品中登记")),
+)
 
 
 def understand_question(question: str) -> QuestionUnderstanding:
@@ -233,6 +247,27 @@ def understand_question(question: str) -> QuestionUnderstanding:
             coarse_intent="comparison",
             fine_intent="comparison",
             confidence=0.92,
+        )
+
+    colloquial_matches = [
+        (len(term), intent, (term,))
+        for intent, terms in _COLLOQUIAL_INTENT_HINTS
+        for term in terms
+        if term in question
+    ]
+    if colloquial_matches:
+        best_length, fine_intent, query_terms = max(
+            colloquial_matches,
+            key=lambda item: item[0],
+        )
+        return QuestionUnderstanding(
+            coarse_intent="exhibit_knowledge",
+            fine_intent=fine_intent,
+            fact_types=_FACT_TYPES_BY_INTENT.get(fine_intent, ()),
+            query_terms=tuple(dict.fromkeys(
+                (*query_terms, *_RETRIEVAL_TERMS_BY_INTENT.get(fine_intent, ()))
+            )),
+            confidence=min(0.95, 0.72 + best_length / 100),
         )
 
     matches: list[tuple[int, str, tuple[str, ...]]] = []

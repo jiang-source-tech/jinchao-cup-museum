@@ -76,7 +76,6 @@ class GroundedAnswerService:
             overview=understanding.fine_intent == "overview",
             allow_dense_only=(
                 understanding.coarse_intent == "exhibit_knowledge"
-                and understanding.fine_intent != "unknown"
                 and "price" not in understanding.fact_types
             ),
             dense_fact_types=dense_fact_types_for_intent(
