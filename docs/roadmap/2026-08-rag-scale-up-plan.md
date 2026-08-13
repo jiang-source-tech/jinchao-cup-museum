@@ -16,8 +16,9 @@
 
 ### 本轮实施状态（2026 年 8 月 12 日）
 
-- 阶段 1 已完成本地代码部分：默认关闭演示 seed、清理用户可见旧身份、增加 5 分钟空闲期限和 30 分钟最长会话期限，并使文本 `/reset` 结束旧会话。
-- 阶段 1 尚未完成生产收敛：生产中的“战国水晶杯”仍需在备份后决定转为受管内容或正式撤回；因此生产基线仍是 18 件展品、94 条事实，阶段不得标记为完成。
+- 阶段 1 已完成：生产 Compose 固定 `MUSEUM_ENV=production`，运行时拒绝生产环境启用 `seed_demo_content=true`，用户可见旧“小芯”身份已清理。
+- 生产中的 seed 演示 revision“战国水晶杯”已在完整备份后通过正式 `withdraw` 生命周期撤回；仓库受管内容、生产 SQLite 和 Qdrant 已统一为 17 件展品、88 条事实。
+- 生产 SQLite 完整性、来源门禁、Qdrant 88/88 一致性、健康入口和三类文本聊天均已验收。完整证据见 `docs/roadmap/stage1-baseline-implementation-report.md`；本结论不包含真机语音验收。
 - 阶段 2 已完成最小可信发布底座：可生成确定性知识发布清单，并校验 Qdrant 的事实、revision、来源、模型、维度、索引版本和内容哈希一致性；尚未实现持久化 release 表、事务化激活和自动回滚。
 - 阶段 2 已建立最小全展品评测覆盖：17 件仓库受管展品均至少有 1 个有依据问题和 1 个价格拒答问题，共 61 个场景、71 轮；规则基线和本地内存 Qdrant hybrid 路径均纳入回归。这不是计划中的 250 问金标集，也不替代生产 Qdrant 与真实 DashScope 的验收。
 - 已增加 liveness/readiness 和 Compose 日志轮转。本地 Python 结构检查通过，但本机无法运行 Docker Compose；Qdrant healthcheck 和完整 Compose 配置必须在生产部署前实测。
