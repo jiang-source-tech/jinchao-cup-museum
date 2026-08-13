@@ -7,10 +7,18 @@ import json
 import os
 import sqlite3
 from pathlib import Path
+import sys
 from typing import Any
 
-from core.museum.knowledge_release import build_knowledge_release_manifest
-from core.museum.store import MuseumStore
+
+SERVER_ROOT = Path(__file__).resolve().parents[1]
+if str(SERVER_ROOT) not in sys.path:
+    sys.path.insert(0, str(SERVER_ROOT))
+
+from core.museum.knowledge_release import (  # noqa: E402
+    build_knowledge_release_manifest,
+)
+from core.museum.store import MuseumStore  # noqa: E402
 
 
 LEGACY_TERMS = ("小芯", "小智", "学生", "课程", "待办", "陪伴宠物")
