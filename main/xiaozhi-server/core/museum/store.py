@@ -261,6 +261,10 @@ _INTRO_TYPES = {
     "material": 29,
     "appearance": 28,
     "excavation": 20,
+    "dimensions": 18,
+    "craft": 17,
+    "research_limit": 16,
+    "usage": 15,
     "history": 31,
 }
 _RETRIEVAL_FAILURE_STATUSES = {

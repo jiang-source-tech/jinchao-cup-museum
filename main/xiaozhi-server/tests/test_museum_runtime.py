@@ -179,6 +179,23 @@ def test_unsupported_question_returns_explicit_fallback(tmp_path):
     assert "不能替馆方补写答案" in no_sourced_facts.spoken_text
 
 
+def test_detailed_overview_uses_multiple_facts_without_requiring_llm(tmp_path):
+    runtime = _runtime(tmp_path)
+
+    outcome = runtime.handle_turn(
+        _request(text="请详细介绍一下战国水晶杯")
+    )
+
+    assert outcome.knowledge_status == "grounded"
+    assert len(outcome.fact_ids) >= 4
+    assert "一整块天然水晶" in outcome.spoken_text
+    assert "1990年" in outcome.spoken_text
+    assert "玻璃杯" in outcome.spoken_text
+    assert len(outcome.spoken_text) >= 100
+    assert outcome.audit_record["retrieval_trace"]["answer_depth"] == "detailed"
+    assert outcome.audit_record["retrieval_trace"]["retrieval_limit"] == 5
+
+
 def test_llm_cannot_use_an_era_fact_to_answer_a_price_question(tmp_path):
     class WrongFactSelector:
         def response_no_stream(self, _system_prompt, _user_prompt, **_kwargs):

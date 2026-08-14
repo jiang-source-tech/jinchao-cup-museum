@@ -91,7 +91,10 @@ def decide_with_museum_llm(
             duration_ms=_duration_ms(started),
         )
 
-    decision = parse_museum_llm_decision(raw_decision)
+    decision = parse_museum_llm_decision(
+        raw_decision,
+        max_fact_ids=5 if understanding.answer_depth == "detailed" else 3,
+    )
     result = "parsed" if decision is not None else "invalid_response"
     return MuseumLlmCall(
         decision=decision,
@@ -127,6 +130,12 @@ def build_museum_llm_prompts(
         list(history[-4:]) if history else [],
         ensure_ascii=False,
     )
+    grounded_contract = (
+        "详细讲解模式下选择覆盖主要方面的事实，最多5个，answer用中文回答4至8句；"
+        "普通模式选择最少且不超过3个给定事实ID，answer用中文回答1至4句。"
+        if understanding.answer_depth == "detailed"
+        else "fact_ids选择最少且不超过3个给定事实ID，answer用中文回答1至4句。"
+    )
     system_prompt = (
         "你是博物馆语音对话的受限事实路由器。"
         "你只能依据本次输入中的当前展品事实，不能使用外部常识或自行推测。"
@@ -134,7 +143,8 @@ def build_museum_llm_prompts(
         "JSON字段必须包含status、fact_ids、social_intent、answer。"
         "status只能是grounded、unsupported、conversational之一。"
         "grounded表示一个或多个给定事实可以直接回答问题；"
-        "fact_ids选择最少且不超过3个给定事实ID，answer用中文回答1至4句，"
+        + grounded_contract
+        +
         "如果游客要求一句话、简短说明或讲给小朋友听，必须遵守该表达要求，"
         "不得增加事实之外的数字、人物、地点、年代、因果、用途或传说。"
         "unsupported表示给定事实不能直接回答，fact_ids必须是空数组，"
@@ -156,7 +166,11 @@ def build_museum_llm_prompts(
     return system_prompt, user_prompt
 
 
-def parse_museum_llm_decision(raw_decision: Any) -> MuseumLlmDecision | None:
+def parse_museum_llm_decision(
+    raw_decision: Any,
+    *,
+    max_fact_ids: int = 3,
+) -> MuseumLlmDecision | None:
     text = str(raw_decision or "").strip()
     if not text:
         return None
@@ -191,7 +205,7 @@ def parse_museum_llm_decision(raw_decision: Any) -> MuseumLlmDecision | None:
     social_intent = social_value.strip().lower()
 
     if status == "grounded":
-        if not fact_ids or len(fact_ids) > 3 or not answer or social_intent:
+        if not fact_ids or len(fact_ids) > max_fact_ids or not answer or social_intent:
             return None
     elif status == "unsupported":
         if fact_ids or answer or social_intent:

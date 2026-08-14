@@ -72,6 +72,10 @@ class GroundedAnswerService:
             return conversational_answer
 
         retrieval_started = perf_counter()
+        detailed_overview = (
+            understanding.answer_depth == "detailed"
+            and understanding.fine_intent == "overview"
+        )
         semantic_fallback = (
             understanding.fine_intent == "unknown"
             and bool(getattr(self._retriever, "supports_semantic_fallback", False))
@@ -79,6 +83,7 @@ class GroundedAnswerService:
         retrieval = self._retriever.retrieve(RetrievalRequest(
             exhibit_id=exhibit_id,
             question=question,
+            limit=5 if detailed_overview else 3,
             fact_types=understanding.fact_types or (),
             query_terms=understanding.query_terms,
             overview=understanding.fine_intent == "overview",
@@ -90,10 +95,24 @@ class GroundedAnswerService:
                 )
                 and "price" not in understanding.fact_types
             ),
-            dense_fact_types=dense_fact_types_for_intent(
-                understanding.fine_intent,
-                understanding.fact_types,
-                understanding.query_terms,
+            dense_fact_types=(
+                (
+                    "history",
+                    "era",
+                    "material",
+                    "appearance",
+                    "excavation",
+                    "dimensions",
+                    "craft",
+                    "research_limit",
+                    "usage",
+                )
+                if detailed_overview
+                else dense_fact_types_for_intent(
+                    understanding.fine_intent,
+                    understanding.fact_types,
+                    understanding.query_terms,
+                )
             ),
             semantic_fallback=semantic_fallback,
             rule_intent=understanding.fine_intent,
@@ -104,6 +123,8 @@ class GroundedAnswerService:
         ))
         retrieved_evidence = retrieval.evidence
         retrieval_trace = retrieval.diagnostics.as_dict()
+        retrieval_trace["answer_depth"] = understanding.answer_depth
+        retrieval_trace["retrieval_limit"] = 5 if detailed_overview else 3
         if (
             understanding.fine_intent == "unknown"
             or retrieval_trace.get("semantic_override")
@@ -213,12 +234,17 @@ class GroundedAnswerService:
                 retrieval_trace=retrieval_trace,
                 **_llm_answer_fields(llm_call),
             )
-        deterministic_answer = self._compose_grounded_answer(evidence)
+        deterministic_answer = self._compose_grounded_answer(
+            evidence,
+            exhibit_name=exhibit_name,
+            detailed=detailed_overview,
+        )
         spoken_text = deterministic_answer
         if decision is not None and decision.status == "grounded":
             rejection_reason = _grounded_paraphrase_failure_reason(
                 decision.answer,
                 "".join(fact.statement for fact in evidence.facts),
+                detailed=detailed_overview,
             )
             if rejection_reason is None:
                 spoken_text = decision.answer
@@ -240,8 +266,44 @@ class GroundedAnswerService:
         )
 
     @staticmethod
-    def _compose_grounded_answer(evidence: EvidenceSnapshot) -> str:
-        return "".join(fact.statement for fact in evidence.facts)
+    def _compose_grounded_answer(
+        evidence: EvidenceSnapshot,
+        *,
+        exhibit_name: str = "",
+        detailed: bool = False,
+    ) -> str:
+        if not detailed:
+            return "".join(fact.statement for fact in evidence.facts)
+        labels = {
+            "history": "登记信息",
+            "era": "年代",
+            "material": "材质",
+            "appearance": "外形",
+            "excavation": "出土信息",
+            "dimensions": "尺寸",
+            "craft": "制作工艺",
+            "research_limit": "研究现状",
+            "usage": "用途",
+        }
+        ordered_facts = sorted(
+            enumerate(evidence.facts),
+            key=lambda item: (
+                tuple(labels).index(item[1].fact_type)
+                if item[1].fact_type in labels
+                else len(labels),
+                item[0],
+            ),
+        )
+        prefix = (
+            f"关于{exhibit_name}，可以从几个方面了解。"
+            if exhibit_name
+            else "这件展品可以从几个方面了解。"
+        )
+        details = "".join(
+            f"{labels.get(fact.fact_type, '补充信息')}：{fact.statement}"
+            for _index, fact in ordered_facts
+        )
+        return prefix + details
 
 def _duration_ms(started: float) -> int:
     return max(0, round((perf_counter() - started) * 1000))
@@ -285,6 +347,7 @@ def _semantic_understanding_from_trace(
         fact_types=fact_types,
         confidence=float(trace.get("semantic_confidence", 0.0) or 0.0),
         source="semantic",
+        answer_depth=fallback.answer_depth,
     )
 
 
@@ -417,8 +480,10 @@ def _is_grounded_paraphrase(answer: str, evidence_text: str) -> bool:
 def _grounded_paraphrase_failure_reason(
     answer: str,
     evidence_text: str,
+    *,
+    detailed: bool = False,
 ) -> str | None:
-    if len(answer) > 220:
+    if len(answer) > (480 if detailed else 220):
         return "model_answer_too_long"
     if any(
         number not in evidence_text
@@ -432,7 +497,7 @@ def _grounded_paraphrase_failure_reason(
         for sentence in re.split(r"[。！？!?；;\n]+", answer)
         if sentence.strip()
     ]
-    if not 1 <= len(sentences) <= 4:
+    if not 1 <= len(sentences) <= (8 if detailed else 4):
         return "model_answer_shape_rejected"
     for sentence in sentences:
         pairs = _cjk_pairs(sentence)

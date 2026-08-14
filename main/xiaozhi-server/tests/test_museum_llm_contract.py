@@ -26,13 +26,18 @@ class _JsonLlm:
         return self.response
 
 
-def _request(*, llm, request_id: str) -> TurnRequest:
+def _request(
+    *,
+    llm,
+    request_id: str,
+    text: str = "战国水晶杯是什么材质？",
+) -> TurnRequest:
     return TurnRequest(
         request_id=request_id,
         transport_session_id=f"transport-{request_id}",
         visitor_session_id=None,
         device_id=f"device-{request_id}",
-        user_text="战国水晶杯是什么材质？",
+        user_text=text,
         history=(),
         occurred_at=datetime.now().astimezone(),
         llm=llm,
@@ -89,6 +94,54 @@ def test_llm_json_contract_and_audit_metadata_are_persisted(tmp_path):
     assert trace["llm_response_summary"] == outcome.audit_record[
         "llm_response_summary"
     ]
+
+
+def test_detailed_overview_accepts_five_grounded_facts_from_llm(tmp_path):
+    runtime = create_conversation_runtime(
+        {
+            "business_runtime": {
+                "type": "museum",
+                "database_path": str(tmp_path / "museum.db"),
+                "seed_demo_content": True,
+                "exhibit_context_mode": "explicit",
+            }
+        }
+    )
+    llm = _JsonLlm(
+        json.dumps(
+            {
+                "status": "grounded",
+                "fact_ids": [
+                    "fact-crystal-cup-era",
+                    "fact-crystal-cup-material",
+                    "fact-crystal-cup-appearance",
+                    "fact-crystal-cup-excavation",
+                    "fact-crystal-cup-dimensions",
+                ],
+                "social_intent": "",
+                "answer": (
+                    "这件水晶杯经鉴定为战国中晚期遗物，已有两千多年历史。"
+                    "它由一整块天然水晶琢制而成。"
+                    "它器口微敞、杯壁斜直、圈足外撇，外形很像现代常见的玻璃杯。"
+                    "它于1990年在杭州半山镇石塘村的战国墓葬中出土。"
+                    "它高15.4厘米，口径7.8厘米，底径5.4厘米。"
+                ),
+            },
+            ensure_ascii=False,
+        )
+    )
+
+    outcome = runtime.handle_turn(
+        _request(
+            llm=llm,
+            request_id="llm-contract-detailed-overview",
+            text="请详细介绍一下战国水晶杯",
+        )
+    )
+
+    assert len(outcome.fact_ids) == 5
+    assert outcome.audit_record["guard_result"] == "model_answer_accepted"
+    assert "最多5个" in llm.calls[0]["system_prompt"]
 
 
 def test_llm_rejection_or_invalid_response_cannot_override_retrieved_evidence(

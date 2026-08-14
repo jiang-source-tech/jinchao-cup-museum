@@ -14,6 +14,7 @@ class QuestionUnderstanding:
     query_terms: tuple[str, ...] = ()
     confidence: float = 0.0
     source: str = "rules"
+    answer_depth: str = "standard"
 
     def __post_init__(self) -> None:
         if self.coarse_intent not in {
@@ -26,6 +27,8 @@ class QuestionUnderstanding:
             raise ValueError(f"unsupported coarse intent: {self.coarse_intent}")
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError("question understanding confidence must be between 0 and 1")
+        if self.answer_depth not in {"standard", "detailed"}:
+            raise ValueError(f"unsupported answer depth: {self.answer_depth}")
 
 
 _SOCIAL_IDENTITY_TERMS = (
@@ -62,6 +65,30 @@ _COMPARISON_TERMS = (
     "哪个更",
     "和它比",
     "跟它比",
+)
+
+_DETAILED_EXPLANATION_TERMS = (
+    "详细介绍",
+    "详细讲解",
+    "详细说说",
+    "说详细点",
+    "讲详细点",
+    "细说一下",
+    "多讲一点",
+    "多说一点",
+    "多介绍一些",
+    "内容多一点",
+    "不要太简略",
+    "别太简短",
+    "展开讲",
+    "展开说",
+    "全面介绍",
+    "全面讲解",
+    "完整介绍",
+    "完整讲解",
+    "深入讲",
+    "仔细讲",
+    "来历和特点",
 )
 
 # Ordered from specific phrases to broad words so a longer phrase wins.
@@ -211,9 +238,11 @@ _INTENT_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
             "有什么看点",
             "介绍一下",
             "讲讲",
+            "讲解",
             "介绍",
             "概况",
             "什么是",
+            "特点",
             "这是什么",
             "给我讲讲",
             "说说",
@@ -302,6 +331,7 @@ def understand_question(question: str) -> QuestionUnderstanding:
                 (*query_terms, *_RETRIEVAL_TERMS_BY_INTENT.get(fine_intent, ()))
             )),
             confidence=min(0.95, 0.72 + best_length / 100),
+            answer_depth=_answer_depth(normalized),
         )
 
     matches: list[tuple[int, str, tuple[str, ...]]] = list(colloquial_matches)
@@ -317,11 +347,13 @@ def understand_question(question: str) -> QuestionUnderstanding:
                 coarse_intent="unclear",
                 fine_intent="unknown",
                 confidence=0.75,
+                answer_depth=_answer_depth(normalized),
             )
         return QuestionUnderstanding(
             coarse_intent="exhibit_knowledge",
             fine_intent="unknown",
             confidence=0.35,
+            answer_depth=_answer_depth(normalized),
         )
 
     specific_matches = [match for match in matches if match[1] != "overview"]
@@ -354,11 +386,20 @@ def understand_question(question: str) -> QuestionUnderstanding:
         fact_types=fact_types,
         query_terms=retrieval_terms,
         confidence=min(0.99, 0.70 + (best_length / 100)),
+        answer_depth=_answer_depth(normalized),
     )
 
 
 def _normalize_text(value: str) -> str:
     return re.sub(r"[\s，。！？、；：,.!?;:]", "", value).lower()
+
+
+def _answer_depth(normalized: str) -> str:
+    return (
+        "detailed"
+        if any(term in normalized for term in _DETAILED_EXPLANATION_TERMS)
+        else "standard"
+    )
 
 
 def _is_social_question(normalized: str) -> bool:

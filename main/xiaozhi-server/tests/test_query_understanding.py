@@ -74,6 +74,19 @@ def test_open_ended_exhibit_questions_map_to_overview():
         assert result.fine_intent == "overview"
 
 
+def test_detailed_explanation_request_sets_detailed_answer_depth():
+    for question in (
+        "请详细介绍一下战国水晶杯",
+        "展开讲讲它的来历和特点",
+        "给我做一个完整讲解",
+    ):
+        result = understand_question(question)
+
+        assert result.coarse_intent == "exhibit_knowledge"
+        assert result.fine_intent == "overview"
+        assert result.answer_depth == "detailed"
+
+
 def test_greeting_to_guide_is_social():
     result = understand_question("你好讲解员。")
     time_greeting = understand_question("讲解员，早上好")
