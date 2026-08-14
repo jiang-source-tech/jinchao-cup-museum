@@ -76,16 +76,22 @@ def test_open_ended_exhibit_questions_map_to_overview():
 
 def test_greeting_to_guide_is_social():
     result = understand_question("你好讲解员。")
+    time_greeting = understand_question("讲解员，早上好")
 
     assert result.coarse_intent == "social"
     assert result.fine_intent == "social"
+    assert time_greeting.coarse_intent == "social"
+    assert time_greeting.fine_intent == "social"
 
 
 def test_plain_statement_is_unclear_instead_of_unknown_exhibit_question():
     result = understand_question("他独自坐地铁去面试。")
+    appearance_statement = understand_question("这个颜色看起来挺漂亮的")
 
     assert result.coarse_intent == "unclear"
     assert result.fine_intent == "unknown"
+    assert appearance_statement.coarse_intent == "unclear"
+    assert appearance_statement.fine_intent == "unknown"
 
 
 def test_history_listing_questions_map_to_history_fact_type():
@@ -104,9 +110,11 @@ def test_polite_social_words_do_not_hide_an_exhibit_question():
 
 def test_specific_fact_intent_wins_over_overview_wording():
     result = understand_question("请介绍一下它的历史")
+    compound = understand_question("它是什么材质，又是在哪里出土的？")
 
     assert result.coarse_intent == "exhibit_knowledge"
     assert result.fine_intent == "era"
+    assert set(compound.fact_types) == {"material", "excavation"}
 
 
 @pytest.mark.parametrize(

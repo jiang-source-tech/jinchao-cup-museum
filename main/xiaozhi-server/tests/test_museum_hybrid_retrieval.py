@@ -33,6 +33,11 @@ class PrototypeEmbedder(FakeEmbedder):
         ]
 
 
+class RejectedPrototypeEmbedder(FakeEmbedder):
+    def embed_many(self, texts: list[str]) -> list[list[float]]:
+        return [[0.0, 1.0, 0.0] for _text in texts]
+
+
 class FailingEmbedder(FakeEmbedder):
     def embed(self, _text: str) -> list[float]:
         raise TimeoutError("embedding timeout")
@@ -207,11 +212,11 @@ def test_unknown_question_with_ambiguous_dense_scores_stays_unsupported(tmp_path
     store = _store(tmp_path)
     retriever = HybridEvidenceRetriever(
         store=store,
-        embedder=FakeEmbedder(),
+        embedder=RejectedPrototypeEmbedder(),
         index=FakeIndex(
             (
-                ("fact-crystal-cup-material", 0.79),
-                ("fact-crystal-cup-era", 0.75),
+                ("fact-crystal-cup-material", 0.94),
+                ("fact-crystal-cup-era", 0.61),
             )
         ),
         mode="hybrid",

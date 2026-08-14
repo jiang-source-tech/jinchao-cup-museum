@@ -251,10 +251,16 @@ class HybridEvidenceRetriever:
         )
         if request.semantic_fallback:
             diagnostics.semantic_fallback = True
-            valid_dense = _select_semantic_fallback_hits(
-                valid_dense,
-                relaxed=bool(diagnostics.semantic_intent),
-            )
+            if (
+                diagnostics.semantic_candidate_intent
+                and not diagnostics.semantic_intent
+            ):
+                valid_dense = ()
+            else:
+                valid_dense = _select_semantic_fallback_hits(
+                    valid_dense,
+                    relaxed=bool(diagnostics.semantic_intent),
+                )
             if valid_dense and not diagnostics.semantic_intent:
                 diagnostics.semantic_confidence = valid_dense[0].score
                 diagnostics.semantic_margin = (
@@ -480,7 +486,10 @@ def dense_fact_types_for_intent(
         term in {"透明", "透亮", "通透"} for term in query_terms
     ):
         return ("appearance", "material")
-    return _DENSE_FACT_TYPES_BY_INTENT.get(fine_intent, fact_types)
+    default_types = _DENSE_FACT_TYPES_BY_INTENT.get(fine_intent, fact_types)
+    if any(fact_type not in default_types for fact_type in fact_types):
+        return fact_types
+    return default_types
 
 
 def _duration_ms(started: float) -> int:

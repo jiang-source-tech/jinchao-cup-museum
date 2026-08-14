@@ -1,0 +1,268 @@
+{
+  "version": 1,
+  "description": "独立于规则词表和固定覆盖探针的首批留出问法，用于测量博物馆文本链路的语义泛化，不代表麦克风、ASR、TTS 或真机验收。",
+  "cases": [
+    {
+      "id": "material-natural-mineral",
+      "category": "unseen_paraphrase",
+      "tags": ["material"],
+      "turns": [{
+        "text": "战国水晶杯看着像玻璃，实际是拿哪种矿物琢出来的？",
+        "expected": {
+          "knowledge_status": "grounded",
+          "coarse_intent": "exhibit_knowledge",
+          "fine_intent": "material",
+          "exhibit_id": "warring-states-crystal-cup",
+          "fact_ids": ["fact-crystal-cup-material-r2"]
+        }
+      }]
+    },
+    {
+      "id": "material-natural-composition",
+      "category": "unseen_paraphrase",
+      "tags": ["material", "semantic_fallback"],
+      "turns": [{
+        "text": "战国水晶杯，构成它本体的原料究竟是什么东西？",
+        "expected": {
+          "knowledge_status": "grounded",
+          "fine_intent": "material",
+          "exhibit_id": "warring-states-crystal-cup",
+          "fact_ids": ["fact-crystal-cup-material-r2"]
+        }
+      }]
+    },
+    {
+      "id": "dimensions-natural-proportions",
+      "category": "unseen_paraphrase",
+      "tags": ["dimensions", "semantic_fallback"],
+      "turns": [{
+        "text": "战国水晶杯的高度、杯口和杯底分别是多少？",
+        "expected": {
+          "knowledge_status": "grounded",
+          "fine_intent": "dimensions",
+          "exhibit_id": "warring-states-crystal-cup",
+          "fact_ids": ["fact-crystal-cup-dimensions-r2"]
+        }
+      }]
+    },
+    {
+      "id": "excavation-natural-tomb",
+      "category": "unseen_paraphrase",
+      "tags": ["excavation", "semantic_fallback"],
+      "turns": [{
+        "text": "战国水晶杯最早是在哪座墓里找到的？",
+        "expected": {
+          "knowledge_status": "grounded",
+          "fine_intent": "excavation",
+          "exhibit_id": "warring-states-crystal-cup",
+          "fact_ids": ["fact-crystal-cup-excavation-r2"]
+        }
+      }]
+    },
+    {
+      "id": "era-natural-distance",
+      "category": "unseen_paraphrase",
+      "tags": ["era", "semantic_fallback"],
+      "turns": [{
+        "text": "战国水晶杯距离今天大约有多少年了？",
+        "expected": {
+          "knowledge_status": "grounded",
+          "fine_intent": "era",
+          "exhibit_id": "warring-states-crystal-cup",
+          "fact_ids": ["fact-crystal-cup-era-r2"]
+        }
+      }]
+    },
+    {
+      "id": "craft-natural-hardness",
+      "category": "unseen_paraphrase",
+      "tags": ["craft"],
+      "turns": [{
+        "text": "战国水晶杯这么硬，古人靠什么办法把内部掏空并磨光？",
+        "expected": {
+          "knowledge_status": "grounded",
+          "fine_intent": "craft",
+          "exhibit_id": "warring-states-crystal-cup",
+          "fact_ids": ["fact-crystal-cup-craft-limit-r2"]
+        }
+      }]
+    },
+    {
+      "id": "appearance-natural-modern-glass",
+      "category": "unseen_paraphrase",
+      "tags": ["appearance"],
+      "turns": [{
+        "text": "战国水晶杯为什么看上去和今天的玻璃杯这么像？",
+        "expected": {
+          "knowledge_status": "grounded",
+          "fine_intent": "appearance",
+          "exhibit_id": "warring-states-crystal-cup",
+          "fact_ids": ["fact-crystal-cup-appearance-r2"]
+        }
+      }]
+    },
+    {
+      "id": "usage-natural-drink",
+      "category": "known_intent_missing_fact",
+      "tags": ["usage", "unsupported"],
+      "turns": [{
+        "text": "战国水晶杯当年究竟是拿来喝酒还是喝水的？",
+        "expected": {
+          "knowledge_status": "unsupported",
+          "fine_intent": "usage",
+          "exhibit_id": "warring-states-crystal-cup",
+          "no_fact_ids": true
+        }
+      }]
+    },
+    {
+      "id": "price-natural-auction",
+      "category": "known_intent_missing_fact",
+      "tags": ["price", "unsupported"],
+      "turns": [{
+        "text": "战国水晶杯要是上拍卖会，大概能成交多少钱？",
+        "expected": {
+          "knowledge_status": "unsupported",
+          "fine_intent": "price",
+          "exhibit_id": "warring-states-crystal-cup",
+          "no_fact_ids": true
+        }
+      }]
+    },
+    {
+      "id": "unsupported-owner-name",
+      "category": "out_of_scope_boundary",
+      "tags": ["unsupported"],
+      "turns": [{
+        "text": "战国水晶杯所在墓葬的主人叫什么名字？",
+        "expected": {
+          "knowledge_status": "unsupported",
+          "fine_intent": "unknown",
+          "exhibit_id": "warring-states-crystal-cup",
+          "no_fact_ids": true
+        }
+      }]
+    },
+    {
+      "id": "unsupported-donor",
+      "category": "out_of_scope_boundary",
+      "tags": ["unsupported"],
+      "turns": [{
+        "text": "战国水晶杯是谁捐给杭州博物馆的？",
+        "expected": {
+          "knowledge_status": "unsupported",
+          "fine_intent": "unknown",
+          "exhibit_id": "warring-states-crystal-cup",
+          "no_fact_ids": true
+        }
+      }]
+    },
+    {
+      "id": "asr-homophone-overview",
+      "category": "asr_text_variant",
+      "tags": ["asr", "overview"],
+      "turns": [{
+        "text": "给我讲讲战果水晶杯",
+        "expected": {
+          "knowledge_status": "grounded",
+          "fine_intent": "overview",
+          "exhibit_id": "warring-states-crystal-cup"
+        }
+      }]
+    },
+    {
+      "id": "asr-homophone-excavation",
+      "category": "asr_text_variant",
+      "tags": ["asr", "excavation"],
+      "turns": [{
+        "text": "战果水晶杯是在哪里出徒的？",
+        "expected": {
+          "knowledge_status": "grounded",
+          "fine_intent": "excavation",
+          "exhibit_id": "warring-states-crystal-cup",
+          "fact_ids": ["fact-crystal-cup-excavation-r2"]
+        }
+      }]
+    },
+    {
+      "id": "multi-turn-pronoun",
+      "category": "multi_turn_followup",
+      "tags": ["context", "pronoun"],
+      "turns": [
+        {
+          "text": "给我讲讲战国水晶杯",
+          "expected": {
+            "knowledge_status": "grounded",
+            "fine_intent": "overview",
+            "exhibit_id": "warring-states-crystal-cup"
+          }
+        },
+        {
+          "text": "它本身到底是什么东西做的？",
+          "expected": {
+            "knowledge_status": "grounded",
+            "fine_intent": "material",
+            "exhibit_id": "warring-states-crystal-cup",
+            "resolution_status": "inherited",
+            "fact_ids": ["fact-crystal-cup-material-r2"]
+          }
+        },
+        {
+          "text": "那又是从哪儿挖出来的？",
+          "expected": {
+            "knowledge_status": "grounded",
+            "fine_intent": "excavation",
+            "exhibit_id": "warring-states-crystal-cup",
+            "resolution_status": "inherited",
+            "fact_ids": ["fact-crystal-cup-excavation-r2"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "social-address-greeting",
+      "category": "conversation_boundary",
+      "tags": ["social"],
+      "turns": [{
+        "text": "讲解员，早上好",
+        "expected": {
+          "knowledge_status": "conversational",
+          "coarse_intent": "social",
+          "fine_intent": "social",
+          "no_fact_ids": true
+        }
+      }]
+    },
+    {
+      "id": "ambient-statement",
+      "category": "conversation_boundary",
+      "tags": ["unclear"],
+      "turns": [{
+        "text": "这个颜色看起来挺漂亮的",
+        "expected": {
+          "knowledge_status": "conversational",
+          "coarse_intent": "unclear",
+          "fine_intent": "unknown",
+          "no_fact_ids": true
+        }
+      }]
+    },
+    {
+      "id": "compound-material-excavation",
+      "category": "compound_question",
+      "tags": ["material", "excavation"],
+      "turns": [{
+        "text": "战国水晶杯是什么材质，又是在哪里出土的？",
+        "expected": {
+          "knowledge_status": "grounded",
+          "fine_intent": ["material", "excavation"],
+          "exhibit_id": "warring-states-crystal-cup",
+          "fact_ids": [
+            "fact-crystal-cup-material-r2",
+            "fact-crystal-cup-excavation-r2"
+          ]
+        }
+      }]
+    }
+  ]
+}

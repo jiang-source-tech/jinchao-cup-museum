@@ -37,7 +37,19 @@ _SOCIAL_CAPABILITY_TERMS = (
     "你可以帮我做什么",
     "能帮我做什么",
 )
-_SOCIAL_GREETINGS = {"你好", "您好", "嗨", "哈喽", "hello", "hi", "在吗"}
+_SOCIAL_GREETINGS = {
+    "你好",
+    "您好",
+    "早上好",
+    "上午好",
+    "下午好",
+    "晚上好",
+    "嗨",
+    "哈喽",
+    "hello",
+    "hi",
+    "在吗",
+}
 _SOCIAL_ADDRESSES = {"讲解员", "导览员", "讲解助手", "助手"}
 _SOCIAL_THANKS = ("谢谢", "感谢", "多谢", "辛苦了")
 _SOCIAL_FAREWELLS = ("再见", "拜拜", "回头见", "下次见")
@@ -111,6 +123,9 @@ _INTENT_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
             "怎么加工",
             "怎样加工",
             "咋加工",
+            "掏空",
+            "磨光",
+            "抛光",
             "怎么做",
             "制作",
             "工艺",
@@ -147,6 +162,7 @@ _INTENT_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
             "有什么用",
             "干什么用",
             "用来干什么",
+            "拿来",
             "什么用途",
             "什么作用",
             "什么场合穿",
@@ -180,8 +196,8 @@ _INTENT_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
             "什么样子",
             "外形",
             "样子",
-            "看起来",
             "为什么像",
+            "为什么看上去",
             "透明",
             "透亮",
             "通透",
@@ -229,7 +245,10 @@ _RETRIEVAL_TERMS_BY_INTENT = {
 _COLLOQUIAL_INTENT_HINTS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("price", ("多少钱", "价格", "售价", "卖了多少钱")),
     ("dimensions", ("多大", "大小", "尺寸", "尺寸是多少", "多高", "口径")),
-    ("excavation", ("从哪儿找到", "在哪里发现", "挖出来", "出土")),
+    (
+        "excavation",
+        ("从哪儿找到", "在哪里发现", "挖出来", "出土", "出徒", "出图"),
+    ),
     ("craft", ("怎么弄出来", "怎么做出来", "制作手法", "如何加工", "怎么加工")),
     ("material", ("是什么材质", "是什么东西做的", "用的是什么料子", "什么原料", "什么材料")),
     ("usage", ("以前拿来做什么", "原本派什么用场", "是干嘛的", "做什么用", "有什么用")),
@@ -268,7 +287,9 @@ def understand_question(question: str) -> QuestionUnderstanding:
         for term in terms
         if term in question
     ]
-    if colloquial_matches:
+    if colloquial_matches and not any(
+        cue in normalized for cue in _COMPOUND_INTENT_CUES
+    ):
         best_length, fine_intent, query_terms = max(
             colloquial_matches,
             key=lambda item: item[0],
@@ -283,7 +304,7 @@ def understand_question(question: str) -> QuestionUnderstanding:
             confidence=min(0.95, 0.72 + best_length / 100),
         )
 
-    matches: list[tuple[int, str, tuple[str, ...]]] = []
+    matches: list[tuple[int, str, tuple[str, ...]]] = list(colloquial_matches)
     for fine_intent, terms in _INTENT_RULES:
         matched_terms = tuple(term for term in terms if term in normalized)
         matched_lengths = [len(term) for term in matched_terms]
@@ -308,7 +329,20 @@ def understand_question(question: str) -> QuestionUnderstanding:
         specific_matches or matches,
         key=lambda item: item[0],
     )
-    fact_types = _FACT_TYPES_BY_INTENT.get(fine_intent, ())
+    compound_matches = _compound_intent_matches(normalized, specific_matches)
+    if compound_matches:
+        fact_types = tuple(dict.fromkeys(
+            fact_type
+            for _length, intent, _terms in compound_matches
+            for fact_type in _FACT_TYPES_BY_INTENT.get(intent, ())
+        ))
+        query_terms = tuple(dict.fromkeys(
+            term
+            for _length, intent, terms in compound_matches
+            for term in (*terms, *_RETRIEVAL_TERMS_BY_INTENT.get(intent, ()))
+        ))
+    else:
+        fact_types = _FACT_TYPES_BY_INTENT.get(fine_intent, ())
     retrieval_terms = tuple(
         dict.fromkeys(
             (*query_terms, *_RETRIEVAL_TERMS_BY_INTENT.get(fine_intent, ()))
@@ -331,9 +365,9 @@ def _is_social_question(normalized: str) -> bool:
     if normalized in _SOCIAL_GREETINGS:
         return True
     if any(
-        normalized.startswith(greeting)
-        and normalized[len(greeting):] in _SOCIAL_ADDRESSES
+        normalized in {f"{greeting}{address}", f"{address}{greeting}"}
         for greeting in _SOCIAL_GREETINGS
+        for address in _SOCIAL_ADDRESSES
     ):
         return True
     if any(term in normalized for term in _SOCIAL_CAPABILITY_TERMS):
@@ -356,6 +390,7 @@ _QUESTION_LIKE_TERMS = (
     "为何",
     "哪里",
     "哪儿",
+    "哪",
     "哪个",
     "哪种",
     "谁",
@@ -370,6 +405,7 @@ _QUESTION_LIKE_TERMS = (
     "可不可以",
     "有没有",
     "有无",
+    "还是",
     "请",
     "我想知道",
     "我想了解",
@@ -384,3 +420,16 @@ def _looks_like_question_or_request(normalized: str) -> bool:
     if any(term in normalized for term in _QUESTION_LIKE_TERMS):
         return True
     return normalized.endswith(("吗", "呢", "吧", "呀", "啊", "嘛"))
+
+
+_COMPOUND_INTENT_CUES = ("又", "还", "以及", "同时", "并且", "分别")
+
+
+def _compound_intent_matches(
+    normalized: str,
+    matches: list[tuple[int, str, tuple[str, ...]]],
+) -> list[tuple[int, str, tuple[str, ...]]]:
+    if not any(cue in normalized for cue in _COMPOUND_INTENT_CUES):
+        return []
+    distinct_intents = {match[1] for match in matches}
+    return matches if len(distinct_intents) >= 2 else []

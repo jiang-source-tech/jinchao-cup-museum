@@ -36,6 +36,8 @@ class GroundedAnswerService:
         composition_started = perf_counter()
         social_intent = _local_social_intent(question)
         understanding = understand_question(question)
+        if not social_intent and understanding.coarse_intent == "social":
+            social_intent = "greeting"
         if not social_intent and understanding.coarse_intent == "unclear":
             social_intent = "unclear"
         if not social_intent:

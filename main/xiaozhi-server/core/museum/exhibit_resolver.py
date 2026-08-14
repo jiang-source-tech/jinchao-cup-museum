@@ -201,6 +201,8 @@ def _looks_like_new_exhibit_reference(
         phrase in question for phrase in _FOLLOW_UP_REFERENCE_PHRASES
     ):
         return False
+    if current_exhibit_id and question.startswith(("那又", "然后", "接着")):
+        return False
     if current_exhibit_id and question.startswith(_CONTEXTUAL_OPENERS):
         if any(pronoun in question for pronoun in _FOLLOW_UP_PRONOUNS):
             return False
