@@ -70,6 +70,10 @@ class GroundedAnswerService:
             return conversational_answer
 
         retrieval_started = perf_counter()
+        semantic_fallback = (
+            understanding.fine_intent == "unknown"
+            and bool(getattr(self._retriever, "supports_semantic_fallback", False))
+        )
         retrieval = self._retriever.retrieve(RetrievalRequest(
             exhibit_id=exhibit_id,
             question=question,
@@ -78,7 +82,10 @@ class GroundedAnswerService:
             overview=understanding.fine_intent == "overview",
             allow_dense_only=(
                 understanding.coarse_intent == "exhibit_knowledge"
-                and understanding.fine_intent != "unknown"
+                and (
+                    understanding.fine_intent != "unknown"
+                    or semantic_fallback
+                )
                 and "price" not in understanding.fact_types
             ),
             dense_fact_types=dense_fact_types_for_intent(
@@ -86,9 +93,15 @@ class GroundedAnswerService:
                 understanding.fact_types,
                 understanding.query_terms,
             ),
+            semantic_fallback=semantic_fallback,
         ))
         retrieved_evidence = retrieval.evidence
         retrieval_trace = retrieval.diagnostics.as_dict()
+        if understanding.fine_intent == "unknown":
+            understanding = _semantic_understanding_from_trace(
+                retrieval_trace,
+                fallback=understanding,
+            )
         llm_candidates = retrieved_evidence
         if (
             llm_candidates is None
@@ -233,6 +246,36 @@ def _llm_answer_fields(llm_call: MuseumLlmCall) -> dict[str, object]:
         "llm_response_summary": llm_call.response_summary,
         "llm_ms": llm_call.duration_ms,
     }
+
+
+def _semantic_understanding_from_trace(
+    trace: dict[str, object],
+    *,
+    fallback: QuestionUnderstanding,
+) -> QuestionUnderstanding:
+    fine_intent = str(trace.get("semantic_intent", "") or "")
+    if not fine_intent:
+        return fallback
+    fact_types = {
+        "craft": ("craft", "research_limit"),
+        "material": ("material",),
+        "dimensions": ("dimensions",),
+        "excavation": ("excavation",),
+        "era": ("era",),
+        "appearance": ("appearance",),
+        "usage": ("usage",),
+        "price": ("price",),
+        "history": ("history",),
+    }.get(fine_intent, ())
+    if not fact_types:
+        return fallback
+    return QuestionUnderstanding(
+        coarse_intent="exhibit_knowledge",
+        fine_intent=fine_intent,
+        fact_types=fact_types,
+        confidence=float(trace.get("semantic_confidence", 0.0) or 0.0),
+        source="semantic",
+    )
 
 
 def _select_evidence(

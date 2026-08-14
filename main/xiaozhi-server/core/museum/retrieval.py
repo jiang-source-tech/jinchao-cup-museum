@@ -35,6 +35,7 @@ class RetrievalRequest:
     overview: bool = False
     allow_dense_only: bool = False
     dense_fact_types: tuple[str, ...] = ()
+    semantic_fallback: bool = False
 
 
 @dataclass(frozen=True)
@@ -57,6 +58,10 @@ class RetrievalDiagnostics:
     embedding_dimension: int = 0
     collection: str = ""
     index_version: str = "facts-v1"
+    semantic_fallback: bool = False
+    semantic_intent: str = ""
+    semantic_confidence: float = 0.0
+    semantic_margin: float = 0.0
     stage_latency_ms: dict[str, int] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, object]:
@@ -106,6 +111,8 @@ class SqliteEvidenceRetriever:
 
 
 class HybridEvidenceRetriever:
+    supports_semantic_fallback = True
+
     def __init__(
         self,
         *,
@@ -206,6 +213,16 @@ class HybridEvidenceRetriever:
             if hit.fact_id in valid_dense_ids
             and hit.score >= self._dense_score_threshold
         )
+        if request.semantic_fallback:
+            diagnostics.semantic_fallback = True
+            valid_dense = _select_semantic_fallback_hits(valid_dense)
+            if valid_dense:
+                diagnostics.semantic_confidence = valid_dense[0].score
+                diagnostics.semantic_margin = (
+                    valid_dense[0].score - valid_dense[1].score
+                    if len(valid_dense) > 1
+                    else valid_dense[0].score
+                )
         if request.dense_fact_types:
             allowed_dense_ids = set(
                 self._store.valid_published_fact_ids_by_type(
@@ -253,12 +270,21 @@ class HybridEvidenceRetriever:
             )
             else [candidate.fact_id for candidate in diagnostics.lexical_candidates]
         )
+        if request.semantic_fallback:
+            chosen = [
+                candidate.fact_id
+                for candidate in diagnostics.dense_candidates[:1]
+            ]
         evidence = self._store.hydrate_published_facts(
             exhibit_id=request.exhibit_id,
             fact_ids=tuple(chosen),
             limit=request.limit,
         )
         selected = list(evidence.fact_ids) if evidence else []
+        if request.semantic_fallback and evidence and evidence.facts:
+            diagnostics.semantic_intent = _intent_for_fact_type(
+                evidence.facts[0].fact_type
+            )
         all_candidate_ids = tuple(dict.fromkeys(
             [candidate.fact_id for candidate in diagnostics.lexical_candidates]
             + list(raw_dense_ids)
@@ -310,6 +336,38 @@ def _rrf(
         RankedFactCandidate(fact_id=fact_id, rank=rank, score=score)
         for rank, (fact_id, score) in enumerate(ordered, start=1)
     ]
+
+
+_SEMANTIC_FALLBACK_MIN_SCORE = 0.72
+_SEMANTIC_FALLBACK_MIN_MARGIN = 0.08
+
+
+def _select_semantic_fallback_hits(hits):
+    if not hits or hits[0].score < _SEMANTIC_FALLBACK_MIN_SCORE:
+        return ()
+    if len(hits) > 1 and (
+        hits[0].score - hits[1].score < _SEMANTIC_FALLBACK_MIN_MARGIN
+    ):
+        return ()
+    return hits
+
+
+def _intent_for_fact_type(fact_type: str) -> str:
+    if fact_type == "research_limit":
+        return "craft"
+    if fact_type in {
+        "material",
+        "dimensions",
+        "excavation",
+        "era",
+        "craft",
+        "appearance",
+        "usage",
+        "price",
+        "history",
+    }:
+        return fact_type
+    return ""
 
 
 def dense_fact_types_for_intent(

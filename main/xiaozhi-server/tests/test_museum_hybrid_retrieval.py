@@ -164,6 +164,61 @@ def test_dense_recall_fills_a_real_understanding_gap(tmp_path, monkeypatch):
     ) is None
 
 
+def test_unknown_question_uses_high_confidence_dense_fact_type(tmp_path):
+    store = _store(tmp_path)
+    retriever = HybridEvidenceRetriever(
+        store=store,
+        embedder=FakeEmbedder(),
+        index=FakeIndex(
+            (
+                ("fact-crystal-cup-material", 0.94),
+                ("fact-crystal-cup-era", 0.61),
+            )
+        ),
+        mode="hybrid",
+    )
+
+    answer = GroundedAnswerService(store, retriever).answer(
+        exhibit_id=DEMO_EXHIBIT_ID,
+        exhibit_name="战国水晶杯",
+        question="这件东西的原料究竟是什么东西？",
+    )
+
+    assert answer.fine_intent == "material"
+    assert answer.intent_confidence == 0.94
+    assert answer.evidence is not None
+    assert answer.evidence.fact_ids == ("fact-crystal-cup-material",)
+    assert answer.retrieval_trace["semantic_fallback"] is True
+    assert answer.retrieval_trace["semantic_intent"] == "material"
+
+
+def test_unknown_question_with_ambiguous_dense_scores_stays_unsupported(tmp_path):
+    store = _store(tmp_path)
+    retriever = HybridEvidenceRetriever(
+        store=store,
+        embedder=FakeEmbedder(),
+        index=FakeIndex(
+            (
+                ("fact-crystal-cup-material", 0.79),
+                ("fact-crystal-cup-era", 0.75),
+            )
+        ),
+        mode="hybrid",
+    )
+
+    answer = GroundedAnswerService(store, retriever).answer(
+        exhibit_id=DEMO_EXHIBIT_ID,
+        exhibit_name="战国水晶杯",
+        question="这件东西究竟怎么回事？",
+    )
+
+    assert answer.knowledge_status == "unsupported"
+    assert answer.fine_intent == "unknown"
+    assert answer.evidence is None
+    assert answer.retrieval_trace["semantic_fallback"] is True
+    assert answer.retrieval_trace["semantic_intent"] == ""
+
+
 def test_sqlite_rejects_cross_exhibit_stale_and_unknown_dense_ids(tmp_path):
     store = _store(tmp_path)
     with store.connection() as connection:

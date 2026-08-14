@@ -142,6 +142,12 @@ def run(database: Path) -> dict[str, object]:
             "fact_type_misses": sum(not case["hit"] for case in subset),
         }
     return {
+        "audit_kind": "published_fact_coverage_smoke",
+        "generalization_claim": False,
+        "audit_note": (
+            "This audit checks published fact coverage with fixed probes only; "
+            "it is not an intent-recognition or natural-language generalization benchmark."
+        ),
         "database": str(database.resolve()),
         "published_exhibit_count": len(names),
         "published_fact_count": len(rows),
