@@ -23,6 +23,16 @@ class FakeEmbedder:
         return [1.0, 0.0, 0.0]
 
 
+class PrototypeEmbedder(FakeEmbedder):
+    def embed_many(self, texts: list[str]) -> list[list[float]]:
+        return [
+            [1.0, 0.0, 0.0]
+            if any(term in text for term in ("材料", "原料", "物质"))
+            else [0.0, 1.0, 0.0]
+            for text in texts
+        ]
+
+
 class FailingEmbedder(FakeEmbedder):
     def embed(self, _text: str) -> list[float]:
         raise TimeoutError("embedding timeout")
@@ -168,7 +178,7 @@ def test_unknown_question_uses_high_confidence_dense_fact_type(tmp_path):
     store = _store(tmp_path)
     retriever = HybridEvidenceRetriever(
         store=store,
-        embedder=FakeEmbedder(),
+        embedder=PrototypeEmbedder(),
         index=FakeIndex(
             (
                 ("fact-crystal-cup-material", 0.94),
@@ -185,11 +195,12 @@ def test_unknown_question_uses_high_confidence_dense_fact_type(tmp_path):
     )
 
     assert answer.fine_intent == "material"
-    assert answer.intent_confidence == 0.94
+    assert answer.intent_confidence == 1.0
     assert answer.evidence is not None
     assert answer.evidence.fact_ids == ("fact-crystal-cup-material",)
     assert answer.retrieval_trace["semantic_fallback"] is True
     assert answer.retrieval_trace["semantic_intent"] == "material"
+    assert answer.retrieval_trace["semantic_candidate_intent"] == "material"
 
 
 def test_unknown_question_with_ambiguous_dense_scores_stays_unsupported(tmp_path):

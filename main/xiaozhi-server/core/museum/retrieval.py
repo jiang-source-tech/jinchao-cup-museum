@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+import math
 from threading import Lock
 from time import monotonic, perf_counter
 from typing import Protocol
@@ -22,6 +23,18 @@ _DENSE_FACT_TYPES_BY_INTENT = {
     "usage": ("usage",),
     "overview": ("history", "era", "material", "appearance", "excavation"),
     "history": ("history",),
+}
+
+_SEMANTIC_INTENT_PROTOTYPES = {
+    "material": "展品由什么材料、原料或物质制成",
+    "dimensions": "展品的尺寸、高度、大小、口径或长宽",
+    "excavation": "展品在哪里出土、发现地点或考古地点",
+    "era": "展品属于哪个年代、距今多久或哪个历史时期",
+    "craft": "展品如何制作、加工工艺、制作方法或工艺过程",
+    "appearance": "展品的外形、样子、颜色和看起来的特征",
+    "usage": "展品过去的用途、作用、用来做什么或怎么使用",
+    "price": "展品的价格、售价、市场价值或卖了多少钱",
+    "history": "展品在馆方登记的名称、公开名称或历史记录",
 }
 
 
@@ -60,6 +73,8 @@ class RetrievalDiagnostics:
     index_version: str = "facts-v1"
     semantic_fallback: bool = False
     semantic_intent: str = ""
+    semantic_candidate_intent: str = ""
+    semantic_candidate_score: float = 0.0
     semantic_confidence: float = 0.0
     semantic_margin: float = 0.0
     stage_latency_ms: dict[str, int] = field(default_factory=dict)
@@ -142,6 +157,8 @@ class HybridEvidenceRetriever:
         self._failure_count = 0
         self._open_until = 0.0
         self._circuit_lock = Lock()
+        self._semantic_prototype_lock = Lock()
+        self._semantic_prototype_vectors = None
 
     def retrieve(self, request: RetrievalRequest) -> RetrievalResult:
         total_started = perf_counter()
@@ -185,11 +202,30 @@ class HybridEvidenceRetriever:
                 diagnostics.stage_latency_ms["embedding"] = _duration_ms(
                     embedding_started
                 )
+                semantic_intent = ""
+                if request.semantic_fallback:
+                    (
+                        semantic_intent,
+                        candidate_intent,
+                        candidate_score,
+                        semantic_margin,
+                    ) = self._classify_semantic_intent(vector)
+                    diagnostics.semantic_intent = semantic_intent
+                    diagnostics.semantic_candidate_intent = candidate_intent
+                    diagnostics.semantic_candidate_score = candidate_score
+                    diagnostics.semantic_confidence = candidate_score
+                    diagnostics.semantic_margin = semantic_margin
+                search_fact_types = request.dense_fact_types
+                if request.semantic_fallback and semantic_intent:
+                    search_fact_types = _DENSE_FACT_TYPES_BY_INTENT.get(
+                        semantic_intent,
+                        (),
+                    )
                 dense_started = perf_counter()
                 dense = self._index.search(
                     vector=vector,
                     exhibit_id=request.exhibit_id,
-                    fact_types=request.dense_fact_types,
+                    fact_types=search_fact_types,
                     limit=max(self._dense_limit, request.limit),
                 )
                 diagnostics.stage_latency_ms["dense"] = _duration_ms(dense_started)
@@ -215,8 +251,11 @@ class HybridEvidenceRetriever:
         )
         if request.semantic_fallback:
             diagnostics.semantic_fallback = True
-            valid_dense = _select_semantic_fallback_hits(valid_dense)
-            if valid_dense:
+            valid_dense = _select_semantic_fallback_hits(
+                valid_dense,
+                relaxed=bool(diagnostics.semantic_intent),
+            )
+            if valid_dense and not diagnostics.semantic_intent:
                 diagnostics.semantic_confidence = valid_dense[0].score
                 diagnostics.semantic_margin = (
                     valid_dense[0].score - valid_dense[1].score
@@ -281,7 +320,12 @@ class HybridEvidenceRetriever:
             limit=request.limit,
         )
         selected = list(evidence.fact_ids) if evidence else []
-        if request.semantic_fallback and evidence and evidence.facts:
+        if (
+            request.semantic_fallback
+            and not diagnostics.semantic_intent
+            and evidence
+            and evidence.facts
+        ):
             diagnostics.semantic_intent = _intent_for_fact_type(
                 evidence.facts[0].fact_type
             )
@@ -299,6 +343,53 @@ class HybridEvidenceRetriever:
         ]
         diagnostics.stage_latency_ms["total"] = _duration_ms(total_started)
         return RetrievalResult(evidence=evidence, diagnostics=diagnostics)
+
+    def _classify_semantic_intent(self, vector):
+        embed_many = getattr(self._embedder, "embed_many", None)
+        if not callable(embed_many):
+            return "", "", 0.0, 0.0
+        try:
+            with self._semantic_prototype_lock:
+                if self._semantic_prototype_vectors is None:
+                    prototype_vectors = embed_many(
+                        list(_SEMANTIC_INTENT_PROTOTYPES.values())
+                    )
+                    if len(prototype_vectors) != len(
+                        _SEMANTIC_INTENT_PROTOTYPES
+                    ):
+                        return "", "", 0.0, 0.0
+                    self._semantic_prototype_vectors = dict(
+                        zip(
+                            _SEMANTIC_INTENT_PROTOTYPES,
+                            prototype_vectors,
+                        )
+                    )
+            ranked = sorted(
+                (
+                    (
+                        intent,
+                        _cosine_similarity(
+                            vector,
+                            prototype_vector,
+                        ),
+                    )
+                    for intent, prototype_vector in self._semantic_prototype_vectors.items()
+                ),
+                key=lambda item: (-item[1], item[0]),
+            )
+        except Exception:
+            return "", "", 0.0, 0.0
+        if not ranked:
+            return "", "", 0.0, 0.0
+        top_intent, top_score = ranked[0]
+        margin = top_score - ranked[1][1] if len(ranked) > 1 else top_score
+        accepted = top_score >= 0.45 and margin >= 0.015
+        return (
+            top_intent if accepted else "",
+            top_intent,
+            top_score,
+            margin,
+        )
 
     def _circuit_is_open(self) -> bool:
         with self._circuit_lock:
@@ -342,14 +433,24 @@ _SEMANTIC_FALLBACK_MIN_SCORE = 0.72
 _SEMANTIC_FALLBACK_MIN_MARGIN = 0.08
 
 
-def _select_semantic_fallback_hits(hits):
+def _select_semantic_fallback_hits(hits, *, relaxed: bool = False):
     if not hits or hits[0].score < _SEMANTIC_FALLBACK_MIN_SCORE:
         return ()
+    if relaxed:
+        return hits
     if len(hits) > 1 and (
         hits[0].score - hits[1].score < _SEMANTIC_FALLBACK_MIN_MARGIN
     ):
         return ()
     return hits
+
+
+def _cosine_similarity(left, right) -> float:
+    left_norm = math.sqrt(sum(value * value for value in left))
+    right_norm = math.sqrt(sum(value * value for value in right))
+    if not left_norm or not right_norm:
+        return 0.0
+    return sum(a * b for a, b in zip(left, right)) / (left_norm * right_norm)
 
 
 def _intent_for_fact_type(fact_type: str) -> str:
