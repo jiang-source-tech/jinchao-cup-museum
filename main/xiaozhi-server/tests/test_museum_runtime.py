@@ -159,6 +159,16 @@ def test_unsupported_question_returns_explicit_fallback(tmp_path):
     assert "已发布的讲解暂时没有覆盖这个问题" in outcome.spoken_text
     assert "馆方没有资料" not in outcome.spoken_text
 
+    social = runtime.handle_turn(_request(text="你好讲解员。"))
+    assert social.knowledge_status == "conversational"
+    assert social.audit_record["fine_intent"] == "social"
+    assert "请说出你想了解的展品名称" in social.spoken_text
+
+    unclear = runtime.handle_turn(_request(text="他独自坐地铁去面试。"))
+    assert unclear.knowledge_status == "conversational"
+    assert unclear.audit_record["coarse_intent"] == "unclear"
+    assert "没听清" in unclear.spoken_text
+
     store = MuseumStore(tmp_path / "museum.db")
     with store.connection() as connection:
         connection.execute("DELETE FROM fact_source")

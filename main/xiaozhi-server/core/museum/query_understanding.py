@@ -38,6 +38,7 @@ _SOCIAL_CAPABILITY_TERMS = (
     "能帮我做什么",
 )
 _SOCIAL_GREETINGS = {"你好", "您好", "嗨", "哈喽", "hello", "hi", "在吗"}
+_SOCIAL_ADDRESSES = {"讲解员", "导览员", "讲解助手", "助手"}
 _SOCIAL_THANKS = ("谢谢", "感谢", "多谢", "辛苦了")
 _SOCIAL_FAREWELLS = ("再见", "拜拜", "回头见", "下次见")
 
@@ -188,7 +189,19 @@ _INTENT_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ),
     (
         "overview",
-        ("有什么特点", "有什么特别", "有什么看点", "介绍一下", "讲讲", "介绍", "概况"),
+        (
+            "有什么特点",
+            "有什么特别",
+            "有什么看点",
+            "介绍一下",
+            "讲讲",
+            "介绍",
+            "概况",
+            "什么是",
+            "这是什么",
+            "给我讲讲",
+            "说说",
+        ),
     ),
 )
 
@@ -278,6 +291,12 @@ def understand_question(question: str) -> QuestionUnderstanding:
             matches.append((max(matched_lengths), fine_intent, matched_terms))
 
     if not matches:
+        if not _looks_like_question_or_request(normalized):
+            return QuestionUnderstanding(
+                coarse_intent="unclear",
+                fine_intent="unknown",
+                confidence=0.75,
+            )
         return QuestionUnderstanding(
             coarse_intent="exhibit_knowledge",
             fine_intent="unknown",
@@ -311,6 +330,12 @@ def _normalize_text(value: str) -> str:
 def _is_social_question(normalized: str) -> bool:
     if normalized in _SOCIAL_GREETINGS:
         return True
+    if any(
+        normalized.startswith(greeting)
+        and normalized[len(greeting):] in _SOCIAL_ADDRESSES
+        for greeting in _SOCIAL_GREETINGS
+    ):
+        return True
     if any(term in normalized for term in _SOCIAL_CAPABILITY_TERMS):
         return True
     if any(term in normalized for term in _SOCIAL_IDENTITY_TERMS):
@@ -320,3 +345,42 @@ def _is_social_question(normalized: str) -> bool:
     return len(normalized) <= 12 and any(
         term in normalized for term in _SOCIAL_FAREWELLS
     )
+
+
+_QUESTION_LIKE_TERMS = (
+    "什么",
+    "怎么",
+    "怎样",
+    "如何",
+    "为什么",
+    "为何",
+    "哪里",
+    "哪儿",
+    "哪个",
+    "哪种",
+    "谁",
+    "何时",
+    "何地",
+    "多少",
+    "几",
+    "是否",
+    "是不是",
+    "能不能",
+    "能否",
+    "可不可以",
+    "有没有",
+    "有无",
+    "请",
+    "我想知道",
+    "我想了解",
+    "告诉我",
+    "介绍",
+    "讲讲",
+    "说说",
+)
+
+
+def _looks_like_question_or_request(normalized: str) -> bool:
+    if any(term in normalized for term in _QUESTION_LIKE_TERMS):
+        return True
+    return normalized.endswith(("吗", "呢", "吧", "呀", "啊", "嘛"))

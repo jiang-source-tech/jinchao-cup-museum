@@ -62,6 +62,32 @@ def test_overview_and_social_are_separate_from_fact_lookup():
     assert social.fine_intent == "social"
 
 
+def test_open_ended_exhibit_questions_map_to_overview():
+    for question in (
+        "那什么是战国水晶杯呢？",
+        "这是什么？",
+        "给我讲讲它。",
+    ):
+        result = understand_question(question)
+
+        assert result.coarse_intent == "exhibit_knowledge"
+        assert result.fine_intent == "overview"
+
+
+def test_greeting_to_guide_is_social():
+    result = understand_question("你好讲解员。")
+
+    assert result.coarse_intent == "social"
+    assert result.fine_intent == "social"
+
+
+def test_plain_statement_is_unclear_instead_of_unknown_exhibit_question():
+    result = understand_question("他独自坐地铁去面试。")
+
+    assert result.coarse_intent == "unclear"
+    assert result.fine_intent == "unknown"
+
+
 def test_history_listing_questions_map_to_history_fact_type():
     result = understand_question("这个展品公开叫什么？")
 

@@ -35,9 +35,11 @@ class GroundedAnswerService:
     def answer_conversational(question: str) -> AnswerResult | None:
         composition_started = perf_counter()
         social_intent = _local_social_intent(question)
+        understanding = understand_question(question)
+        if not social_intent and understanding.coarse_intent == "unclear":
+            social_intent = "unclear"
         if not social_intent:
             return None
-        understanding = understand_question(question)
         return AnswerResult(
             knowledge_status="conversational",
             spoken_text=_conversational_reply(social_intent),
@@ -311,6 +313,10 @@ def _local_social_intent(question: str) -> str | None:
         "hithere",
         "你好吗",
         "在吗",
+        "你好讲解员",
+        "您好讲解员",
+        "嗨讲解员",
+        "哈喽讲解员",
     }
     if normalized in greetings:
         return "greeting"
@@ -343,6 +349,10 @@ def _conversational_reply(intent: str) -> str:
         "out_of_scope": (
             "我主要负责讲解馆内展品，暂时不讲笑话。"
             "你可以问展品的年代、材质、外形或制作方式。"
+        ),
+        "unclear": (
+            "我没听清你是在问哪件展品或哪个方面。"
+            "请说出展品名称，再问问它的材质、年代、外形或用途。"
         ),
     }.get(intent, "我在。请说出展品名称和你想了解的内容。")
 
