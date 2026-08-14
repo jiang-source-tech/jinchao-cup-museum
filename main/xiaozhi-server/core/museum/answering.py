@@ -96,10 +96,18 @@ class GroundedAnswerService:
                 understanding.query_terms,
             ),
             semantic_fallback=semantic_fallback,
+            rule_intent=understanding.fine_intent,
+            semantic_validation=(
+                understanding.coarse_intent == "exhibit_knowledge"
+                and bool(getattr(self._retriever, "supports_semantic_fallback", False))
+            ),
         ))
         retrieved_evidence = retrieval.evidence
         retrieval_trace = retrieval.diagnostics.as_dict()
-        if understanding.fine_intent == "unknown":
+        if (
+            understanding.fine_intent == "unknown"
+            or retrieval_trace.get("semantic_override")
+        ):
             understanding = _semantic_understanding_from_trace(
                 retrieval_trace,
                 fallback=understanding,

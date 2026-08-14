@@ -49,6 +49,8 @@ class RetrievalRequest:
     allow_dense_only: bool = False
     dense_fact_types: tuple[str, ...] = ()
     semantic_fallback: bool = False
+    rule_intent: str = ""
+    semantic_validation: bool = False
 
 
 @dataclass(frozen=True)
@@ -77,6 +79,7 @@ class RetrievalDiagnostics:
     semantic_candidate_score: float = 0.0
     semantic_confidence: float = 0.0
     semantic_margin: float = 0.0
+    semantic_override: bool = False
     stage_latency_ms: dict[str, int] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, object]:
@@ -203,7 +206,7 @@ class HybridEvidenceRetriever:
                     embedding_started
                 )
                 semantic_intent = ""
-                if request.semantic_fallback:
+                if request.semantic_fallback or request.semantic_validation:
                     (
                         semantic_intent,
                         candidate_intent,
@@ -216,7 +219,19 @@ class HybridEvidenceRetriever:
                     diagnostics.semantic_confidence = candidate_score
                     diagnostics.semantic_margin = semantic_margin
                 search_fact_types = request.dense_fact_types
-                if request.semantic_fallback and semantic_intent:
+                semantic_disagrees = bool(
+                    request.semantic_validation
+                    and request.rule_intent
+                    and request.rule_intent != "unknown"
+                    and semantic_intent
+                    and semantic_intent != request.rule_intent
+                )
+                if semantic_disagrees:
+                    search_fact_types = _DENSE_FACT_TYPES_BY_INTENT.get(
+                        semantic_intent,
+                        search_fact_types,
+                    )
+                elif request.semantic_fallback and semantic_intent:
                     search_fact_types = _DENSE_FACT_TYPES_BY_INTENT.get(
                         semantic_intent,
                         (),
@@ -268,7 +283,14 @@ class HybridEvidenceRetriever:
                     if len(valid_dense) > 1
                     else valid_dense[0].score
                 )
-        if request.dense_fact_types:
+        semantic_disagrees = bool(
+            request.semantic_validation
+            and request.rule_intent
+            and request.rule_intent != "unknown"
+            and diagnostics.semantic_intent
+            and diagnostics.semantic_intent != request.rule_intent
+        )
+        if request.dense_fact_types and not semantic_disagrees:
             allowed_dense_ids = set(
                 self._store.valid_published_fact_ids_by_type(
                     exhibit_id=request.exhibit_id,
@@ -287,6 +309,8 @@ class HybridEvidenceRetriever:
             )
             for index, hit in enumerate(valid_dense, start=1)
         ]
+        if semantic_disagrees and _is_high_confidence_dense_match(valid_dense):
+            diagnostics.semantic_override = True
         fused = _rrf(
             diagnostics.lexical_candidates,
             diagnostics.dense_candidates,
@@ -316,6 +340,11 @@ class HybridEvidenceRetriever:
             else [candidate.fact_id for candidate in diagnostics.lexical_candidates]
         )
         if request.semantic_fallback:
+            chosen = [
+                candidate.fact_id
+                for candidate in diagnostics.dense_candidates[:1]
+            ]
+        elif diagnostics.semantic_override:
             chosen = [
                 candidate.fact_id
                 for candidate in diagnostics.dense_candidates[:1]
@@ -449,6 +478,14 @@ def _select_semantic_fallback_hits(hits, *, relaxed: bool = False):
     ):
         return ()
     return hits
+
+
+def _is_high_confidence_dense_match(hits) -> bool:
+    if not hits or hits[0].score < _SEMANTIC_FALLBACK_MIN_SCORE:
+        return False
+    return len(hits) == 1 or (
+        hits[0].score - hits[1].score >= _SEMANTIC_FALLBACK_MIN_MARGIN
+    )
 
 
 def _cosine_similarity(left, right) -> float:

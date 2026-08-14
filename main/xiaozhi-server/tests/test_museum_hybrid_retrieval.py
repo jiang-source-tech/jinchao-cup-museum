@@ -38,6 +38,21 @@ class RejectedPrototypeEmbedder(FakeEmbedder):
         return [[0.0, 1.0, 0.0] for _text in texts]
 
 
+class EraOverrideEmbedder(FakeEmbedder):
+    def embed(self, _text: str) -> list[float]:
+        return [0.0, 1.0, 0.0]
+
+    def embed_many(self, texts: list[str]) -> list[list[float]]:
+        vectors = []
+        for text in texts:
+            vectors.append(
+                [0.0, 1.0, 0.0]
+                if "年代" in text
+                else [1.0, 0.0, 0.0]
+            )
+        return vectors
+
+
 class FailingEmbedder(FakeEmbedder):
     def embed(self, _text: str) -> list[float]:
         raise TimeoutError("embedding timeout")
@@ -233,6 +248,34 @@ def test_unknown_question_with_ambiguous_dense_scores_stays_unsupported(tmp_path
     assert answer.evidence is None
     assert answer.retrieval_trace["semantic_fallback"] is True
     assert answer.retrieval_trace["semantic_intent"] == ""
+
+
+def test_semantic_intent_can_override_weak_rule_route_when_dense_match_is_strong(
+    tmp_path,
+):
+    store = _store(tmp_path)
+    retriever = HybridEvidenceRetriever(
+        store=store,
+        embedder=EraOverrideEmbedder(),
+        index=FakeIndex(
+            (
+                ("fact-crystal-cup-era", 0.94),
+                ("fact-crystal-cup-material", 0.61),
+            )
+        ),
+        mode="hybrid",
+    )
+
+    answer = GroundedAnswerService(store, retriever).answer(
+        exhibit_id=DEMO_EXHIBIT_ID,
+        exhibit_name="战国水晶杯",
+        question="这个杯子的材质是什么？",
+    )
+
+    assert answer.fine_intent == "era"
+    assert answer.evidence is not None
+    assert answer.evidence.fact_ids == ("fact-crystal-cup-era",)
+    assert answer.retrieval_trace["semantic_override"] is True
 
 
 def test_sqlite_rejects_cross_exhibit_stale_and_unknown_dense_ids(tmp_path):
