@@ -20,6 +20,6 @@ def test_isolated_release_publishes_all_content_and_records_manifest(tmp_path):
 
     assert result["exhibit_count"] == 101
     assert result["published_revision_count"] == 101
-    assert result["published_fact_count"] == 177
+    assert result["published_fact_count"] == 187
     assert result["sqlite_integrity"] == "ok"
     assert str(result["collection"]) == "museum_facts_stage3_isolated_v1"

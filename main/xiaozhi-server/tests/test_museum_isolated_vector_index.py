@@ -51,9 +51,9 @@ def test_isolated_vector_build_preserves_aliases_and_records_usage(tmp_path):
         index_factory=index_factory,
     )
 
-    assert result["indexed_point_count"] == 177
-    assert result["embedding_batch_count"] == 18
-    assert result["embedding_usage"] == {"total_tokens": 531}
+    assert result["indexed_point_count"] == 187
+    assert result["embedding_batch_count"] == 19
+    assert result["embedding_usage"] == {"total_tokens": 561}
     assert result["payload_verification"]["ok"] is True
     assert result["alias_switched"] is False
     assert client.get_aliases().aliases == []

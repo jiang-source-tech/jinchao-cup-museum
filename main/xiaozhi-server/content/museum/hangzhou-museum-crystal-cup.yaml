@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 
 museum:
   id: hangzhou-museum-demo
@@ -11,22 +11,47 @@ zones:
     sort_order: 1
 
 sources:
-  - id: source-hangzhou-portal-2020
-    title: 杭州出土的战国水晶杯，连现代工艺都难以复制
-    source_type: 杭州市门户网站公开文章
-    locator: "https://z.hangzhou.com.cn/2020/rwwhql/content/content_7734423.htm"
-    rights_note: 仅用于演示事实核对；未取得图片或展陈素材授权。
-  - id: source-people-daily-2026
-    title: 两千多年前的水晶杯
-    source_type: 人民日报公开报道
+  - id: source-crystal-cup-excavator-interview-2023
+    title: 东西问·镇馆之宝丨杜正贤：战国水晶杯为何是最具“穿越感”国宝？
+    source_type: markdown
+    locator: "https://www.gqb.gov.cn/news/2023/0712/57396.shtml"
+    rights_note: 仅保存公开事实摘编与来源定位，不保存页面图片或整页转载。
+    publisher: 国务院侨务办公室网站转发中国新闻网
+    published_date: '2023-07-12'
+    accessed_at: '2026-08-15'
+    language: zh-CN
+  - id: source-crystal-cup-people-daily-2026
+    title: 2000年前水晶杯缘何“撞脸”现代玻璃杯？（文物有话说）
+    source_type: markdown
     locator: "https://paper.people.com.cn/rmrb/pad/content/202602/19/content_30141292.html"
-    rights_note: 仅用于演示事实核对；未取得图片或展陈素材授权。
+    rights_note: 仅保存公开事实摘编与来源定位，不保存页面图片或整篇转载。
+    publisher: 人民日报
+    published_date: '2026-02-19'
+    accessed_at: '2026-08-15'
+    language: zh-CN
+  - id: source-crystal-cup-hangzhou-portal-2020
+    title: 杭州博物馆丨三维动画·国宝水晶杯及其三个未解之谜
+    source_type: markdown
+    locator: "https://z.hangzhou.com.cn/2020/rwwhql/content/content_7734423.htm"
+    rights_note: 仅保存公开事实摘编与来源定位，不保存页面图片或整篇转载。
+    publisher: 杭州网
+    published_date: '2020-05-14'
+    accessed_at: '2026-08-15'
+    language: zh-CN
 
 exhibits:
   - id: warring-states-crystal-cup
     zone_id: hangzhou-history-demo-zone
     name: 战国水晶杯
-    aliases: [水晶杯, 战国时期水晶杯]
+    aliases:
+      - text: 水晶杯
+        kind: common
+        binding: unique
+        sources: [source-crystal-cup-excavator-interview-2023]
+      - text: 战国时期水晶杯
+        kind: historical
+        binding: unique
+        sources: [source-crystal-cup-people-daily-2026]
     status: active
     revision:
       id: warring-states-crystal-cup-r2
@@ -35,37 +60,73 @@ exhibits:
       facts:
         - id: fact-crystal-cup-era-r2
           type: era
-          statement: 这件水晶杯经鉴定为战国中晚期遗物，已有两千多年历史。
-          keywords: [年代, 时期, 战国, 多久, 历史]
-          confidence: reviewed-public-source
-          sources: [source-people-daily-2026]
+          statement: 这件水晶杯经鉴定为战国中晚期遗物，距今已有两千多年；同墓器物兼具楚、越文化因素，反映了当时杭州地区的文化交流。
+          keywords: [年代, 时期, 战国, 中晚期, 多久, 历史, 楚越文化, 杭州]
+          confidence: reviewed_public_source
+          certainty: qualified
+          sources: [source-crystal-cup-people-daily-2026]
+        - id: fact-crystal-cup-background-r2
+          type: history
+          statement: 它是迄今我国出土的早期水晶制品中最大的一件，2002年1月18日被列入首批禁止出国（境）展览文物名录。
+          keywords: [历史地位, 早期水晶器, 最大, 禁止出国展览, 2002年, 文物保护]
+          confidence: reviewed_public_source
+          certainty: confirmed
+          sources: [source-crystal-cup-hangzhou-portal-2020]
         - id: fact-crystal-cup-material-r2
           type: material
-          statement: 它由一整块天然水晶琢制而成。
-          keywords: [材质, 材料, 水晶, 天然, 做成]
-          confidence: reviewed-public-source
-          sources: [source-hangzhou-portal-2020, source-people-daily-2026]
+          statement: 它由一整块天然水晶琢制而成，晶体内部可见少量海绵体状自然结晶。
+          keywords: [材质, 材料, 水晶, 天然, 海绵体状, 自然结晶]
+          confidence: reviewed_public_source
+          certainty: confirmed
+          sources:
+            - source-crystal-cup-excavator-interview-2023
         - id: fact-crystal-cup-excavation-r2
           type: excavation
-          statement: 它于1990年在杭州半山镇石塘村的战国墓葬中出土。
-          keywords: [出土, 发现, 哪里, 地点, "1990", 半山, 石塘]
-          confidence: reviewed-public-source
-          sources: [source-hangzhou-portal-2020, source-people-daily-2026]
-        - id: fact-crystal-cup-dimensions-r2
+          statement: 1990年下半年，杭州半山镇石塘村发现战国墓葬；考古人员于10月底进行抢救性发掘时在墓室中发现这件水晶杯。
+          keywords: [出土, 发现, 1990年, 下半年, 10月底, 半山, 石塘村, 墓室, 抢救性发掘]
+          confidence: excavator_interview
+          certainty: confirmed
+          sources: [source-crystal-cup-excavator-interview-2023]
+        - id: fact-crystal-cup-dimensions-interview-r2
           type: dimensions
-          statement: 它高15.4厘米，口径7.8厘米，底径5.4厘米。
-          keywords: [尺寸, 多高, 多大, 口径, 底径, 厘米]
-          confidence: reviewed-public-source
-          sources: [source-hangzhou-portal-2020, source-people-daily-2026]
+          statement: 发掘者访谈记录这件水晶杯高15.4厘米、口径7.8厘米、底径5.4厘米。
+          keywords: [尺寸, 多高, 多大, 口径, 底径, 厘米, '7.8', '5.4']
+          confidence: excavator_interview_measurement
+          certainty: qualified
+          sources: [source-crystal-cup-excavator-interview-2023]
+        - id: fact-crystal-cup-dimensions-portal-r2
+          type: dimensions
+          statement: 杭州网2020年文章记录这件水晶杯高15.4厘米、口径7.6厘米、底径5.2厘米。
+          keywords: [尺寸, 多高, 多大, 口径, 底径, 厘米, '7.6', '5.2']
+          confidence: public_portal_measurement
+          certainty: qualified
+          sources: [source-crystal-cup-hangzhou-portal-2020]
         - id: fact-crystal-cup-appearance-r2
           type: appearance
           statement: 它器口微敞、杯壁斜直、圈足外撇，外形很像现代常见的玻璃杯。
-          keywords: [外形, 样子, 玻璃杯, 现代, 长什么, 为什么像]
-          confidence: reviewed-public-source
-          sources: [source-hangzhou-portal-2020, source-people-daily-2026]
-        - id: fact-crystal-cup-craft-limit-r2
+          keywords: [外形, 样子, 玻璃杯, 圈足, 为什么像]
+          confidence: reviewed_public_source
+          certainty: confirmed
+          sources:
+            - source-crystal-cup-people-daily-2026
+        - id: fact-crystal-cup-craft-r2
+          type: craft
+          statement: 水晶质硬易脆，莫氏硬度约为7；公开文章提出过管钻掏挖与金刚砂磨制等推测，但具体取芯工具、加工顺序和内壁抛光方法至今仍无定论。
+          keywords: [工艺, 制作, 掏膛, 管钻, 金刚砂, 研磨, 抛光, 怎么做, 未解]
+          confidence: research_hypothesis_from_public_sources
+          certainty: qualified
+          sources: [source-crystal-cup-hangzhou-portal-2020]
+        - id: fact-crystal-cup-usage-r2
+          type: usage
+          statement: 发掘者认为它应是用于喝水或饮酒的实用器，而不是专门用于祭祀或典礼的礼器；这属于考古解释，不是对某一次实际使用的直接记录。
+          keywords: [用途, 喝水, 饮酒, 实用器, 礼器, 干什么用]
+          confidence: excavator_interpretation
+          certainty: qualified
+          sources: [source-crystal-cup-excavator-interview-2023]
+        - id: fact-crystal-cup-research-limit-r2
           type: research_limit
-          statement: 水晶硬度高、脆性大，开料、掏膛和抛光难度很高；它的具体原料来源及部分制作细节目前仍有未解之处。
-          keywords: [工艺, 制作, 怎么做, 掏膛, 抛光, 原料来源, 未解]
-          confidence: reviewed-public-source
-          sources: [source-hangzhou-portal-2020, source-people-daily-2026]
+          statement: 目前公开资料仍不能确定原料产地、内膛取芯与抛光工具、墓主人确切身份，以及它在喝水与饮酒之间的具体使用方式；这些问题应作为研究边界保留。
+          keywords: [争议, 未解, 原料产地, 工具, 墓主人, 喝水, 饮酒, 不知道]
+          confidence: explicit_public_source_limit
+          certainty: unknown
+          sources: [source-crystal-cup-excavator-interview-2023]

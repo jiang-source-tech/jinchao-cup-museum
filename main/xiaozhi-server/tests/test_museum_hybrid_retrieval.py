@@ -38,6 +38,19 @@ class RejectedPrototypeEmbedder(FakeEmbedder):
         return [[0.0, 1.0, 0.0] for _text in texts]
 
 
+class ResearchLimitPrototypeEmbedder(FakeEmbedder):
+    def embed(self, _text: str) -> list[float]:
+        return [0.0, 0.0, 1.0]
+
+    def embed_many(self, texts: list[str]) -> list[list[float]]:
+        return [
+            [0.0, 0.0, 1.0]
+            if any(term in text for term in ("争议", "未解", "定论"))
+            else [1.0, 0.0, 0.0]
+            for text in texts
+        ]
+
+
 class EraOverrideEmbedder(FakeEmbedder):
     def embed(self, _text: str) -> list[float]:
         return [0.0, 1.0, 0.0]
@@ -221,6 +234,32 @@ def test_unknown_question_uses_high_confidence_dense_fact_type(tmp_path):
     assert answer.retrieval_trace["semantic_fallback"] is True
     assert answer.retrieval_trace["semantic_intent"] == "material"
     assert answer.retrieval_trace["semantic_candidate_intent"] == "material"
+
+    research_answer = GroundedAnswerService(
+        store,
+        HybridEvidenceRetriever(
+            store=store,
+            embedder=ResearchLimitPrototypeEmbedder(),
+            index=FakeIndex(
+                (
+                    ("fact-crystal-cup-research-limit", 0.95),
+                    ("fact-crystal-cup-material", 0.62),
+                )
+            ),
+            mode="hybrid",
+        ),
+    ).answer(
+        exhibit_id=DEMO_EXHIBIT_ID,
+        exhibit_name="战国水晶杯",
+        question="这个杯子至今还有哪些学界没弄清楚的地方？",
+    )
+
+    assert research_answer.fine_intent == "research_limit"
+    assert research_answer.evidence is not None
+    assert research_answer.evidence.fact_ids == (
+        "fact-crystal-cup-research-limit",
+    )
+    assert research_answer.retrieval_trace["semantic_intent"] == "research_limit"
 
 
 def test_unknown_question_with_ambiguous_dense_scores_stays_unsupported(tmp_path):

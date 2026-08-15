@@ -4,38 +4,38 @@
   "exhibits": [
     {
       "exhibit_id": "liangzhu-jade-yue-set",
-      "canonical": {"text": "玉钺组合有多大？", "fact_id": "fact-liangzhu-yue-dimensions"},
+      "canonical": {"text": "玉钺组合有多大？", "fact_id": "fact-liangzhu-yue-dimensions-r2"},
       "aliases": [
-        {"text": "玉钺是在哪里出土的？", "fact_id": "fact-liangzhu-yue-excavation"},
-        {"text": "反山M14玉钺组合有什么用途？", "fact_id": "fact-liangzhu-yue-usage"}
+        {"text": "玉钺是在哪里出土的？", "fact_id": "fact-liangzhu-yue-excavation-r2"},
+        {"text": "反山M14玉钺组合有什么用途？", "fact_id": "fact-liangzhu-yue-usage-r2"}
       ],
       "facts": [
-        {"text": "玉钺组合长什么样？", "fact_id": "fact-liangzhu-yue-composition", "fact_type": "appearance"},
-        {"text": "玉钺组合是怎么加工的？", "fact_id": "fact-liangzhu-yue-craft", "fact_type": "craft"}
+        {"text": "玉钺组合长什么样？", "fact_id": "fact-liangzhu-yue-composition-r2", "fact_type": "appearance"},
+        {"text": "玉钺组合是怎么加工的？", "fact_id": "fact-liangzhu-yue-craft-r2", "fact_type": "craft"}
       ],
-      "interference": {"text": "别把它和同墓出土的小型鸟形玉器混淆，反山M14玉钺组合有多大？", "fact_id": "fact-liangzhu-yue-dimensions"},
+      "interference": {"text": "别把它和同墓出土的小型鸟形玉器混淆，反山M14玉钺组合有多大？", "fact_id": "fact-liangzhu-yue-dimensions-r2"},
       "unsupported": {"text": "玉钺组合现在市场价多少钱？"},
       "conversation": {
-        "initial": {"text": "玉钺组合长什么样？", "fact_id": "fact-liangzhu-yue-composition"},
-        "followup": {"text": "它有什么用途？", "fact_id": "fact-liangzhu-yue-usage"}
+        "initial": {"text": "玉钺组合长什么样？", "fact_id": "fact-liangzhu-yue-composition-r2"},
+        "followup": {"text": "它有什么用途？", "fact_id": "fact-liangzhu-yue-usage-r2"}
       }
     },
     {
       "exhibit_id": "liangzhu-jade-trident",
-      "canonical": {"text": "玉三叉形器是什么材质？", "fact_id": "fact-liangzhu-trident-material"},
+      "canonical": {"text": "玉三叉形器是什么材质？", "fact_id": "fact-liangzhu-trident-material-r2"},
       "aliases": [
-        {"text": "三叉形器有多高？", "fact_id": "fact-liangzhu-trident-dimensions"},
-        {"text": "瑶山M7玉三叉形器是在哪里出土的？", "fact_id": "fact-liangzhu-trident-excavation"}
+        {"text": "三叉形器有多高？", "fact_id": "fact-liangzhu-trident-dimensions-r2"},
+        {"text": "瑶山M7玉三叉形器是在哪里出土的？", "fact_id": "fact-liangzhu-trident-excavation-r2"}
       ],
       "facts": [
-        {"text": "玉三叉形器上面刻了什么？", "fact_id": "fact-liangzhu-trident-craft", "fact_type": "craft"},
-        {"text": "玉三叉形器原来戴在哪儿？", "fact_id": "fact-liangzhu-trident-usage", "fact_type": "usage"}
+        {"text": "玉三叉形器上面刻了什么？", "fact_id": "fact-liangzhu-trident-craft-r2", "fact_type": "craft"},
+        {"text": "玉三叉形器原来戴在哪儿？", "fact_id": "fact-liangzhu-trident-usage-r2", "fact_type": "usage"}
       ],
-      "interference": {"text": "别把它和同墓出土的方柱形玉器混淆，瑶山M7玉三叉形器是什么材质？", "fact_id": "fact-liangzhu-trident-material"},
+      "interference": {"text": "别把它和同墓出土的方柱形玉器混淆，瑶山M7玉三叉形器是什么材质？", "fact_id": "fact-liangzhu-trident-material-r2"},
       "unsupported": {"text": "玉三叉形器的主人叫什么名字？"},
       "conversation": {
-        "initial": {"text": "玉三叉形器有多大？", "fact_id": "fact-liangzhu-trident-dimensions"},
-        "followup": {"text": "它原来有什么用？", "fact_id": "fact-liangzhu-trident-usage"}
+        "initial": {"text": "玉三叉形器有多大？", "fact_id": "fact-liangzhu-trident-dimensions-r2"},
+        "followup": {"text": "它原来有什么用？", "fact_id": "fact-liangzhu-trident-usage-r2"}
       }
     },
     {

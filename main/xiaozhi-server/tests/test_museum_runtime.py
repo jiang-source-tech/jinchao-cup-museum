@@ -4,7 +4,7 @@ from datetime import datetime
 from core.business_runtime_factory import create_conversation_runtime
 from core.conversation_runtime import TurnRequest
 from core.museum.answering import GroundedAnswerService
-from core.museum.store import MuseumStore
+from core.museum.store import DEMO_EXHIBIT_ID, MuseumStore
 
 
 def _request(*, text, device_id="demo-device", llm=None):
@@ -332,6 +332,7 @@ def test_natural_follow_up_variants_keep_the_established_exhibit(tmp_path):
         ("这个杯子是怎么做出来的？", "fact-crystal-cup-craft-limit"),
         ("你能讲讲它的历史吗？", "fact-crystal-cup-era"),
         ("它的制作工艺复杂吗？", "fact-crystal-cup-craft-limit"),
+        ("它还有哪些未解的问题？", "fact-crystal-cup-research-limit"),
     )
 
     assert first.knowledge_status == "grounded"
@@ -341,6 +342,71 @@ def test_natural_follow_up_variants_keep_the_established_exhibit(tmp_path):
         assert outcome.fact_ids == (expected_fact_id,)
         assert outcome.display_state["context"]["exhibit_id"] == "warring-states-crystal-cup"
         assert outcome.display_state["context"]["source"] == "inherited_session"
+
+
+def test_demo_seed_upgrades_legacy_combined_craft_fact(tmp_path):
+    store = MuseumStore(tmp_path / "museum.db")
+    store.seed_demo_content()
+    with store.connection() as connection:
+        connection.execute(
+            """
+            UPDATE exhibit_fact
+            SET statement = '用户保留的材质说明'
+            WHERE id = 'fact-crystal-cup-material'
+            """
+        )
+        connection.execute(
+            "DELETE FROM fact_source WHERE fact_id = ?",
+            ("fact-crystal-cup-research-limit",),
+        )
+        connection.execute(
+            "DELETE FROM exhibit_fact_fts WHERE fact_id = ?",
+            ("fact-crystal-cup-research-limit",),
+        )
+        connection.execute(
+            "DELETE FROM exhibit_fact WHERE id = ?",
+            ("fact-crystal-cup-research-limit",),
+        )
+        connection.execute(
+            """
+            UPDATE exhibit_fact
+            SET fact_type = 'research_limit',
+                statement = ?,
+                keywords_json = ?
+            WHERE id = 'fact-crystal-cup-craft-limit'
+            """,
+            (
+                "水晶硬度高、脆性大，开料、掏膛和抛光难度很高；"
+                "它的具体原料来源及部分制作细节目前仍有未解之处。",
+                '["工艺", "制作", "怎么做", "掏膛", "抛光", "原料来源", "未解"]',
+            ),
+        )
+
+    store.seed_demo_content()
+
+    with store.connection() as connection:
+        preserved = connection.execute(
+            "SELECT statement FROM exhibit_fact WHERE id = ?",
+            ("fact-crystal-cup-material",),
+        ).fetchone()
+    assert str(preserved["statement"]) == "用户保留的材质说明"
+
+    craft = GroundedAnswerService(store).answer(
+        exhibit_id=DEMO_EXHIBIT_ID,
+        exhibit_name="战国水晶杯",
+        question="它是怎么制作的？",
+    )
+    research = GroundedAnswerService(store).answer(
+        exhibit_id=DEMO_EXHIBIT_ID,
+        exhibit_name="战国水晶杯",
+        question="它还有哪些未解的问题？",
+    )
+
+    assert craft.evidence is not None
+    assert research.evidence is not None
+    assert craft.evidence.fact_ids == ("fact-crystal-cup-craft-limit",)
+    assert research.evidence.fact_ids == ("fact-crystal-cup-research-limit",)
+    assert "未解之处" not in craft.spoken_text
 
 
 def test_explicit_mode_never_uses_an_existing_device_placement(tmp_path):

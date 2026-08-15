@@ -699,7 +699,8 @@ def _semantic_understanding_from_trace(
     if not fine_intent:
         return fallback
     fact_types = {
-        "craft": ("craft", "research_limit"),
+        "craft": ("craft",),
+        "research_limit": ("research_limit",),
         "material": ("material",),
         "dimensions": ("dimensions",),
         "excavation": ("excavation",),

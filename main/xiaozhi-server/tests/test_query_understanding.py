@@ -28,21 +28,21 @@ def test_craft_intent_maps_to_published_fact_type():
     result = understand_question("它的制作工艺复杂吗？")
 
     assert result.fine_intent == "craft"
-    assert result.fact_types == ("craft", "research_limit")
+    assert result.fact_types == ("craft",)
 
 
 def test_craft_intent_accepts_colloquial_phrasing():
     result = understand_question("这么硬的水晶，当时的人是咋做出来的？")
 
     assert result.fine_intent == "craft"
-    assert result.fact_types == ("craft", "research_limit")
+    assert result.fact_types == ("craft",)
 
 
 def test_craft_intent_accepts_object_inserted_before_verb():
     result = understand_question("这么硬，古人当时是怎么把它做出来的？")
 
     assert result.fine_intent == "craft"
-    assert result.fact_types == ("craft", "research_limit")
+    assert result.fact_types == ("craft",)
 
 
 def test_price_intent_wins_over_incidental_era_word():
@@ -139,7 +139,7 @@ def test_specific_fact_intent_wins_over_overview_wording():
         ("它原来戴在身体哪个位置？", "usage", ("usage",)),
         ("上面的洞除了好看还有什么用？", "usage", ("usage",)),
         ("这件袍子原来是什么场合穿的？", "usage", ("usage",)),
-        ("垫饼上写了什么字？", "craft", ("craft", "research_limit")),
+        ("垫饼上写了什么字？", "craft", ("craft",)),
     ),
 )
 def test_understanding_covers_natural_museum_usage_questions(
@@ -165,12 +165,12 @@ def test_understanding_covers_natural_museum_usage_questions(
         (
             "liangzhu-jade-yue-set",
             "这套东西是不是代表了主人的权力？",
-            "fact-liangzhu-yue-usage",
+            "fact-liangzhu-yue-usage-r2",
         ),
         (
             "liangzhu-jade-trident",
             "它原来戴在身体哪个位置？",
-            "fact-liangzhu-trident-usage",
+            "fact-liangzhu-trident-usage-r2",
         ),
         (
             "southern-song-guan-bagua-incense-lid",

@@ -38,7 +38,7 @@
             "context_exhibit_id": "liangzhu-jade-yue-set",
             "context_source": "explicit_mention",
             "fine_intent": "dimensions",
-            "fact_ids": ["fact-liangzhu-yue-dimensions"]
+            "fact_ids": ["fact-liangzhu-yue-dimensions-r2"]
           }
         }
       ]
@@ -55,7 +55,7 @@
             "resolution_status": "explicit",
             "context_exhibit_id": "liangzhu-jade-trident",
             "fine_intent": "material",
-            "fact_ids": ["fact-liangzhu-trident-material"]
+            "fact_ids": ["fact-liangzhu-trident-material-r2"]
           }
         }
       ]
@@ -122,7 +122,7 @@
             "knowledge_status": "grounded",
             "resolution_status": "explicit",
             "context_exhibit_id": "liangzhu-jade-yue-set",
-            "fact_ids": ["fact-liangzhu-yue-dimensions"]
+            "fact_ids": ["fact-liangzhu-yue-dimensions-r2"]
           }
         }
       ]
@@ -138,7 +138,7 @@
             "knowledge_status": "grounded",
             "resolution_status": "explicit",
             "context_exhibit_id": "liangzhu-jade-yue-set",
-            "fact_ids": ["fact-liangzhu-yue-excavation"]
+            "fact_ids": ["fact-liangzhu-yue-excavation-r2"]
           }
         }
       ]
@@ -154,7 +154,7 @@
             "knowledge_status": "grounded",
             "resolution_status": "explicit",
             "context_exhibit_id": "liangzhu-jade-yue-set",
-            "fact_ids": ["fact-liangzhu-yue-dimensions"]
+            "fact_ids": ["fact-liangzhu-yue-dimensions-r2"]
           }
         }
       ]
@@ -170,7 +170,7 @@
             "knowledge_status": "grounded",
             "resolution_status": "explicit",
             "context_exhibit_id": "liangzhu-jade-trident",
-            "fact_ids": ["fact-liangzhu-trident-material"]
+            "fact_ids": ["fact-liangzhu-trident-material-r2"]
           }
         }
       ]
@@ -186,7 +186,7 @@
             "knowledge_status": "grounded",
             "resolution_status": "explicit",
             "context_exhibit_id": "liangzhu-jade-trident",
-            "fact_ids": ["fact-liangzhu-trident-dimensions"]
+            "fact_ids": ["fact-liangzhu-trident-dimensions-r2"]
           }
         }
       ]
@@ -202,7 +202,7 @@
             "knowledge_status": "grounded",
             "resolution_status": "explicit",
             "context_exhibit_id": "liangzhu-jade-trident",
-            "fact_ids": ["fact-liangzhu-trident-material"]
+            "fact_ids": ["fact-liangzhu-trident-material-r2"]
           }
         }
       ]
@@ -416,7 +416,7 @@
             "resolution_status": "explicit",
             "context_exhibit_id": "liangzhu-jade-trident",
             "context_source": "explicit_mention",
-            "fact_ids": ["fact-liangzhu-trident-material"]
+            "fact_ids": ["fact-liangzhu-trident-material-r2"]
           }
         },
         {
@@ -429,12 +429,12 @@
           "expected_by_mode": {
             "rules": {
               "knowledge_status": "grounded",
-              "fact_ids": ["fact-liangzhu-trident-usage"]
+              "fact_ids": ["fact-liangzhu-trident-usage-r2"]
             },
             "llm": {
               "knowledge_status": "grounded",
-              "required_fact_ids": ["fact-liangzhu-trident-usage"],
-              "allowed_fact_ids": ["fact-liangzhu-trident-usage"]
+              "required_fact_ids": ["fact-liangzhu-trident-usage-r2"],
+              "allowed_fact_ids": ["fact-liangzhu-trident-usage-r2"]
             }
           }
         }
@@ -509,12 +509,12 @@
           "expected_by_mode": {
             "rules": {
               "knowledge_status": "grounded",
-              "fact_ids": ["fact-liangzhu-yue-usage"]
+              "fact_ids": ["fact-liangzhu-yue-usage-r2"]
             },
             "llm": {
               "knowledge_status": "grounded",
-              "required_fact_ids": ["fact-liangzhu-yue-usage"],
-              "allowed_fact_ids": ["fact-liangzhu-yue-usage"]
+              "required_fact_ids": ["fact-liangzhu-yue-usage-r2"],
+              "allowed_fact_ids": ["fact-liangzhu-yue-usage-r2"]
             }
           }
         }
@@ -629,7 +629,7 @@
           "expected": {
             "knowledge_status": "grounded",
             "context_exhibit_id": "liangzhu-jade-trident",
-            "fact_ids": ["fact-liangzhu-trident-material"]
+            "fact_ids": ["fact-liangzhu-trident-material-r2"]
           }
         },
         {
@@ -708,7 +708,7 @@
           "expected": {
             "knowledge_status": "grounded",
             "context_exhibit_id": "liangzhu-jade-trident",
-            "fact_ids": ["fact-liangzhu-trident-material"]
+            "fact_ids": ["fact-liangzhu-trident-material-r2"]
           }
         },
         {

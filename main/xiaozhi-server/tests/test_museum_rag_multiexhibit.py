@@ -107,14 +107,17 @@ def test_official_hangzhou_content_is_source_backed_and_draft_by_default(tmp_pat
         "china-national-silk-museum",
     }
     assert len(exhibits) == 17
-    assert len(facts) == 88
+    assert len(facts) == 94
     assert all(exhibit.revision.status == "draft" for exhibit in exhibits)
     assert all(fact.source_ids for fact in facts)
     assert {
         urlparse(source.locator).hostname for source in sources
     } == {
         "www.lzmuseum.cn",
-        "www.lzsite.cn",
+            "www.lzsite.cn",
+            "m.thepaper.cn",
+            "whc.unesco.org",
+        "www.chnmuseum.cn",
         "www.westlakemuseum.com",
         "www.chinasilkmuseum.com",
     }
@@ -137,9 +140,9 @@ def test_retrieval_is_isolated_by_exhibit_and_published_revision(tmp_path):
         (
             "liangzhu-jade-trident",
             "玉三叉形器是什么材质？",
-            "liangzhu-jade-trident-r1",
-            "fact-liangzhu-trident-material",
-            "source-liangzhu-jade-trident-2019393530",
+            "liangzhu-jade-trident-r2",
+            "fact-liangzhu-trident-material-r2",
+            "source-liangzhu-trident-museum-record",
         ),
         (
             "southern-song-guan-zun-incense-burner",
@@ -193,7 +196,7 @@ def test_runtime_switches_exhibits_without_reusing_previous_facts(tmp_path):
         )
     )
 
-    assert jade_answer.fact_ids == ("fact-liangzhu-trident-material",)
+    assert jade_answer.fact_ids == ("fact-liangzhu-trident-material-r2",)
     assert "南瓜黄色玉器" in jade_answer.spoken_text
     assert porcelain_answer.fact_ids == ("fact-west-lake-zun-material",)
     assert "灰青釉" in porcelain_answer.spoken_text
@@ -219,14 +222,14 @@ def test_numeric_answer_keeps_exact_revision_fact_and_source_snapshot(tmp_path):
     evidence = json.loads(trace["evidence_json"])
 
     assert outcome.knowledge_status == "grounded"
-    assert outcome.fact_ids == ("fact-liangzhu-trident-dimensions",)
+    assert outcome.fact_ids == ("fact-liangzhu-trident-dimensions-r2",)
     assert "4.8厘米" in outcome.spoken_text
     assert "8.5厘米" in outcome.spoken_text
-    assert evidence["content_revision_id"] == "liangzhu-jade-trident-r1"
-    assert evidence["content_version"] == 1
-    assert evidence["fact_ids"] == ["fact-liangzhu-trident-dimensions"]
+    assert evidence["content_revision_id"] == "liangzhu-jade-trident-r2"
+    assert evidence["content_version"] == 2
+    assert evidence["fact_ids"] == ["fact-liangzhu-trident-dimensions-r2"]
     assert evidence["source_ids"] == [
-        "source-liangzhu-jade-trident-2019393530"
+        "source-liangzhu-trident-museum-record"
     ]
 
 
@@ -236,7 +239,7 @@ def test_withdrawn_exhibit_is_resolvable_but_has_no_visible_facts(tmp_path):
 
     withdraw_revision(
         store,
-        revision_id="liangzhu-jade-trident-r1",
+        revision_id="liangzhu-jade-trident-r2",
         withdrawn_by="official-content-operator",
         withdrawn_at=OCCURRED_AT,
         reason="验证撤回后的检索隔离",
@@ -346,7 +349,7 @@ def test_legacy_fts_schema_is_rebuilt_with_exhibit_and_revision_boundaries(
         fact_types=("material",),
     )
     assert evidence is not None
-    assert evidence.fact_ids == ("fact-liangzhu-trident-material",)
+    assert evidence.fact_ids == ("fact-liangzhu-trident-material-r2",)
 
 
 def test_new_revision_cannot_return_old_revision_fact_or_fts_match(tmp_path):

@@ -1,0 +1,88 @@
+schema_version: 1
+dataset_id: priority-hangzhou-crystal-cup-20260815
+museum:
+  id: hangzhou-museum-demo
+  name: 杭州博物馆（演示数据）
+sources:
+  - id: source-crystal-cup-excavator-interview-2023
+    title: 东西问·镇馆之宝丨杜正贤：战国水晶杯为何是最具“穿越感”国宝？
+    source_type: markdown
+    path: originals/crystal-cup-excavator-interview-2023.md
+    locator: "https://www.gqb.gov.cn/news/2023/0712/57396.shtml"
+    rights_note: 仅保存公开事实摘编与来源定位，不保存页面图片或整页转载。
+    publisher: 国务院侨务办公室网站转发中国新闻网
+    published_date: '2023-07-12'
+    accessed_at: '2026-08-15'
+    language: zh-CN
+    source_level: primary_public_source
+    rights_status: factual_digest_only
+    exhibit_ids: [warring-states-crystal-cup]
+    metadata:
+      capture_kind: project_factual_digest
+      source_role: excavator_interview
+      dimensions: [发现经过, 材料, 工艺, 用途, 研究边界]
+  - id: source-crystal-cup-people-daily-2026
+    title: 2000年前水晶杯缘何“撞脸”现代玻璃杯？（文物有话说）
+    source_type: markdown
+    path: originals/crystal-cup-people-daily-2026.md
+    locator: "https://paper.people.com.cn/rmrb/pad/content/202602/19/content_30141292.html"
+    rights_note: 仅保存公开事实摘编与来源定位，不保存页面图片或整篇转载。
+    publisher: 人民日报
+    published_date: '2026-02-19'
+    accessed_at: '2026-08-15'
+    language: zh-CN
+    source_level: secondary_public_source
+    rights_status: factual_digest_only
+    exhibit_ids: [warring-states-crystal-cup]
+    metadata:
+      capture_kind: project_factual_digest
+      source_role: researched_public_report
+      dimensions: [年代背景, 历史地位, 工艺, 原料来源疑问]
+  - id: source-crystal-cup-hangzhou-portal-2020
+    title: 杭州博物馆丨三维动画·国宝水晶杯及其三个未解之谜
+    source_type: markdown
+    path: originals/crystal-cup-hangzhou-portal-2020.md
+    locator: "https://z.hangzhou.com.cn/2020/rwwhql/content/content_7734423.htm"
+    rights_note: 仅保存公开事实摘编与来源定位，不保存页面图片或整篇转载。
+    publisher: 杭州网
+    published_date: '2020-05-14'
+    accessed_at: '2026-08-15'
+    language: zh-CN
+    source_level: secondary_public_source
+    rights_status: factual_digest_only
+    exhibit_ids: [warring-states-crystal-cup]
+    metadata:
+      capture_kind: project_factual_digest
+      source_role: local_public_cultural_portal
+      dimensions: [材料, 尺寸, 历史地位, 工艺]
+claim_support:
+  - fact_id: fact-crystal-cup-era-r2
+    source_id: source-crystal-cup-people-daily-2026
+    sections: [年代与器形, 历史背景]
+  - fact_id: fact-crystal-cup-background-r2
+    source_id: source-crystal-cup-hangzhou-portal-2020
+    sections: [历史地位]
+  - fact_id: fact-crystal-cup-material-r2
+    source_id: source-crystal-cup-excavator-interview-2023
+    sections: [材质与保存状态]
+  - fact_id: fact-crystal-cup-excavation-r2
+    source_id: source-crystal-cup-excavator-interview-2023
+    sections: [发现经过]
+  - fact_id: fact-crystal-cup-dimensions-interview-r2
+    source_id: source-crystal-cup-excavator-interview-2023
+    sections: [材质与保存状态]
+  - fact_id: fact-crystal-cup-dimensions-portal-r2
+    source_id: source-crystal-cup-hangzhou-portal-2020
+    sections: [材料与尺寸]
+  - fact_id: fact-crystal-cup-appearance-r2
+    source_id: source-crystal-cup-people-daily-2026
+    sections: [年代与器形]
+  - fact_id: fact-crystal-cup-craft-r2
+    source_id: source-crystal-cup-hangzhou-portal-2020
+    sections: [工艺难点]
+  - fact_id: fact-crystal-cup-usage-r2
+    source_id: source-crystal-cup-excavator-interview-2023
+    sections: [用途与研究边界]
+  - fact_id: fact-crystal-cup-research-limit-r2
+    source_id: source-crystal-cup-excavator-interview-2023
+    sections: [用途与研究边界]

@@ -63,6 +63,7 @@ class EvidenceStore:
         publications: Sequence[
             tuple[SourceDocumentRecord, Sequence[SourceSegmentRecord]]
         ],
+        claim_support: Sequence[tuple[str, str]] = (),
     ) -> dict[str, tuple[str, ...]]:
         """Publish one manifest as a single SQLite transaction."""
         normalized = tuple(
@@ -105,7 +106,102 @@ class EvidenceStore:
                     segments,
                     source_version_id=source_version_id,
                 )
+            self._replace_claim_support(
+                connection,
+                museum_id=museum_id,
+                source_ids=source_ids,
+                published=published,
+                claim_support=claim_support,
+            )
         return published
+
+    @staticmethod
+    def _replace_claim_support(
+        connection: sqlite3.Connection,
+        *,
+        museum_id: str,
+        source_ids: Sequence[str],
+        published: dict[str, tuple[str, ...]],
+        claim_support: Sequence[tuple[str, str]],
+    ) -> None:
+        active_segment_ids = {
+            segment_id
+            for segment_ids in published.values()
+            for segment_id in segment_ids
+        }
+        normalized = tuple(dict.fromkeys(claim_support))
+        for fact_id, segment_id in normalized:
+            if segment_id not in active_segment_ids:
+                raise ValueError(
+                    f"claim support references a segment outside this manifest: {segment_id}"
+                )
+            row = connection.execute(
+                """
+                SELECT cr.status AS revision_status,
+                       z.museum_id AS fact_museum_id,
+                       cr.exhibit_id AS fact_exhibit_id,
+                       ss.status AS segment_status,
+                       EXISTS(
+                           SELECT 1
+                           FROM fact_source fs
+                           WHERE fs.fact_id = f.id
+                             AND fs.source_id = ss.source_id
+                       ) AS declared_source,
+                       EXISTS(
+                           SELECT 1
+                           FROM source_segment_exhibit sse
+                           WHERE sse.segment_id = ss.id
+                             AND sse.exhibit_id = cr.exhibit_id
+                       ) AS same_exhibit
+                FROM exhibit_fact f
+                JOIN content_revision cr ON cr.id = f.revision_id
+                JOIN exhibit e ON e.id = cr.exhibit_id
+                JOIN zone z ON z.id = e.zone_id
+                JOIN source_segment ss ON ss.id = ?
+                WHERE f.id = ?
+                """,
+                (segment_id, fact_id),
+            ).fetchone()
+            if row is None:
+                raise ValueError(f"claim support references an unknown fact: {fact_id}")
+            if str(row["revision_status"]) != "published":
+                raise ValueError(
+                    f"claim support fact is not published: {fact_id}"
+                )
+            if str(row["fact_museum_id"]) != museum_id:
+                raise ValueError(
+                    f"claim support fact belongs to another museum: {fact_id}"
+                )
+            if str(row["segment_status"]) != "published":
+                raise ValueError(
+                    f"claim support segment is not published: {segment_id}"
+                )
+            if not bool(row["declared_source"]):
+                raise ValueError(
+                    f"claim support source is not declared by fact: {fact_id}"
+                )
+            if not bool(row["same_exhibit"]):
+                raise ValueError(
+                    f"claim support fact and segment belong to different exhibits: {fact_id}"
+                )
+
+        if source_ids:
+            placeholders = ", ".join("?" for _ in source_ids)
+            connection.execute(
+                f"""
+                DELETE FROM knowledge_claim_support
+                WHERE segment_id IN (
+                    SELECT id
+                    FROM source_segment
+                    WHERE source_id IN ({placeholders})
+                )
+                """,
+                tuple(source_ids),
+            )
+        connection.executemany(
+            "INSERT INTO knowledge_claim_support(fact_id, segment_id) VALUES (?, ?)",
+            normalized,
+        )
 
     def source_checksum(self, source_id: str) -> str | None:
         with self._store.connection() as connection:

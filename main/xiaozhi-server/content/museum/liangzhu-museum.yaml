@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 
 museum:
   id: liangzhu-museum
@@ -11,106 +11,234 @@ zones:
     sort_order: 1
 
 sources:
-  - id: source-liangzhu-jade-yue-combination-201910913103
-    title: 良渚博物院馆藏精品：玉钺组合
-    source_type: official_museum_webpage
+  - id: source-liangzhu-unesco-background
+    title: Archaeological Ruins of Liangzhu City
+    source_type: markdown
+    locator: "https://whc.unesco.org/en/list/1592/"
+    rights_note: 仅保存遗产年代与价值说明的事实摘编和来源定位，不保存页面图片或整页转载。
+    publisher: UNESCO World Heritage Centre
+    accessed_at: '2026-08-15'
+    language: zh-CN
+  - id: source-liangzhu-yue-m14-interview
+    title: 访谈︱杨楠：良渚遗址是“最早的中国”么？
+    source_type: markdown
+    locator: "https://m.thepaper.cn/newsDetail_forward_1464371"
+    rights_note: 仅保存考古人员公开访谈中的事实摘编和来源定位，不保存页面图片或整篇转载。
+    publisher: 澎湃新闻
+    published_date: '2016-05-26'
+    accessed_at: '2026-08-15'
+    language: zh-CN
+  - id: source-liangzhu-yue-museum-overview
+    title: 玉钺
+    source_type: markdown
     locator: "https://www.lzmuseum.cn/YuQi/201910913103.html"
-    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
-  - id: source-liangzhu-jade-yue-overview-2019611219610
-    title: 良渚博物院馆藏精品：玉钺
-    source_type: official_museum_webpage
-    locator: "https://www.lzmuseum.cn/YuQi/2019611219610.html"
-    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
-  - id: source-liangzhu-jade-trident-2019393530
-    title: 良渚博物院馆藏精品：玉三叉形器
-    source_type: official_museum_webpage
+    rights_note: 仅保存馆方公开器物信息摘编和来源定位，不保存页面图片或整页转载。
+    publisher: 良渚博物院
+    accessed_at: '2026-08-15'
+    language: zh-CN
+  - id: source-national-museum-liangzhu-yue
+    title: 玉钺
+    source_type: markdown
+    locator: "https://www.chnmuseum.cn/zp/zpml/kgfjp/202104/t20210415_249734.shtml"
+    rights_note: 仅保存关于玉钺功能与权力象征的事实摘编和来源定位，不保存页面图片或整篇转载。
+    publisher: 中国国家博物馆
+    accessed_at: '2026-08-15'
+    language: zh-CN
+  - id: source-liangzhu-trident-museum-record
+    title: 三叉形器
+    source_type: markdown
     locator: "https://www.lzmuseum.cn/YuQi/2019393530.html"
-    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
-  - id: source-liangzhu-trident-overview-20198121782
-    title: 良渚博物院典藏精品：三叉形器
-    source_type: official_museum_webpage
-    locator: "https://www.lzmuseum.cn/YuQi/20198121782.html"
-    rights_note: 仅保存馆方公开事实摘要与来源定位，不保存页面图片。
+    rights_note: 仅保存馆方公开器物信息摘编和来源定位，不保存页面图片或整页转载。
+    publisher: 良渚博物院
+    accessed_at: '2026-08-15'
+    language: zh-CN
+  - id: source-liangzhu-trident-museum-study-2022
+    title: 秋意渐浓，玉通乾坤
+    source_type: markdown
+    locator: "https://www.lzmuseum.cn/LiangBoXinWen/2022713850713.html"
+    rights_note: 仅保存馆方研究性说明的事实摘编和来源定位，不保存页面图片或整篇转载。
+    publisher: 良渚博物院
+    published_date: '2022-09-23'
+    accessed_at: '2026-08-15'
+    language: zh-CN
+  - id: source-liangzhu-trident-reconstruction-discussion
+    title: 中华玉文化中心第八届年会暨第十届中国古代玉器与传统文化学术讨论会纪要（中）
+    source_type: markdown
+    locator: "https://www.lzmuseum.cn/LiangBoXinWen/2025754695754.html"
+    rights_note: 仅保存良渚博物院公开学术会议纪要中的研究观点摘编和来源定位，不保存页面图片或整篇转载；该来源用于记录解释更新，不单独承担确定性事实。
+    publisher: 良渚博物院
+    published_date: '2025-01-20'
+    accessed_at: '2026-08-15'
+    language: zh-CN
 
 exhibits:
   - id: liangzhu-jade-yue-set
     zone_id: liangzhu-official-collection
     name: 玉钺组合
-    aliases: [玉钺, 反山M14玉钺组合, 玉越组合, 反山M十四玉钺组合]
+    aliases:
+      - text: 玉钺
+        kind: common
+        binding: unique
+        sources: [source-liangzhu-yue-museum-overview]
+      - text: 反山M14玉钺组合
+        kind: historical
+        binding: unique
+        sources: [source-liangzhu-yue-m14-interview]
+      - text: 玉越组合
+        kind: asr_variant
+        binding: unique
+        sources: [source-liangzhu-yue-museum-overview]
+      - text: 反山M十四玉钺组合
+        kind: asr_variant
+        binding: unique
+        sources: [source-liangzhu-yue-m14-interview]
     status: active
     revision:
-      id: liangzhu-jade-yue-set-r1
-      number: 1
+      id: liangzhu-jade-yue-set-r2
+      number: 2
       status: draft
       facts:
-        - id: fact-liangzhu-yue-excavation
+        - id: fact-liangzhu-yue-era-r2
+          type: era
+          statement: 这组玉钺属于距今约五千年的良渚文化时期，所在社会已经形成以大型工程、等级墓地和礼制玉器为特征的早期区域性国家形态。
+          keywords: [年代, 良渚文化, 五千年, 早期国家, 历史背景]
+          confidence: unesco_and_official_archaeology
+          certainty: qualified
+          sources: [source-liangzhu-unesco-background]
+        - id: fact-liangzhu-yue-excavation-r2
           type: excavation
-          statement: 这组玉钺、玉钺冠饰和玉钺端饰均出土于1986年发掘的反山遗址M14。
-          keywords: [反山遗址, M14, 1986年, 出土]
-          confidence: official_museum_webpage
-          sources: [source-liangzhu-jade-yue-combination-201910913103]
-        - id: fact-liangzhu-yue-composition
+          statement: 这组玉钺出土于1986年发掘的反山遗址M14；考古人员逐颗保留玉钺附近小玉粒的位置，识别出一条由近百颗玉粒组成、长约70厘米的玉粒带。
+          keywords: [反山遗址, M14, 1986年, 出土, 玉粒带, 70厘米]
+          confidence: excavator_interview
+          certainty: confirmed
+          sources: [source-liangzhu-yue-m14-interview]
+        - id: fact-liangzhu-yue-composition-r2
           type: appearance
-          statement: 这套玉钺组合由冠饰、钺和端饰三部分组成。
-          keywords: [组成, 冠饰, 钺, 端饰]
-          confidence: official_museum_webpage
-          sources: [source-liangzhu-jade-yue-overview-2019611219610]
-        - id: fact-liangzhu-yue-dimensions
+          statement: 完整组合由玉钺、玉瑁、玉镦、近百颗小玉粒和已经腐烂的木质柲构成，复原后是一件装饰华丽的长柄仪仗性武器。
+          keywords: [组成, 玉瑁, 玉镦, 玉粒, 木质柲, 仪仗性武器, 复原]
+          confidence: official_archaeology_reconstruction
+          certainty: qualified
+          sources:
+            - source-liangzhu-yue-m14-interview
+        - id: fact-liangzhu-yue-dimensions-r2
           type: dimensions
           statement: 其中玉钺长14.1厘米，上端宽9.3厘米，刃部宽11厘米，最厚约0.9厘米。
-          keywords: [尺寸, 长, 上端宽, 刃部宽, 厚]
-          confidence: official_museum_webpage
-          sources: [source-liangzhu-jade-yue-combination-201910913103]
-        - id: fact-liangzhu-yue-craft
+          keywords: [尺寸, 长, 上端宽, 刃部宽, 厚, 厘米]
+          confidence: official_museum_collection_page
+          certainty: confirmed
+          sources: [source-liangzhu-yue-museum-overview]
+        - id: fact-liangzhu-yue-material-r2
+          type: material
+          statement: 组合中的玉钺、玉瑁、玉镦和小玉粒均为玉质部件，原有把柄为木质，出土时木柄已经腐烂。
+          keywords: [材质, 玉钺, 玉瑁, 玉镦, 玉粒, 木柄, 腐烂]
+          confidence: official_archaeology_interview
+          certainty: confirmed
+          sources: [source-liangzhu-yue-m14-interview]
+        - id: fact-liangzhu-yue-craft-r2
           type: craft
-          statement: 玉钺上端保留双向片切割痕迹，补缺玉件与台阶状缺口吻合，相关切割面经过打磨。
-          keywords: [工艺, 双向片切割, 补缺, 台阶状缺口, 打磨]
-          confidence: official_museum_webpage
-          sources: [source-liangzhu-jade-yue-combination-201910913103]
-        - id: fact-liangzhu-yue-usage
+          statement: 玉钺上端可见双向片切割痕迹，补缺玉件与台阶状缺口相合，切割面又经过打磨，说明制作者在成形后还进行了装配和修整。
+          keywords: [工艺, 双向片切割, 补缺, 台阶状缺口, 打磨, 装配]
+          confidence: official_museum_collection_page
+          certainty: confirmed
+          sources: [source-liangzhu-yue-museum-overview]
+        - id: fact-liangzhu-yue-usage-r2
           type: usage
-          statement: 馆方资料说明，玉钺是军事指挥权的象征，也是显贵者特定身份地位的玉质标志。
-          keywords: [用途, 军事指挥权, 显贵者, 身份, 地位]
-          confidence: official_museum_webpage
-          sources: [source-liangzhu-jade-yue-overview-2019611219610]
+          statement: 玉钺源于武器形态，但良渚高等级墓葬中的精制玉钺更主要用于表现军事统率权和持有者的等级身份，而不是普通砍击工具。
+          keywords: [用途, 武器形态, 军事统率权, 权力象征, 身份]
+          confidence: museum_research_interpretation
+          certainty: qualified
+          sources:
+            - source-national-museum-liangzhu-yue
+            - source-liangzhu-yue-m14-interview
+        - id: fact-liangzhu-yue-research-limit-r2
+          type: research_limit
+          statement: 原木柄已经腐烂，当前复原依靠约70厘米玉粒带、玉瑁和玉镦的出土位置推断部件关系，仍不能直接观察玉粒的固定细节和实际持握动作。
+          keywords: [争议, 未解, 复原, 木柄, 玉粒带, 装配, 使用动作]
+          confidence: evidence_boundary_from_excavation
+          certainty: unknown
+          sources: [source-liangzhu-yue-m14-interview]
 
   - id: liangzhu-jade-trident
     zone_id: liangzhu-official-collection
     name: 玉三叉形器
-    aliases: [三叉形器, 瑶山M7玉三叉形器, 三叉型器, 瑶山M七玉三叉型器]
+    aliases:
+      - text: 三叉形器
+        kind: common
+        binding: unique
+        sources: [source-liangzhu-trident-museum-record]
+      - text: 瑶山M7玉三叉形器
+        kind: historical
+        binding: unique
+        sources: [source-liangzhu-trident-museum-record]
+      - text: 三叉型器
+        kind: asr_variant
+        binding: unique
+        sources: [source-liangzhu-trident-museum-record]
+      - text: 瑶山M七玉三叉型器
+        kind: asr_variant
+        binding: unique
+        sources: [source-liangzhu-trident-museum-record]
     status: active
     revision:
-      id: liangzhu-jade-trident-r1
-      number: 1
+      id: liangzhu-jade-trident-r2
+      number: 2
       status: draft
       facts:
-        - id: fact-liangzhu-trident-excavation
+        - id: fact-liangzhu-trident-era-r2
+          type: era
+          statement: 这件玉三叉形器属于良渚文化时期，其社会背景与大型工程、等级墓地和礼制玉器共同构成的早期国家形态有关。
+          keywords: [年代, 良渚文化, 五千年, 早期国家, 历史背景]
+          confidence: unesco_and_official_museum
+          certainty: qualified
+          sources: [source-liangzhu-unesco-background]
+        - id: fact-liangzhu-trident-excavation-r2
           type: excavation
-          statement: 这件玉三叉形器出土于1987年发掘的瑶山遗址M7。
-          keywords: [瑶山遗址, M7, 1987年, 出土]
-          confidence: official_museum_webpage
-          sources: [source-liangzhu-jade-trident-2019393530]
-        - id: fact-liangzhu-trident-dimensions
+          statement: 它出土于1987年发掘的瑶山遗址M7，出土时位于墓主人头部，是判断其佩戴方式的重要依据。
+          keywords: [瑶山遗址, M7, 1987年, 出土, 头部, 发现]
+          confidence: official_museum_collection_page
+          certainty: confirmed
+          sources: [source-liangzhu-trident-museum-study-2022]
+        - id: fact-liangzhu-trident-dimensions-r2
           type: dimensions
-          statement: 玉三叉形器高4.8厘米、宽8.5厘米、厚0.8厘米。
-          keywords: [尺寸, 高, 宽, 厚]
-          confidence: official_museum_webpage
-          sources: [source-liangzhu-jade-trident-2019393530]
-        - id: fact-liangzhu-trident-material
+          statement: 这件玉三叉形器高4.8厘米、宽8.5厘米、厚0.8厘米。
+          keywords: [尺寸, 高, 宽, 厚, 厘米]
+          confidence: official_museum_collection_page
+          certainty: confirmed
+          sources: [source-liangzhu-trident-museum-record]
+        - id: fact-liangzhu-trident-material-r2
           type: material
-          statement: 这件玉三叉形器为南瓜黄色玉器。
-          keywords: [材质, 玉器, 南瓜黄]
-          confidence: official_museum_webpage
-          sources: [source-liangzhu-jade-trident-2019393530]
-        - id: fact-liangzhu-trident-craft
+          statement: 这件器物为南瓜黄色玉器，中叉和左右两叉共同构成横向展开的三叉形轮廓。
+          keywords: [材质, 玉器, 南瓜黄, 三叉形, 轮廓]
+          confidence: official_museum_collection_page
+          certainty: confirmed
+          sources: [source-liangzhu-trident-museum-record]
+        - id: fact-liangzhu-trident-craft-r2
           type: craft
-          statement: 器物一面有精美刻纹，左右两叉刻相向的神人头像，中叉上端饰五组羽状纹，下端阴线刻兽面纹。
-          keywords: [工艺, 神人头像, 羽状纹, 阴线刻, 兽面纹]
-          confidence: official_museum_webpage
-          sources: [source-liangzhu-jade-trident-2019393530]
-        - id: fact-liangzhu-trident-usage
+          statement: 器物一面以细密阴线刻出神人头像、羽状纹和兽面纹；中叉有竖向钻孔，可与配套玉管连接使用。
+          keywords: [工艺, 神人头像, 羽状纹, 兽面纹, 阴线刻, 竖向孔, 玉管]
+          confidence: official_museum_collection_page
+          certainty: confirmed
+          sources:
+            - source-liangzhu-trident-museum-record
+            - source-liangzhu-trident-museum-study-2022
+        - id: fact-liangzhu-trident-usage-r2
           type: usage
-          statement: 三叉形器出土时位于墓主人头部，应属冠帽饰物；使用时中叉通常与玉管相接。
-          keywords: [用途, 冠帽, 饰物, 头部, 中叉, 玉管]
-          confidence: official_museum_webpage
-          sources: [source-liangzhu-trident-overview-20198121782]
+          statement: 根据墓主人头部的出土位置和玉管组合关系，良渚博物院将它解释为男性贵族冠帽上的头饰。
+          keywords: [用途, 冠帽饰, 头饰, 头部, 男性贵族, 干什么用]
+          confidence: official_museum_research_interpretation
+          certainty: qualified
+          sources: [source-liangzhu-trident-museum-study-2022]
+        - id: fact-liangzhu-trident-reconstruction-hairpin-r2
+          type: research_limit
+          statement: 良渚博物院2022年文章提出一种冠帽饰复原方案：以发簪穿过配套玉管和三叉形器钻孔，将它固定在头部；文章明确把这种方式写成专家推测。
+          keywords: [争议, 复原, 佩戴, 玉管, 发簪, 冠帽饰, 专家推测]
+          confidence: official_reconstruction_hypothesis
+          certainty: qualified
+          sources: [source-liangzhu-trident-museum-study-2022]
+        - id: fact-liangzhu-trident-reconstruction-headband-r2
+          type: research_limit
+          statement: 良渚博物院2025年发布的学术会议纪要记录了另一种解释：三叉形器并非发笄，而是穿缀在男性贵族额带上的玉饰。
+          keywords: [争议, 复原, 佩戴, 发笄, 额带, 男性贵族, 不同观点]
+          confidence: symposium_interpretation_update
+          certainty: disputed
+          sources: [source-liangzhu-trident-reconstruction-discussion]

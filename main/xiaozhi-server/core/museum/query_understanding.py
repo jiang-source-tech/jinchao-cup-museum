@@ -118,6 +118,20 @@ _INTENT_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
         ("在哪里出土", "哪里出土", "出土地点", "出土", "发现在哪里", "发现"),
     ),
     (
+        "research_limit",
+        (
+            "研究争议",
+            "有什么争议",
+            "哪些争议",
+            "还有哪些未解",
+            "有什么未解",
+            "未解之处",
+            "尚无定论",
+            "有没有定论",
+            "哪里不确定",
+        ),
+    ),
+    (
         "craft",
         (
             "怎么做出来",
@@ -265,7 +279,8 @@ _INTENT_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
 _FACT_TYPES_BY_INTENT = {
     "dimensions": ("dimensions",),
     "excavation": ("excavation",),
-    "craft": ("craft", "research_limit"),
+    "craft": ("craft",),
+    "research_limit": ("research_limit",),
     "material": ("material",),
     "era": ("era",),
     "appearance": ("appearance",),
@@ -278,6 +293,7 @@ _RETRIEVAL_TERMS_BY_INTENT = {
     # Normalize colloquial ways of asking about making an object into the
     # vocabulary used by published facts.
     "craft": ("工艺", "制作", "怎么做"),
+    "research_limit": ("研究争议", "未解", "不确定", "无定论"),
     "material": ("材质",),
     "usage": ("用途",),
     "history": ("公开名称", "登记"),
@@ -291,6 +307,10 @@ _COLLOQUIAL_INTENT_HINTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         ("从哪儿找到", "在哪里发现", "挖出来", "出土", "出徒", "出图"),
     ),
     ("craft", ("怎么弄出来", "怎么做出来", "制作手法", "如何加工", "怎么加工")),
+    (
+        "research_limit",
+        ("有什么争议", "还有哪些未解", "有没有定论", "哪里不确定"),
+    ),
     ("material", ("是什么材质", "是什么东西做的", "用的是什么料子", "什么原料", "什么材料")),
     ("usage", ("以前拿来做什么", "原本派什么用场", "是干嘛的", "做什么用", "有什么用")),
     ("era", ("大概是哪会儿", "距今多久", "属于哪个年代", "哪个时期", "什么年代")),

@@ -18,7 +18,8 @@ _DENSE_FACT_TYPES_BY_INTENT = {
     "dimensions": ("dimensions",),
     "excavation": ("excavation",),
     "era": ("era",),
-    "craft": ("craft", "research_limit"),
+    "craft": ("craft",),
+    "research_limit": ("research_limit",),
     "appearance": ("appearance",),
     "usage": ("usage",),
     "overview": ("history", "era", "material", "appearance", "excavation"),
@@ -31,6 +32,7 @@ _SEMANTIC_INTENT_PROTOTYPES = {
     "excavation": "展品在哪里出土、发现地点或考古地点",
     "era": "展品属于哪个年代、距今多久或哪个历史时期",
     "craft": "展品如何制作、加工工艺、制作方法或工艺过程",
+    "research_limit": "展品有哪些研究争议、未解问题、不同观点或尚无定论之处",
     "appearance": "展品的外形、样子、颜色和看起来的特征",
     "usage": "展品过去的用途、作用、用来做什么或怎么使用",
     "price": "展品的价格、售价、市场价值或卖了多少钱",
@@ -497,14 +499,13 @@ def _cosine_similarity(left, right) -> float:
 
 
 def _intent_for_fact_type(fact_type: str) -> str:
-    if fact_type == "research_limit":
-        return "craft"
     if fact_type in {
         "material",
         "dimensions",
         "excavation",
         "era",
         "craft",
+        "research_limit",
         "appearance",
         "usage",
         "price",

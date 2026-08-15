@@ -41,7 +41,10 @@
           "knowledge_status": "grounded",
           "fine_intent": "dimensions",
           "exhibit_id": "warring-states-crystal-cup",
-          "fact_ids": ["fact-crystal-cup-dimensions-r2"]
+          "fact_ids": [
+            "fact-crystal-cup-dimensions-interview-r2",
+            "fact-crystal-cup-dimensions-portal-r2"
+          ]
         }
       }]
     },

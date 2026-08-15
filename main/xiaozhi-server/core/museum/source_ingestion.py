@@ -72,6 +72,14 @@ class SourceManifest:
     museum_id: str
     museum_name: str
     sources: tuple[SourceManifestEntry, ...]
+    claim_support: tuple[SourceClaimBinding, ...] = ()
+
+
+@dataclass(frozen=True)
+class SourceClaimBinding:
+    fact_id: str
+    source_id: str
+    sections: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -199,6 +207,16 @@ def parse_source_manifest(
             )
         )
 
+    raw_claim_support = payload.get("claim_support")
+    claim_support: tuple[SourceClaimBinding, ...] = ()
+    if raw_claim_support is not None:
+        claim_support = _parse_claim_support(
+            raw_claim_support,
+            manifest_path=manifest_path,
+            source_ids={entry.id for entry in entries},
+            issues=issues,
+        )
+
     if issues:
         raise SourceManifestError(issues)
     return SourceManifest(
@@ -207,6 +225,7 @@ def parse_source_manifest(
         museum_id=museum_id,
         museum_name=museum_name,
         sources=tuple(entries),
+        claim_support=claim_support,
     )
 
 
@@ -311,10 +330,44 @@ def ingest_source_manifest(
                     segments,
                 )
             )
+        claim_support: list[tuple[str, str]] = []
+        segments_by_source = {
+            document.id: segments
+            for document, segments in publications
+        }
+        for binding in manifest.claim_support:
+            source_segments = segments_by_source[binding.source_id]
+            available_sections = {segment.section for segment in source_segments}
+            missing_sections = tuple(
+                section
+                for section in binding.sections
+                if section not in available_sections
+            )
+            if missing_sections:
+                missing = ", ".join(missing_sections)
+                raise ValueError(
+                    f"{binding.fact_id}: 来源 {binding.source_id} "
+                    f"缺少章节：{missing}"
+                )
+            matching = tuple(
+                segment
+                for segment in source_segments
+                if segment.section in binding.sections
+            )
+            if not matching:
+                expected = ", ".join(binding.sections)
+                raise ValueError(
+                    f"{binding.fact_id}: 来源 {binding.source_id} "
+                    f"没有匹配章节：{expected}"
+                )
+            claim_support.extend(
+                (binding.fact_id, segment.id) for segment in matching
+            )
         published = evidence_store.publish_source_batch(
             museum_id=manifest.museum_id,
             museum_name=manifest.museum_name,
             publications=publications,
+            claim_support=claim_support,
         )
         for entry, _source_path, _checksum, _source_version_id, _segments in prepared:
             source_ids.append(entry.id)
@@ -336,6 +389,57 @@ def ingest_source_manifest(
         segment_ids=tuple(segment_ids),
         errors=tuple(errors),
     )
+
+
+def _parse_claim_support(
+    value: Any,
+    *,
+    manifest_path: str | Path,
+    source_ids: set[str],
+    issues: list[str],
+) -> tuple[SourceClaimBinding, ...]:
+    if not isinstance(value, list):
+        issues.append(f"{manifest_path}: claim_support 必须是数组")
+        return ()
+    bindings: list[SourceClaimBinding] = []
+    seen: set[tuple[str, str, tuple[str, ...]]] = set()
+    for index, item in enumerate(value):
+        prefix = f"{manifest_path}: claim_support[{index}]"
+        if not isinstance(item, Mapping):
+            issues.append(f"{prefix} 必须是对象")
+            continue
+        fact_id = _required_id(item.get("fact_id"), f"{prefix}.fact_id", issues)
+        source_id = _required_id(
+            item.get("source_id"), f"{prefix}.source_id", issues
+        )
+        if source_id and source_id not in source_ids:
+            issues.append(f"{prefix}.source_id 不存在于 sources：{source_id}")
+        raw_sections = item.get("sections")
+        if not isinstance(raw_sections, list) or not raw_sections:
+            issues.append(f"{prefix}.sections 至少需要一项")
+            sections: tuple[str, ...] = ()
+        else:
+            sections = tuple(
+                dict.fromkeys(
+                    str(section).strip()
+                    for section in raw_sections
+                    if str(section).strip()
+                )
+            )
+            if not sections:
+                issues.append(f"{prefix}.sections 至少需要一项非空文本")
+        signature = (fact_id, source_id, sections)
+        if signature in seen:
+            issues.append(f"{prefix} 重复")
+        seen.add(signature)
+        bindings.append(
+            SourceClaimBinding(
+                fact_id=fact_id,
+                source_id=source_id,
+                sections=sections,
+            )
+        )
+    return tuple(bindings)
 
 
 def parse_source_file(

@@ -1,0 +1,177 @@
+schema_version: 1
+dataset_id: priority-liangzhu-jades-20260815
+museum:
+  id: liangzhu-museum
+  name: 良渚博物院
+sources:
+  - id: source-liangzhu-unesco-background
+    title: Archaeological Ruins of Liangzhu City
+    source_type: markdown
+    path: originals/liangzhu-unesco-background.md
+    locator: "https://whc.unesco.org/en/list/1592/"
+    rights_note: 仅保存遗产年代与价值说明的事实摘编和来源定位，不保存页面图片或整页转载。
+    publisher: UNESCO World Heritage Centre
+    accessed_at: '2026-08-15'
+    language: zh-CN
+    source_level: primary_public_source
+    rights_status: factual_digest_only
+    exhibit_ids: [liangzhu-jade-yue-set, liangzhu-jade-trident]
+    metadata:
+      capture_kind: project_factual_digest
+      original_language: en
+      source_role: period_and_social_context
+      dimensions: [年代背景]
+  - id: source-liangzhu-yue-m14-interview
+    title: 访谈︱杨楠：良渚遗址是“最早的中国”么？
+    source_type: markdown
+    path: originals/liangzhu-yue-m14-interview.md
+    locator: "https://m.thepaper.cn/newsDetail_forward_1464371"
+    rights_note: 仅保存考古人员公开访谈中的事实摘编和来源定位，不保存页面图片或整篇转载。
+    publisher: 澎湃新闻
+    published_date: '2016-05-26'
+    accessed_at: '2026-08-15'
+    language: zh-CN
+    source_level: primary_public_source
+    rights_status: factual_digest_only
+    exhibit_ids: [liangzhu-jade-yue-set]
+    metadata:
+      capture_kind: project_factual_digest
+      source_role: archaeological_interview
+      dimensions: [发现经过, 材料, 用途, 研究边界]
+  - id: source-liangzhu-yue-museum-overview
+    title: 玉钺
+    source_type: markdown
+    path: originals/liangzhu-yue-museum-overview.md
+    locator: "https://www.lzmuseum.cn/YuQi/201910913103.html"
+    rights_note: 仅保存馆方公开器物信息摘编和来源定位，不保存页面图片或整页转载。
+    publisher: 良渚博物院
+    accessed_at: '2026-08-15'
+    language: zh-CN
+    source_level: primary_public_source
+    rights_status: factual_digest_only
+    exhibit_ids: [liangzhu-jade-yue-set]
+    metadata:
+      capture_kind: project_factual_digest
+      source_role: official_collection_record
+      dimensions: [尺寸, 工艺]
+  - id: source-national-museum-liangzhu-yue
+    title: 玉钺
+    source_type: markdown
+    path: originals/national-museum-liangzhu-yue.md
+    locator: "https://www.chnmuseum.cn/zp/zpml/kgfjp/202104/t20210415_249734.shtml"
+    rights_note: 仅保存关于玉钺功能与权力象征的事实摘编和来源定位，不保存页面图片或整篇转载。
+    publisher: 中国国家博物馆
+    accessed_at: '2026-08-15'
+    language: zh-CN
+    source_level: secondary_public_source
+    rights_status: factual_digest_only
+    exhibit_ids: [liangzhu-jade-yue-set]
+    metadata:
+      capture_kind: project_factual_digest
+      source_role: comparative_museum_research
+      dimensions: [用途, 权力解释]
+  - id: source-liangzhu-trident-museum-record
+    title: 三叉形器
+    source_type: markdown
+    path: originals/liangzhu-trident-museum-record.md
+    locator: "https://www.lzmuseum.cn/YuQi/2019393530.html"
+    rights_note: 仅保存馆方公开器物信息摘编和来源定位，不保存页面图片或整页转载。
+    publisher: 良渚博物院
+    accessed_at: '2026-08-15'
+    language: zh-CN
+    source_level: primary_public_source
+    rights_status: factual_digest_only
+    exhibit_ids: [liangzhu-jade-trident]
+    metadata:
+      capture_kind: project_factual_digest
+      source_role: official_collection_record
+      dimensions: [材料, 尺寸, 工艺]
+  - id: source-liangzhu-trident-museum-study-2022
+    title: 秋意渐浓，玉通乾坤
+    source_type: markdown
+    path: originals/liangzhu-trident-museum-study-2022.md
+    locator: "https://www.lzmuseum.cn/LiangBoXinWen/2022713850713.html"
+    rights_note: 仅保存馆方研究性说明的事实摘编和来源定位，不保存页面图片或整篇转载。
+    publisher: 良渚博物院
+    published_date: '2022-09-23'
+    accessed_at: '2026-08-15'
+    language: zh-CN
+    source_level: primary_public_source
+    rights_status: factual_digest_only
+    exhibit_ids: [liangzhu-jade-trident]
+    metadata:
+      capture_kind: project_factual_digest
+      source_role: official_museum_interpretation
+      dimensions: [发现经过, 材料, 尺寸, 工艺, 用途, 装配, 研究边界]
+  - id: source-liangzhu-trident-reconstruction-discussion
+    title: 中华玉文化中心第八届年会暨第十届中国古代玉器与传统文化学术讨论会纪要（中）
+    source_type: markdown
+    path: originals/liangzhu-trident-reconstruction-discussion.md
+    locator: "https://www.lzmuseum.cn/LiangBoXinWen/2025754695754.html"
+    rights_note: 仅保存良渚博物院公开学术会议纪要中的研究观点摘编和来源定位，不保存页面图片或整篇转载；该来源用于记录解释更新，不单独承担确定性事实。
+    publisher: 良渚博物院
+    published_date: '2025-01-20'
+    accessed_at: '2026-08-15'
+    language: zh-CN
+    source_level: primary_public_source
+    rights_status: factual_digest_only
+    exhibit_ids: [liangzhu-jade-trident]
+    metadata:
+      capture_kind: project_factual_digest
+      source_role: official_symposium_interpretation_update
+      dimensions: [研究争议]
+claim_support:
+  - fact_id: fact-liangzhu-yue-era-r2
+    source_id: source-liangzhu-unesco-background
+    sections: [年代与社会背景]
+  - fact_id: fact-liangzhu-yue-excavation-r2
+    source_id: source-liangzhu-yue-m14-interview
+    sections: [发现与整理, 组合复原]
+  - fact_id: fact-liangzhu-yue-composition-r2
+    source_id: source-liangzhu-yue-m14-interview
+    sections: [组合复原]
+  - fact_id: fact-liangzhu-yue-dimensions-r2
+    source_id: source-liangzhu-yue-museum-overview
+    sections: [器物尺寸]
+  - fact_id: fact-liangzhu-yue-material-r2
+    source_id: source-liangzhu-yue-m14-interview
+    sections: [材质与保存]
+  - fact_id: fact-liangzhu-yue-craft-r2
+    source_id: source-liangzhu-yue-museum-overview
+    sections: [制作工艺]
+  - fact_id: fact-liangzhu-yue-usage-r2
+    source_id: source-national-museum-liangzhu-yue
+    sections: [用途与权力解释]
+  - fact_id: fact-liangzhu-yue-usage-r2
+    source_id: source-liangzhu-yue-m14-interview
+    sections: [用途解释]
+  - fact_id: fact-liangzhu-yue-research-limit-r2
+    source_id: source-liangzhu-yue-m14-interview
+    sections: [证据边界]
+  - fact_id: fact-liangzhu-trident-era-r2
+    source_id: source-liangzhu-unesco-background
+    sections: [年代与社会背景]
+  - fact_id: fact-liangzhu-trident-excavation-r2
+    source_id: source-liangzhu-trident-museum-study-2022
+    sections: [出土位置]
+  - fact_id: fact-liangzhu-trident-dimensions-r2
+    source_id: source-liangzhu-trident-museum-record
+    sections: [材料、尺寸与纹饰]
+  - fact_id: fact-liangzhu-trident-material-r2
+    source_id: source-liangzhu-trident-museum-record
+    sections: [材料、尺寸与纹饰]
+  - fact_id: fact-liangzhu-trident-craft-r2
+    source_id: source-liangzhu-trident-museum-record
+    sections: [材料、尺寸与纹饰]
+  - fact_id: fact-liangzhu-trident-craft-r2
+    source_id: source-liangzhu-trident-museum-study-2022
+    sections: [器物与装配]
+  - fact_id: fact-liangzhu-trident-usage-r2
+    source_id: source-liangzhu-trident-museum-study-2022
+    sections: [用途推定]
+  - fact_id: fact-liangzhu-trident-reconstruction-hairpin-r2
+    source_id: source-liangzhu-trident-museum-study-2022
+    sections: [研究边界]
+  - fact_id: fact-liangzhu-trident-reconstruction-headband-r2
+    source_id: source-liangzhu-trident-reconstruction-discussion
+    sections: [复原分歧]

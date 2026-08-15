@@ -354,11 +354,23 @@ _DEMO_FACTS = (
     ),
     (
         "fact-crystal-cup-craft-limit",
-        "research_limit",
-        "水晶硬度高、脆性大，开料、掏膛和抛光难度很高；它的具体原料来源及部分制作细节目前仍有未解之处。",
-        ["工艺", "制作", "怎么做", "掏膛", "抛光", "原料来源", "未解"],
+        "craft",
+        "水晶硬度高、脆性大，开料、掏膛和抛光难度很高。",
+        ["工艺", "制作", "怎么做", "开料", "掏膛", "抛光"],
         ("source-hangzhou-portal-2020", "source-people-daily-2026"),
     ),
+    (
+        "fact-crystal-cup-research-limit",
+        "research_limit",
+        "它的具体原料来源及部分制作细节目前仍有未解之处。",
+        ["研究争议", "争议", "未解", "未知", "定论", "原料来源", "制作细节"],
+        ("source-hangzhou-portal-2020", "source-people-daily-2026"),
+    ),
+)
+
+_LEGACY_COMBINED_CRAFT_STATEMENT = (
+    "水晶硬度高、脆性大，开料、掏膛和抛光难度很高；"
+    "它的具体原料来源及部分制作细节目前仍有未解之处。"
 )
 
 _TYPE_TERMS = {
@@ -368,7 +380,7 @@ _TYPE_TERMS = {
     "dimensions": ("尺寸", "多高", "多大", "口径", "底径"),
     "appearance": ("外形", "样子", "玻璃杯", "现代", "长什么", "为什么像"),
     "craft": ("工艺", "制作", "怎么做", "雕琢", "加工"),
-    "research_limit": ("工艺", "制作", "怎么做", "掏膛", "抛光", "原料来源"),
+    "research_limit": ("研究争议", "争议", "未解", "未知", "定论", "原料来源"),
     "price": ("多少钱", "价格", "售价", "卖了多少", "值多少钱", "市场价"),
     "history": ("公开名称", "登记", "藏品库", "展示名称"),
 }
@@ -754,7 +766,7 @@ class MuseumStore:
             )
             for fact_id, fact_type, statement, keywords, source_ids in _DEMO_FACTS:
                 keywords_json = json.dumps(keywords, ensure_ascii=False)
-                connection.execute(
+                inserted = connection.execute(
                     """
                     INSERT OR IGNORE INTO exhibit_fact(
                         id, revision_id, fact_type, statement,
@@ -769,11 +781,47 @@ class MuseumStore:
                         keywords_json,
                     ),
                 )
-                for source_id in source_ids:
-                    connection.execute(
-                        "INSERT OR IGNORE INTO fact_source(fact_id, source_id) VALUES (?, ?)",
-                        (fact_id, source_id),
+                changed = inserted.rowcount > 0
+                if fact_id == "fact-crystal-cup-craft-limit":
+                    migrated = connection.execute(
+                        """
+                        UPDATE exhibit_fact
+                        SET revision_id = ?, fact_type = ?, statement = ?,
+                            keywords_json = ?, confidence = 'reviewed-demo',
+                            certainty = 'confirmed'
+                        WHERE id = ?
+                          AND fact_type = 'research_limit'
+                          AND statement = ?
+                        """,
+                        (
+                            DEMO_REVISION_ID,
+                            fact_type,
+                            statement,
+                            keywords_json,
+                            fact_id,
+                            _LEGACY_COMBINED_CRAFT_STATEMENT,
+                        ),
                     )
+                    changed = changed or migrated.rowcount > 0
+                if changed:
+                    connection.execute(
+                        "DELETE FROM fact_source WHERE fact_id = ?",
+                        (fact_id,),
+                    )
+                    for source_id in source_ids:
+                        connection.execute(
+                            "INSERT INTO fact_source(fact_id, source_id) VALUES (?, ?)",
+                            (fact_id, source_id),
+                        )
+                persisted = connection.execute(
+                    """
+                    SELECT revision_id, fact_type, statement, keywords_json
+                    FROM exhibit_fact
+                    WHERE id = ?
+                    """,
+                    (fact_id,),
+                ).fetchone()
+                persisted_keywords = json.loads(str(persisted["keywords_json"]))
                 connection.execute(
                     "DELETE FROM exhibit_fact_fts WHERE fact_id = ?",
                     (fact_id,),
@@ -788,12 +836,12 @@ class MuseumStore:
                     (
                         fact_id,
                         DEMO_EXHIBIT_ID,
-                        DEMO_REVISION_ID,
+                        str(persisted["revision_id"]),
                         "战国水晶杯",
                         "水晶杯 战国时期水晶杯",
-                        fact_type,
-                        statement,
-                        " ".join(keywords),
+                        str(persisted["fact_type"]),
+                        str(persisted["statement"]),
+                        " ".join(str(value) for value in persisted_keywords),
                     ),
                 )
 
