@@ -73,9 +73,10 @@ def test_llm_json_contract_and_audit_metadata_are_persisted(tmp_path):
     )
 
     assert llm.calls[0]["kwargs"]["response_format"] == {"type": "json_object"}
+    assert llm.calls[0]["kwargs"]["max_tokens"] == 500
     assert outcome.audit_record["llm_invoked"] is True
     assert outcome.audit_record["llm_model"] == "deepseek-v4-flash"
-    assert outcome.audit_record["llm_prompt_version"] == "museum-grounded-router-v1"
+    assert outcome.audit_record["llm_prompt_version"] == "museum-grounded-guide-v2"
     assert outcome.audit_record["llm_result"] == "parsed"
     response_summary = json.loads(outcome.audit_record["llm_response_summary"])
     assert response_summary["status"] == "grounded"
@@ -89,7 +90,7 @@ def test_llm_json_contract_and_audit_metadata_are_persisted(tmp_path):
     assert trace is not None
     assert trace["llm_invoked"] == 1
     assert trace["llm_model"] == "deepseek-v4-flash"
-    assert trace["llm_prompt_version"] == "museum-grounded-router-v1"
+    assert trace["llm_prompt_version"] == "museum-grounded-guide-v2"
     assert trace["llm_result"] == "parsed"
     assert trace["llm_response_summary"] == outcome.audit_record[
         "llm_response_summary"
@@ -141,7 +142,100 @@ def test_detailed_overview_accepts_five_grounded_facts_from_llm(tmp_path):
 
     assert len(outcome.fact_ids) == 5
     assert outcome.audit_record["guard_result"] == "model_answer_accepted"
-    assert "最多5个" in llm.calls[0]["system_prompt"]
+    assert "不超过8个" in llm.calls[0]["system_prompt"]
+    assert llm.calls[0]["kwargs"]["max_tokens"] == 1200
+
+
+def test_default_overview_uses_guide_prompt_and_larger_token_budget(tmp_path):
+    runtime = create_conversation_runtime(
+        {
+            "business_runtime": {
+                "type": "museum",
+                "database_path": str(tmp_path / "museum.db"),
+                "seed_demo_content": True,
+                "exhibit_context_mode": "explicit",
+            }
+        }
+    )
+    llm = _JsonLlm(
+        json.dumps(
+            {
+                "status": "grounded",
+                "fact_ids": [
+                    "fact-crystal-cup-appearance",
+                    "fact-crystal-cup-era",
+                    "fact-crystal-cup-material",
+                    "fact-crystal-cup-dimensions",
+                    "fact-crystal-cup-excavation",
+                    "fact-crystal-cup-craft-limit",
+                ],
+                "social_intent": "",
+                "answer": (
+                    "现在看到的是战国水晶杯。"
+                    "可以先看它的外形：它器口微敞、杯壁斜直、圈足外撇，外形很像现代常见的玻璃杯。"
+                    "再看它的年代与材质：这件水晶杯经鉴定为战国中晚期遗物，已有两千多年历史。"
+                    "它由一整块天然水晶琢制而成。"
+                    "从尺寸信息看，它高15.4厘米，口径7.8厘米，底径5.4厘米。"
+                    "关于它的发现经过：它于1990年在杭州半山镇石塘村的战国墓葬中出土。"
+                    "最后看它的制作和仍待研究之处：水晶硬度高、脆性大，开料、掏膛和抛光难度很高；"
+                    "它的具体原料来源及部分制作细节目前仍有未解之处。"
+                ),
+            },
+            ensure_ascii=False,
+        )
+    )
+
+    outcome = runtime.handle_turn(
+        _request(
+            llm=llm,
+            request_id="llm-contract-guided-overview",
+            text="介绍一下战国水晶杯",
+        )
+    )
+
+    assert outcome.audit_record["guard_result"] == "model_answer_accepted"
+    assert len(outcome.fact_ids) == 6
+    assert llm.calls[0]["kwargs"]["max_tokens"] == 900
+    assert "回答档位：guided" in llm.calls[0]["user_prompt"]
+
+
+def test_guided_narration_still_rejects_unsupported_history(tmp_path):
+    runtime = create_conversation_runtime(
+        {
+            "business_runtime": {
+                "type": "museum",
+                "database_path": str(tmp_path / "museum.db"),
+                "seed_demo_content": True,
+                "exhibit_context_mode": "explicit",
+            }
+        }
+    )
+    llm = _JsonLlm(
+        json.dumps(
+            {
+                "status": "grounded",
+                "fact_ids": ["fact-crystal-cup-material"],
+                "social_intent": "",
+                "answer": (
+                    "现在看到的是战国水晶杯。"
+                    "它由一整块天然水晶琢制而成，是战国王室祭祀专用器物。"
+                ),
+            },
+            ensure_ascii=False,
+        )
+    )
+
+    outcome = runtime.handle_turn(
+        _request(
+            llm=llm,
+            request_id="llm-contract-guided-rejects-history",
+            text="介绍一下战国水晶杯",
+        )
+    )
+
+    assert outcome.audit_record["guard_result"] == "model_answer_unsupported_claim"
+    assert "王室祭祀" not in outcome.spoken_text
+    assert "现在看到的是战国水晶杯" in outcome.spoken_text
 
 
 def test_llm_rejection_or_invalid_response_cannot_override_retrieved_evidence(

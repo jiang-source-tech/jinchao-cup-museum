@@ -11,8 +11,8 @@ from core.museum.contracts import EvidencePack, EvidenceSnapshot
 from core.museum.query_understanding import QuestionUnderstanding
 
 
-MUSEUM_LLM_PROMPT_VERSION = "museum-grounded-router-v1"
-MUSEUM_EVIDENCE_LLM_PROMPT_VERSION = "museum-evidence-router-v1"
+MUSEUM_LLM_PROMPT_VERSION = "museum-grounded-guide-v2"
+MUSEUM_EVIDENCE_LLM_PROMPT_VERSION = "museum-evidence-guide-v2"
 _VALID_STATUSES = {
     "grounded",
     "partial",
@@ -92,6 +92,7 @@ def decide_with_museum_llm(
             session_id=session_id,
             system_prompt=system_prompt,
             user_prompt=user_prompt,
+            max_tokens=_response_token_budget(understanding.answer_depth),
         )
     except Exception as exc:
         return MuseumLlmCall(
@@ -113,8 +114,8 @@ def decide_with_museum_llm(
 
     decision = parse_museum_llm_decision(
         raw_decision,
-        max_fact_ids=5 if understanding.answer_depth == "detailed" else 3,
-        max_evidence_ids=8 if understanding.answer_depth == "detailed" else 5,
+        max_fact_ids=_fact_limit(understanding.answer_depth),
+        max_evidence_ids=_evidence_limit(understanding.answer_depth),
         require_evidence=isinstance(candidates, EvidencePack),
     )
     result = "parsed" if decision is not None else "invalid_response"
@@ -137,6 +138,30 @@ def _duration_ms(started: float) -> int:
     return max(0, round((perf_counter() - started) * 1000))
 
 
+def _fact_limit(answer_depth: str) -> int:
+    return {
+        "brief": 1,
+        "guided": 6,
+        "detailed": 8,
+    }.get(answer_depth, 3)
+
+
+def _evidence_limit(answer_depth: str) -> int:
+    return {
+        "brief": 2,
+        "guided": 10,
+        "detailed": 12,
+    }.get(answer_depth, 5)
+
+
+def _response_token_budget(answer_depth: str) -> int:
+    return {
+        "brief": 300,
+        "guided": 900,
+        "detailed": 1200,
+    }.get(answer_depth, 500)
+
+
 def build_museum_llm_prompts(
     *,
     exhibit_name: str,
@@ -157,13 +182,39 @@ def build_museum_llm_prompts(
         list(history[-4:]) if history else [],
         ensure_ascii=False,
     )
+    answer_depth = understanding.answer_depth
+    if answer_depth == "brief":
+        expression_contract = "answer用中文回答1句，最多不超过2句，不展开旁支信息。"
+        narration_contract = "直接回答游客问题。"
+    elif answer_depth == "guided":
+        expression_contract = (
+            "answer通常回答5至9句，资料充足时以约240至520个中文字符为目标；"
+            "资料稀少时宁可缩短，也不能重复或补写。"
+        )
+        narration_contract = (
+            "answer要像现场讲解员而不是资料表：先点明展品，再引导游客观察外形，"
+            "随后按证据自然串联年代、材质、尺寸、发现经过、用途、制作或研究现状，"
+            "最后用一句有收束作用但不增加新事实的话结束。"
+            "不要使用“年代：”“材质：”这类逐项标签，不要连续照抄原文。"
+        )
+    elif answer_depth == "detailed":
+        expression_contract = (
+            "answer通常回答8至12句，资料充足时以约400至800个中文字符为目标；"
+            "资料稀少时宁可缩短，也不能重复、扩写常识或虚构故事。"
+        )
+        narration_contract = (
+            "answer要形成完整的现场讲解：先点明展品和观察入口，再按证据展开外形、"
+            "年代、材质、尺寸、发现经过、用途、制作与研究现状，最后明确仍未解决的问题。"
+            "各部分使用自然过渡，不要写成字段清单，不要为了篇幅重复同一事实。"
+        )
+    else:
+        expression_contract = "answer用中文回答1至4句，只覆盖问题直接需要的事实。"
+        narration_contract = "直接、自然地回答游客提出的具体问题。"
+
     if evidence_mode:
         grounded_contract = (
-            "详细讲解模式下最多选择8个evidence_ids，并为每条事实性声明填写claims及其引用，"
-            "answer用中文回答4至8句；"
-            if understanding.answer_depth == "detailed"
-            else "普通模式最多选择5个evidence_ids，并为每条事实性声明填写claims及其引用，"
-            "answer用中文回答1至4句。"
+            f"最多选择{_evidence_limit(answer_depth)}个evidence_ids，"
+            "并为answer中的每条事实性声明填写claims及其引用。"
         )
         fields_contract = (
             "JSON字段必须包含status、evidence_ids、claims、fact_ids、social_intent、answer。"
@@ -173,16 +224,18 @@ def build_museum_llm_prompts(
         )
     else:
         grounded_contract = (
-            "详细讲解模式下选择覆盖主要方面的事实，最多5个，answer用中文回答4至8句；"
-            "普通模式选择最少且不超过3个给定事实ID，answer用中文回答1至4句。"
-            if understanding.answer_depth == "detailed"
-            else "fact_ids选择最少且不超过3个给定事实ID，answer用中文回答1至4句。"
+            f"选择直接支撑回答且不超过{_fact_limit(answer_depth)}个给定fact_ids。"
         )
         fields_contract = "JSON字段必须包含status、fact_ids、social_intent、answer。"
         status_contract = "status只能是grounded、unsupported、conversational之一。"
     evidence_status_rules = (
         "partial表示只有部分问题能由证据回答；conflicting表示证据之间存在冲突，"
         "必须在claims中保留冲突涉及的引用，不得自行选边。"
+        if evidence_mode
+        else ""
+    )
+    claim_contract = (
+        "claims只填写可由引用核验的事实，不要把“先看外形”等讲解过渡语写成claim。"
         if evidence_mode
         else ""
     )
@@ -194,8 +247,12 @@ def build_museum_llm_prompts(
         + status_contract
         + "grounded表示一个或多个给定事实可以直接回答问题；"
         + grounded_contract
+        + expression_contract
+        + narration_contract
         +
         "如果游客要求一句话、简短说明或讲给小朋友听，必须遵守该表达要求，"
+        + claim_contract
+        +
         "不得增加事实之外的数字、人物、地点、年代、因果、用途或传说。"
         + evidence_status_rules
         + "unsupported表示给定证据不能直接回答，fact_ids和evidence_ids必须是空数组，"
@@ -210,6 +267,7 @@ def build_museum_llm_prompts(
         f"当前展品：{exhibit_name}\n"
         f"问题粗分类：{understanding.coarse_intent}\n"
         f"问题细分类：{understanding.fine_intent}\n"
+        f"回答档位：{answer_depth}\n"
         f"最近对话：{recent_history}\n"
         f"游客本轮输入：{question}\n"
         "回答表达：优先遵守游客对篇幅、受众和通俗程度的明确要求。\n"
@@ -377,27 +435,27 @@ def _invoke_json_response(
     session_id: str,
     system_prompt: str,
     user_prompt: str,
+    max_tokens: int,
 ) -> Any:
     response_no_stream = getattr(llm, "response_no_stream", None)
     if callable(response_no_stream):
+        kwargs: dict[str, Any] = {}
         if _accepts_keyword(response_no_stream, "response_format"):
-            return response_no_stream(
-                system_prompt,
-                user_prompt,
-                response_format={"type": "json_object"},
-            )
-        return response_no_stream(system_prompt, user_prompt)
+            kwargs["response_format"] = {"type": "json_object"}
+        if _accepts_keyword(response_no_stream, "max_tokens"):
+            kwargs["max_tokens"] = max_tokens
+        return response_no_stream(system_prompt, user_prompt, **kwargs)
 
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
     ]
     response = getattr(llm, "response")
-    kwargs = (
-        {"response_format": {"type": "json_object"}}
-        if _accepts_keyword(response, "response_format")
-        else {}
-    )
+    kwargs: dict[str, Any] = {}
+    if _accepts_keyword(response, "response_format"):
+        kwargs["response_format"] = {"type": "json_object"}
+    if _accepts_keyword(response, "max_tokens"):
+        kwargs["max_tokens"] = max_tokens
     return "".join(str(part) for part in response(session_id, messages, **kwargs))
 
 

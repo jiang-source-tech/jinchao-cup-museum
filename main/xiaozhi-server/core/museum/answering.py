@@ -33,6 +33,19 @@ from core.museum.retrieval import (
 )
 
 
+_GUIDE_FACT_TYPES = (
+    "history",
+    "era",
+    "material",
+    "appearance",
+    "excavation",
+    "dimensions",
+    "craft",
+    "research_limit",
+    "usage",
+)
+
+
 class GroundedAnswerService:
     def __init__(
         self,
@@ -98,9 +111,13 @@ class GroundedAnswerService:
             )
 
         retrieval_started = perf_counter()
-        detailed_overview = (
-            understanding.answer_depth == "detailed"
+        narrated_overview = (
+            understanding.answer_depth in {"guided", "detailed"}
             and understanding.fine_intent == "overview"
+        )
+        retrieval_limit = _retrieval_limit(
+            understanding.answer_depth,
+            evidence_mode=False,
         )
         semantic_fallback = (
             understanding.fine_intent == "unknown"
@@ -109,7 +126,7 @@ class GroundedAnswerService:
         retrieval = self._retriever.retrieve(RetrievalRequest(
             exhibit_id=exhibit_id,
             question=question,
-            limit=5 if detailed_overview else 3,
+            limit=retrieval_limit,
             fact_types=understanding.fact_types or (),
             query_terms=understanding.query_terms,
             overview=understanding.fine_intent == "overview",
@@ -122,18 +139,8 @@ class GroundedAnswerService:
                 and "price" not in understanding.fact_types
             ),
             dense_fact_types=(
-                (
-                    "history",
-                    "era",
-                    "material",
-                    "appearance",
-                    "excavation",
-                    "dimensions",
-                    "craft",
-                    "research_limit",
-                    "usage",
-                )
-                if detailed_overview
+                _GUIDE_FACT_TYPES
+                if narrated_overview
                 else dense_fact_types_for_intent(
                     understanding.fine_intent,
                     understanding.fact_types,
@@ -150,7 +157,7 @@ class GroundedAnswerService:
         retrieved_evidence = retrieval.evidence
         retrieval_trace = retrieval.diagnostics.as_dict()
         retrieval_trace["answer_depth"] = understanding.answer_depth
-        retrieval_trace["retrieval_limit"] = 5 if detailed_overview else 3
+        retrieval_trace["retrieval_limit"] = retrieval_limit
         if (
             understanding.fine_intent == "unknown"
             or retrieval_trace.get("semantic_override")
@@ -263,14 +270,15 @@ class GroundedAnswerService:
         deterministic_answer = self._compose_grounded_answer(
             evidence,
             exhibit_name=exhibit_name,
-            detailed=detailed_overview,
+            answer_depth=understanding.answer_depth,
         )
         spoken_text = deterministic_answer
         if decision is not None and decision.status == "grounded":
             rejection_reason = _grounded_paraphrase_failure_reason(
                 decision.answer,
                 "".join(fact.statement for fact in evidence.facts),
-                detailed=detailed_overview,
+                answer_depth=understanding.answer_depth,
+                exhibit_name=exhibit_name,
             )
             if rejection_reason is None:
                 spoken_text = decision.answer
@@ -304,16 +312,20 @@ class GroundedAnswerService:
         query_id: str,
     ) -> AnswerResult:
         retrieval_started = perf_counter()
-        detailed = (
-            understanding.answer_depth == "detailed"
+        narrated_overview = (
+            understanding.answer_depth in {"guided", "detailed"}
             and understanding.fine_intent == "overview"
+        )
+        retrieval_limit = _retrieval_limit(
+            understanding.answer_depth,
+            evidence_mode=True,
         )
         pack = self._evidence_search.search(
             EvidenceSearchRequest(
                 question=question,
                 exhibit_ids=(exhibit_id,),
                 fact_types=understanding.fact_types or (),
-                limit=8 if detailed else 5,
+                limit=retrieval_limit,
                 query_id=query_id,
             )
         )
@@ -321,7 +333,7 @@ class GroundedAnswerService:
         retrieval_trace = dict(pack.retrieval_trace)
         retrieval_trace["backend"] = "evidence_segments"
         retrieval_trace["answer_depth"] = understanding.answer_depth
-        retrieval_trace["retrieval_limit"] = 8 if detailed else 5
+        retrieval_trace["retrieval_limit"] = retrieval_limit
         composition_started = perf_counter()
 
         llm_call = MuseumLlmCall.not_called()
@@ -398,7 +410,8 @@ class GroundedAnswerService:
         deterministic_ids = (
             _lexically_supported_evidence_ids(
                 pack,
-                detailed=detailed,
+                answer_depth=understanding.answer_depth,
+                overview=narrated_overview,
                 allowed_evidence_ids={
                     evidence_id
                     for claim in pack.claims
@@ -422,7 +435,7 @@ class GroundedAnswerService:
         deterministic_answer = self._compose_segment_answer(
             pack,
             exhibit_name=exhibit_name,
-            detailed=detailed,
+            answer_depth=understanding.answer_depth,
             evidence_ids=deterministic_ids,
         )
         spoken_text = ""
@@ -442,7 +455,8 @@ class GroundedAnswerService:
             rejection_reason = _validate_evidence_decision(
                 decision,
                 pack,
-                detailed=detailed,
+                answer_depth=understanding.answer_depth,
+                exhibit_name=exhibit_name,
             )
             if rejection_reason is None:
                 spoken_text = decision.answer
@@ -504,53 +518,44 @@ class GroundedAnswerService:
         evidence: EvidenceSnapshot,
         *,
         exhibit_name: str = "",
-        detailed: bool = False,
+        answer_depth: str = "standard",
     ) -> str:
-        if not detailed:
+        if answer_depth not in {"guided", "detailed"}:
             return "".join(fact.statement for fact in evidence.facts)
-        labels = {
-            "history": "登记信息",
-            "era": "年代",
-            "material": "材质",
-            "appearance": "外形",
-            "excavation": "出土信息",
-            "dimensions": "尺寸",
-            "craft": "制作工艺",
-            "research_limit": "研究现状",
-            "usage": "用途",
-        }
-        ordered_facts = sorted(
-            enumerate(evidence.facts),
-            key=lambda item: (
-                tuple(labels).index(item[1].fact_type)
-                if item[1].fact_type in labels
-                else len(labels),
-                item[0],
+        return _compose_guide_narrative(
+            exhibit_name,
+            tuple(
+                (fact.fact_type, fact.statement)
+                for fact in evidence.facts
             ),
         )
-        prefix = (
-            f"关于{exhibit_name}，可以从几个方面了解。"
-            if exhibit_name
-            else "这件展品可以从几个方面了解。"
-        )
-        details = "".join(
-            f"{labels.get(fact.fact_type, '补充信息')}：{fact.statement}"
-            for _index, fact in ordered_facts
-        )
-        return prefix + details
 
     @staticmethod
     def _compose_segment_answer(
         evidence: EvidencePack,
         *,
         exhibit_name: str = "",
-        detailed: bool = False,
+        answer_depth: str = "standard",
         evidence_ids: tuple[str, ...] = (),
     ) -> str:
+        allowed_ids = set(evidence_ids)
+        claims = tuple(
+            (claim.fact_type, claim.statement)
+            for claim in evidence.claims
+            if allowed_ids.intersection(claim.supporting_evidence_ids)
+        )
+        if claims:
+            if answer_depth in {"guided", "detailed"}:
+                return _compose_guide_narrative(exhibit_name, claims)
+            return "".join(statement for _fact_type, statement in claims)
+
         texts: list[str] = []
         seen: set[str] = set()
-        allowed_ids = set(evidence_ids)
-        max_items = 5 if detailed else 2
+        max_items = {
+            "brief": 1,
+            "guided": 6,
+            "detailed": 8,
+        }.get(answer_depth, 2)
         for item in evidence.items:
             if allowed_ids and item.id not in allowed_ids:
                 continue
@@ -565,8 +570,75 @@ class GroundedAnswerService:
                 break
         if not texts:
             return ""
-        prefix = f"关于{exhibit_name}，演示资料显示：" if exhibit_name else "演示资料显示："
+        prefix = f"关于{exhibit_name}，现有资料显示：" if exhibit_name else "现有资料显示："
         return prefix + " ".join(texts)
+
+
+def _retrieval_limit(answer_depth: str, *, evidence_mode: bool) -> int:
+    if evidence_mode:
+        return {
+            "brief": 2,
+            "guided": 10,
+            "detailed": 12,
+        }.get(answer_depth, 5)
+    return {
+        "brief": 1,
+        "guided": 6,
+        "detailed": 8,
+    }.get(answer_depth, 3)
+
+
+def _compose_guide_narrative(
+    exhibit_name: str,
+    facts: tuple[tuple[str, str], ...],
+) -> str:
+    unique_facts: list[tuple[str, str]] = []
+    seen_statements: set[str] = set()
+    for fact_type, statement in facts:
+        normalized = statement.strip()
+        if not normalized or normalized in seen_statements:
+            continue
+        seen_statements.add(normalized)
+        unique_facts.append((fact_type, normalized))
+    if not unique_facts:
+        return ""
+
+    groups = (
+        (("appearance",), "可以先看它的外形"),
+        (("era", "material"), "再看它的年代与材质"),
+        (("dimensions",), "从尺寸信息看"),
+        (("excavation",), "关于它的发现经过"),
+        (("history",), "公开记录还提供了这条信息"),
+        (("usage",), "关于它的用途"),
+        (("craft", "research_limit"), "最后看它的制作和仍待研究之处"),
+    )
+    parts = [
+        f"现在看到的是{exhibit_name}。"
+        if exhibit_name
+        else "现在来看这件展品。"
+    ]
+    used_indexes: set[int] = set()
+    for fact_types, lead in groups:
+        statements: list[str] = []
+        for index, (fact_type, statement) in enumerate(unique_facts):
+            if fact_type not in fact_types or index in used_indexes:
+                continue
+            used_indexes.add(index)
+            statements.append(statement)
+        if statements:
+            parts.append(f"{lead}：{''.join(statements)}")
+
+    remaining = [
+        statement
+        for index, (_fact_type, statement) in enumerate(unique_facts)
+        if index not in used_indexes
+    ]
+    if remaining:
+        parts.append(f"还有一些补充信息：{''.join(remaining)}")
+    if len(unique_facts) >= 3:
+        parts.append("把这些信息放在一起，这件展品的基本面貌就更清楚了。")
+    return "".join(parts)
+
 
 def _duration_ms(started: float) -> int:
     return max(0, round((perf_counter() - started) * 1000))
@@ -586,11 +658,23 @@ def _llm_answer_fields(llm_call: MuseumLlmCall) -> dict[str, object]:
 def _lexically_supported_evidence_ids(
     pack: EvidencePack,
     *,
-    detailed: bool,
+    answer_depth: str,
+    overview: bool,
     allowed_evidence_ids: set[str],
 ) -> tuple[str, ...]:
     if not allowed_evidence_ids:
         return ()
+    limit = {
+        "brief": 1,
+        "guided": 6,
+        "detailed": 8,
+    }.get(answer_depth, 2)
+    if overview:
+        return tuple(
+            item.id
+            for item in pack.items
+            if item.id in allowed_evidence_ids
+        )[:limit]
     raw_candidates = pack.retrieval_trace.get("lexical_candidates", ())
     lexical_ids = {
         str(candidate.get("segment_id", ""))
@@ -599,7 +683,6 @@ def _lexically_supported_evidence_ids(
         and candidate.get("segment_id")
         and float(candidate.get("score", 0.0) or 0.0) >= 1.0
     }
-    limit = 5 if detailed else 2
     return tuple(
         item.id
         for item in pack.items
@@ -666,7 +749,8 @@ def _validate_evidence_decision(
     decision: MuseumLlmDecision,
     pack: EvidencePack,
     *,
-    detailed: bool,
+    answer_depth: str,
+    exhibit_name: str,
 ) -> str | None:
     allowed_ids = set(pack.evidence_ids)
     selected_ids = set(decision.evidence_ids)
@@ -743,13 +827,16 @@ def _validate_evidence_decision(
     answer_reason = _grounded_paraphrase_failure_reason(
         decision.answer,
         evidence_text,
-        detailed=detailed,
+        answer_depth=answer_depth,
+        exhibit_name=exhibit_name,
     )
     if answer_reason is not None:
         return answer_reason
     claim_coverage_reason = _answer_claim_coverage_failure_reason(
         decision.answer,
         tuple(claim.text for claim in decision.claims),
+        answer_depth=answer_depth,
+        exhibit_name=exhibit_name,
     )
     if claim_coverage_reason is not None:
         return claim_coverage_reason
@@ -981,6 +1068,9 @@ def _discloses_conflict(value: str) -> bool:
 def _answer_claim_coverage_failure_reason(
     answer: str,
     claim_texts: tuple[str, ...],
+    *,
+    answer_depth: str = "standard",
+    exhibit_name: str = "",
 ) -> str | None:
     claim_text = "。".join(claim_texts)
     if not _number_tokens(answer).issubset(_number_tokens(claim_text)):
@@ -999,17 +1089,25 @@ def _answer_claim_coverage_failure_reason(
     for clause in _claim_clauses(answer):
         if _is_conflict_disclosure_clause(clause):
             continue
-        clause_pairs = _cjk_pairs(clause)
+        grounded_clause = clause
+        if answer_depth in {"guided", "detailed"}:
+            grounded_clause = _without_guide_scaffolding(
+                clause,
+                exhibit_name=exhibit_name,
+            )
+            if not grounded_clause:
+                continue
+        clause_pairs = _cjk_pairs(grounded_clause)
         if clause_pairs:
             covered = len(clause_pairs & claim_pairs) / len(clause_pairs)
             if covered < 0.6:
                 return "model_answer_claim_coverage_rejected"
-        clause_content_tokens = _conflict_content_tokens(clause)
+        clause_content_tokens = _conflict_content_tokens(grounded_clause)
         if clause_content_tokens:
             covered = len(clause_content_tokens & _conflict_content_tokens(claim_text))
             if covered / len(clause_content_tokens) < 0.6:
                 return "model_answer_claim_coverage_rejected"
-        clause_tokens = set(re.findall(r"[A-Za-z0-9]+", clause.casefold()))
+        clause_tokens = set(re.findall(r"[A-Za-z0-9]+", grounded_clause.casefold()))
         if clause_tokens and not clause_tokens.issubset(claim_tokens):
             return "model_answer_claim_coverage_rejected"
     return None
@@ -1197,9 +1295,15 @@ def _grounded_paraphrase_failure_reason(
     answer: str,
     evidence_text: str,
     *,
-    detailed: bool = False,
+    answer_depth: str = "standard",
+    exhibit_name: str = "",
 ) -> str | None:
-    if len(answer) > (480 if detailed else 220):
+    max_characters, max_sentences = {
+        "brief": (180, 2),
+        "guided": (650, 10),
+        "detailed": (900, 14),
+    }.get(answer_depth, (260, 4))
+    if len(answer) > max_characters:
         return "model_answer_too_long"
     if not _number_tokens(answer).issubset(_number_tokens(evidence_text)):
         return "model_answer_extra_number"
@@ -1218,16 +1322,72 @@ def _grounded_paraphrase_failure_reason(
         for sentence in re.split(r"[。！？!?；;\n]+", answer)
         if sentence.strip()
     ]
-    if not 1 <= len(sentences) <= (8 if detailed else 4):
+    if not 1 <= len(sentences) <= max_sentences:
         return "model_answer_shape_rejected"
     for sentence in sentences:
-        pairs = _cjk_pairs(sentence)
+        grounded_sentence = sentence
+        if answer_depth in {"guided", "detailed"}:
+            grounded_sentence = _without_guide_scaffolding(
+                sentence,
+                exhibit_name=exhibit_name,
+            )
+            if not grounded_sentence:
+                continue
+        pairs = _cjk_pairs(grounded_sentence)
         if not pairs:
             return "model_answer_shape_rejected"
         covered = sum(pair in evidence_pairs for pair in pairs)
         if covered / len(pairs) < 0.6:
             return "model_answer_unsupported_claim"
     return None
+
+
+def _is_guide_scaffolding(value: str, *, exhibit_name: str = "") -> bool:
+    normalized = re.sub(r"[\s，。！？、；：,.!?;:]", "", value)
+    if not normalized:
+        return False
+    normalized_exhibit = re.sub(r"\s+", "", exhibit_name)
+    if normalized_exhibit and normalized in {
+        f"现在看到的是{normalized_exhibit}",
+        f"现在来看{normalized_exhibit}",
+        f"我们现在看到的是{normalized_exhibit}",
+    }:
+        return True
+    if normalized in {
+        "现在来看这件展品",
+        "可以先看它的外形",
+        "再看它的年代与材质",
+        "从尺寸信息看",
+        "关于它的发现经过",
+        "公开记录还提供了这条信息",
+        "关于它的用途",
+        "最后看它的制作和仍待研究之处",
+        "还有一些补充信息",
+        "把这些信息放在一起",
+        "将这些信息放在一起",
+        "讲到这里",
+    }:
+        return True
+    return bool(
+        re.fullmatch(
+            r"(?:我们|可以)?(?:先|再|接着|然后|最后)?(?:来)?"
+            r"(?:看|看看|看一看|说说|讲讲|注意|观察)"
+            r"(?:这件展品|这件器物|它)?(?:的)?"
+            r"(?:外形|年代|材质|尺寸|出土信息|发现经过|制作工艺|"
+            r"制作问题|用途|未解问题|基本信息)",
+            normalized,
+        )
+    )
+
+
+def _without_guide_scaffolding(value: str, *, exhibit_name: str = "") -> str:
+    if _is_guide_scaffolding(value, exhibit_name=exhibit_name):
+        return ""
+    for separator in ("：", ":", "，", ","):
+        prefix, matched, remainder = value.partition(separator)
+        if matched and _is_guide_scaffolding(prefix, exhibit_name=exhibit_name):
+            return remainder.strip()
+    return value
 
 
 def _cjk_pairs(text: str) -> set[str]:

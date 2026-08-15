@@ -72,6 +72,7 @@ def test_open_ended_exhibit_questions_map_to_overview():
 
         assert result.coarse_intent == "exhibit_knowledge"
         assert result.fine_intent == "overview"
+        assert result.answer_depth == "guided"
 
 
 def test_detailed_explanation_request_sets_detailed_answer_depth():

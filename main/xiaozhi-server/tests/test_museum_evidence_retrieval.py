@@ -138,6 +138,49 @@ def test_evidence_search_returns_traceable_segments_and_claims(tmp_path: Path):
     )
 
 
+def test_evidence_backed_overview_uses_guided_claim_fallback(tmp_path: Path):
+    store, report = _setup(tmp_path)
+    supporting_segment = report.segment_ids[0]
+    with store.connection() as connection:
+        connection.execute(
+            "INSERT OR IGNORE INTO knowledge_claim_support(fact_id, segment_id) "
+            "VALUES (?, ?)",
+            ("fact-crystal-cup-material", supporting_segment),
+        )
+    service = EvidenceSearchService(
+        store=store,
+        embedder=FakeEmbedder(),
+        index=FakeIndex(
+            (
+                DenseEvidenceHit(
+                    segment_id=supporting_segment,
+                    score=0.98,
+                    payload={
+                        "segment_id": supporting_segment,
+                        "source_id": "retrieval-source",
+                    },
+                ),
+            )
+        ),
+    )
+
+    answer = GroundedAnswerService(
+        store,
+        evidence_search=service,
+    ).answer(
+        exhibit_id=DEMO_EXHIBIT_ID,
+        exhibit_name="战国水晶杯",
+        question="介绍一下战国水晶杯",
+    )
+
+    assert answer.knowledge_status == "grounded"
+    assert answer.spoken_text.startswith("现在看到的是战国水晶杯")
+    assert "一整块天然水晶" in answer.spoken_text
+    assert answer.cited_evidence_ids == (supporting_segment,)
+    assert answer.retrieval_trace["answer_depth"] == "guided"
+    assert answer.retrieval_trace["retrieval_limit"] == 10
+
+
 def test_evidence_search_falls_back_to_lexical_when_dense_fails(tmp_path: Path):
     store, report = _setup(tmp_path)
 

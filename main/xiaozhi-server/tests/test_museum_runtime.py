@@ -109,6 +109,11 @@ def test_published_fact_produces_grounded_answer_and_trace(tmp_path):
     overview = runtime.handle_turn(_request(text="水晶杯有什么特点？"))
     assert overview.audit_record["knowledge_status"] == "grounded"
     assert "玻璃杯" in overview.spoken_text
+    assert len(overview.fact_ids) == 6
+    assert len(overview.spoken_text) >= 220
+    assert "现在看到的是战国水晶杯" in overview.spoken_text
+    assert overview.audit_record["retrieval_trace"]["answer_depth"] == "guided"
+    assert overview.audit_record["retrieval_trace"]["retrieval_limit"] == 6
 
     class HallucinatingLLM:
         def response_no_stream(self, *_args):
@@ -192,8 +197,9 @@ def test_detailed_overview_uses_multiple_facts_without_requiring_llm(tmp_path):
     assert "1990年" in outcome.spoken_text
     assert "玻璃杯" in outcome.spoken_text
     assert len(outcome.spoken_text) >= 100
+    assert "现在看到的是战国水晶杯" in outcome.spoken_text
     assert outcome.audit_record["retrieval_trace"]["answer_depth"] == "detailed"
-    assert outcome.audit_record["retrieval_trace"]["retrieval_limit"] == 5
+    assert outcome.audit_record["retrieval_trace"]["retrieval_limit"] == 8
 
 
 def test_llm_cannot_use_an_era_fact_to_answer_a_price_question(tmp_path):
@@ -462,6 +468,7 @@ def test_one_sentence_child_friendly_request_accepts_grounded_paraphrase(tmp_pat
     assert follow_up.audit_record["resolution_status"] == "inherited"
     assert follow_up.spoken_text == "这只杯子由一整块天然水晶琢制而成。"
     assert follow_up.audit_record["guard_result"] == "model_answer_accepted"
+    assert follow_up.audit_record["retrieval_trace"]["answer_depth"] == "brief"
 
 
 def test_missing_current_exhibit_is_handled_without_legacy_or_llm_fallback(tmp_path):

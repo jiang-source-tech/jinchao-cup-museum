@@ -151,7 +151,7 @@ def test_evidence_answer_requires_valid_claim_citations(tmp_path: Path):
     assert answer.evidence_pack.evidence_ids == (segment_id,)
     assert answer.cited_evidence_ids == (segment_id,)
     assert answer.guard_result == "model_answer_accepted"
-    assert answer.llm_prompt_version == "museum-evidence-router-v1"
+    assert answer.llm_prompt_version == "museum-evidence-guide-v2"
     assert "EVIDENCE" in llm.calls[0]["user"]
 
     invalid_llm = _JsonLlm(
@@ -211,7 +211,7 @@ def test_evidence_answer_requires_valid_claim_citations(tmp_path: Path):
         question="这件展品是什么材质？",
         llm=negated_llm,
     )
-    assert "由天然水晶制成" in negated.spoken_text
+    assert "一整块天然水晶" in negated.spoken_text
     assert "不是由天然水晶制成" not in negated.spoken_text
     assert negated.guard_result == "model_claim_negation_mismatch"
 
