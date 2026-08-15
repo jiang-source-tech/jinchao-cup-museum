@@ -1,0 +1,54 @@
+schema_version: 1
+dataset_id: museum-demo-pilot-001
+museum:
+  id: hangzhou-museum-demo
+  name: 杭州博物馆（演示数据）
+sources:
+  - id: demo-crystal-cup-pdf
+    title: 战国水晶杯 PDF 演示摘录
+    source_type: pdf
+    path: originals/crystal-cup-catalog.pdf
+    locator: demo://museum-demo/crystal-cup-catalog-pdf
+    rights_note: 项目生成的 PDF 输入夹具，不代表馆方正式发布或授权。
+    publisher: 金潮杯博物馆项目演示组
+    accessed_at: '2026-08-15'
+    source_level: synthetic_demo
+    rights_status: demo_authorized
+    exhibit_ids:
+      - warring-states-crystal-cup
+  - id: demo-crystal-cup-catalog
+    title: 战国水晶杯演示图录摘录
+    source_type: markdown
+    path: originals/crystal-cup-catalog.md
+    locator: demo://museum-demo/crystal-cup-catalog
+    rights_note: 公开资料整理的演示夹具，不代表馆方正式发布或授权。
+    publisher: 金潮杯博物馆项目演示组
+    accessed_at: '2026-08-15'
+    source_level: demo_curated
+    rights_status: demo_authorized
+    exhibit_ids:
+      - warring-states-crystal-cup
+  - id: demo-crystal-cup-record
+    title: 战国水晶杯结构化演示记录
+    source_type: json
+    path: originals/crystal-cup-record.json
+    locator: demo://museum-demo/crystal-cup-record
+    rights_note: 合成的结构化测试资料，不代表馆方正式发布或授权。
+    publisher: 金潮杯博物馆项目演示组
+    accessed_at: '2026-08-15'
+    source_level: synthetic_demo
+    rights_status: demo_authorized
+    exhibit_ids:
+      - warring-states-crystal-cup
+  - id: demo-crystal-cup-label
+    title: 战国水晶杯展签 HTML 演示快照
+    source_type: html
+    path: originals/crystal-cup-label.html
+    locator: demo://museum-demo/crystal-cup-label
+    rights_note: 脱敏的 HTML 解析测试夹具，不代表馆方正式发布或授权。
+    publisher: 金潮杯博物馆项目演示组
+    accessed_at: '2026-08-15'
+    source_level: demo_curated
+    rights_status: demo_authorized
+    exhibit_ids:
+      - warring-states-crystal-cup

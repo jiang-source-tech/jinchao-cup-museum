@@ -11,6 +11,7 @@ from core.museum.exhibit_resolver import ExhibitResolver
 from core.museum.query_understanding import understand_question
 from core.museum.store import MuseumStore
 from core.museum.retrieval import EvidenceRetriever
+from core.museum.evidence_retrieval import EvidenceSearchService
 
 
 class MuseumRuntime:
@@ -21,9 +22,14 @@ class MuseumRuntime:
         auto_assign_unknown_devices: bool = False,
         exhibit_context_mode: str = "explicit",
         retriever: EvidenceRetriever | None = None,
+        evidence_search: EvidenceSearchService | None = None,
     ):
         self._store = store
-        self._answering = GroundedAnswerService(store, retriever)
+        self._answering = GroundedAnswerService(
+            store,
+            retriever,
+            evidence_search=evidence_search,
+        )
         self._auto_assign_unknown_devices = auto_assign_unknown_devices
         self._exhibit_context_mode = exhibit_context_mode
         self._exhibit_resolver = ExhibitResolver(store)
@@ -133,18 +139,55 @@ class MuseumRuntime:
             llm=request.llm,
             session_id=request.transport_session_id,
             history=request.history,
+            query_id=request.request_id,
         )
         duration_ms = _duration_ms(started)
         unanswered_reason = (
-            "no_published_fact_match"
+            "no_evidence_match"
+            if answer.knowledge_status == "unsupported"
+            and answer.evidence_pack is not None
+            else "no_published_fact_match"
             if answer.knowledge_status == "unsupported"
             else None
         )
         guard_result = answer.guard_result or {
             "grounded": "published_facts_only",
+            "partial": "model_partial_answer_accepted",
+            "conflicting": "model_conflict_answer_accepted",
             "conversational": "conversational_scope",
             "unsupported": "unsupported_fallback",
         }.get(answer.knowledge_status, "not_evaluated")
+        fact_ids = list(answer.evidence.fact_ids) if answer.evidence else []
+        evidence_ids = list(answer.cited_evidence_ids)
+        cited_evidence_id_set = set(evidence_ids)
+        cited_segment_items = (
+            tuple(
+                item
+                for item in answer.evidence_pack.items
+                if item.id in cited_evidence_id_set
+            )
+            if answer.evidence_pack
+            else ()
+        )
+        source_ids = list(
+            dict.fromkeys(
+                (list(answer.evidence.source_ids) if answer.evidence else [])
+                + [item.source_id for item in cited_segment_items if item.source_id]
+            )
+        )
+        content_version = (
+            answer.evidence.content_version
+            if answer.evidence
+            else max(
+                (
+                    item.content_version
+                    for item in cited_segment_items
+                ),
+                default=None,
+            )
+            if answer.evidence_pack
+            else None
+        )
         trace_id = self._store.record_interaction(
             request_id=request.request_id,
             visitor_session_id=session.id,
@@ -152,7 +195,9 @@ class MuseumRuntime:
             exhibit_id=context.exhibit_id,
             user_text=request.user_text,
             grounding_status=answer.knowledge_status,
-            evidence=answer.evidence,
+            evidence=answer.evidence_pack or answer.evidence,
+            cited_evidence_ids=answer.cited_evidence_ids,
+            answer_claims=answer.answer_claims,
             answer_text=answer.spoken_text,
             unanswered_reason=unanswered_reason,
             coarse_intent=answer.coarse_intent,
@@ -179,15 +224,14 @@ class MuseumRuntime:
             candidate_exhibit_ids=resolution.candidate_ids,
             retrieval_trace=answer.retrieval_trace,
         )
-        fact_ids = list(answer.evidence.fact_ids) if answer.evidence else []
-        source_ids = list(answer.evidence.source_ids) if answer.evidence else []
-        content_version = answer.evidence.content_version if answer.evidence else None
         display_knowledge_status = answer.knowledge_status
         if answer.knowledge_status == "conversational":
             display_knowledge_status = "ready"
             content_version = self._store.published_content_version(
                 context.exhibit_id
             )
+        elif answer.knowledge_status in {"partial", "conflicting"}:
+            display_knowledge_status = "grounded"
         display_state = self._build_state(
             request_id=request.request_id,
             session=session,
@@ -201,6 +245,7 @@ class MuseumRuntime:
             spoken_text=answer.spoken_text,
             knowledge_status=answer.knowledge_status,
             fact_ids=tuple(fact_ids),
+            evidence_ids=tuple(evidence_ids),
             source_ids=tuple(source_ids),
             content_version=content_version,
             museum_state=display_state,
@@ -216,6 +261,19 @@ class MuseumRuntime:
                 "matched_exhibit_text": resolution.matched_text,
                 "candidate_exhibit_ids": list(resolution.candidate_ids),
                 "fact_ids": fact_ids,
+                "evidence_ids": evidence_ids,
+                "candidate_evidence_ids": (
+                    list(answer.evidence_pack.evidence_ids)
+                    if answer.evidence_pack
+                    else []
+                ),
+                "answer_claims": [
+                    {
+                        "text": claim.text,
+                        "evidence_ids": list(claim.evidence_ids),
+                    }
+                    for claim in answer.answer_claims
+                ],
                 "source_ids": source_ids,
                 "content_version": content_version,
                 "coarse_intent": answer.coarse_intent,
@@ -407,6 +465,7 @@ class MuseumRuntime:
                 else [],
                 "matched_exhibit_text": resolution.matched_text if resolution else None,
                 "fact_ids": [],
+                "evidence_ids": [],
                 "source_ids": [],
                 "coarse_intent": understanding.coarse_intent,
                 "fine_intent": understanding.fine_intent,
@@ -561,6 +620,7 @@ class MuseumRuntime:
                     list(resolution.candidate_ids) if resolution else []
                 ),
                 "fact_ids": [],
+                "evidence_ids": [],
                 "source_ids": [],
                 "content_version": content_version,
                 "coarse_intent": answer.coarse_intent,

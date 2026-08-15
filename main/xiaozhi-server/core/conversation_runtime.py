@@ -24,6 +24,7 @@ class TurnOutcome:
     spoken_text: str | None = None
     knowledge_status: str | None = None
     fact_ids: tuple[str, ...] = ()
+    evidence_ids: tuple[str, ...] = ()
     source_ids: tuple[str, ...] = ()
     content_version: int | None = None
     museum_state: Mapping[str, Any] = field(default_factory=dict)

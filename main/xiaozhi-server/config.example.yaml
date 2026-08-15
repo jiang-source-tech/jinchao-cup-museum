@@ -35,7 +35,7 @@ tts_done_ack_timeout_ms: 10000
 exit_commands: ["退出", "关闭"]
 wakeup_words: ["你好讲解员"]
 plugins: {}
-prompt: "你是金潮杯博物馆现场语音讲解助手。只根据当前展品的已审核资料回答；资料不足时明确说明，不补充猜测。"
+prompt: "你是金潮杯博物馆现场语音讲解助手。只根据当前展品的已发布演示资料回答；资料不足时明确说明，不补充猜测。"
 prompt_template: agent-base-prompt.txt
 system_error_response: "刚才的讲解链路出了点问题，请再问一次。"
 end_prompt:
@@ -70,13 +70,16 @@ business_runtime:
   session_idle_ttl_minutes: 5
   session_max_ttl_minutes: 30
   retrieval:
-    # rules 保持原检索；shadow 只记录向量对照；hybrid 启用融合结果。
+    # legacy_facts 保持现有事实链路；evidence_segments 启用原文片段 RAG。
+    backend: legacy_facts
+    # 仅对 legacy_facts 生效：rules 保持原检索；shadow 只记录向量对照；hybrid 启用融合结果。
     mode: rules
     embedding_model: text-embedding-v4
     embedding_dimension: 1024
     embedding_timeout_seconds: 3
     qdrant_url: ${MUSEUM_QDRANT_URL:-http://qdrant:6333}
     qdrant_collection: museum_facts_v1
+    evidence_qdrant_collection: museum_evidence_v1
     qdrant_timeout_seconds: 2
     lexical_limit: 12
     dense_limit: 12

@@ -470,6 +470,7 @@ def _evaluate_turn(
         "coarse_intent": outcome.audit_record.get("coarse_intent", ""),
         "fine_intent": outcome.audit_record.get("fine_intent", ""),
         "fact_ids": list(outcome.fact_ids),
+        "evidence_ids": list(getattr(outcome, "evidence_ids", ())),
         "source_ids": list(outcome.source_ids),
         "guard_result": outcome.audit_record.get("guard_result", ""),
         "llm_invoked": bool(outcome.audit_record.get("llm_invoked", False)),
@@ -656,6 +657,10 @@ def _audit_is_reproducible(
         and str(trace.get("answer_text", "")) == actual["answer"]
         and str(trace.get("exhibit_id") or "") == actual["context_exhibit_id"]
         and evidence.get("fact_ids", []) == actual["fact_ids"]
+        and (
+            not actual.get("evidence_ids")
+            or evidence.get("evidence_ids", []) == actual["evidence_ids"]
+        )
         and evidence.get("source_ids", []) == actual["source_ids"]
         and bool(trace.get("llm_invoked")) == actual["llm_invoked"]
         and str(trace.get("llm_model", "")) == actual["llm_model"]

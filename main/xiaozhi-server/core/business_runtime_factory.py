@@ -10,6 +10,8 @@ from core.conversation_runtime import ConversationRuntime
 from core.museum.runtime import MuseumRuntime
 from core.museum.store import MuseumStore
 from core.museum.embedding import DashScopeTextEmbedder
+from core.museum.evidence_index import QdrantEvidenceIndex
+from core.museum.evidence_retrieval import EvidenceSearchService
 from core.museum.qdrant_index import QdrantFactIndex
 from core.museum.retrieval import (
     HybridEvidenceRetriever,
@@ -59,13 +61,71 @@ def create_conversation_runtime(
     retrieval_config = runtime_config.get("retrieval", {})
     if not isinstance(retrieval_config, Mapping):
         raise ValueError("business_runtime.retrieval must be a mapping")
+    retrieval_backend = str(
+        retrieval_config.get("backend", "legacy_facts")
+    ).strip().lower()
+    if retrieval_backend not in {"legacy_facts", "evidence_segments"}:
+        raise ValueError(
+            "business_runtime.retrieval.backend must be legacy_facts or evidence_segments"
+        )
     retrieval_mode = str(retrieval_config.get("mode", "rules")).strip().lower()
     if retrieval_mode not in VALID_RETRIEVAL_MODES:
         raise ValueError(
             "business_runtime.retrieval.mode must be rules, shadow or hybrid"
         )
     lexical_limit = int(retrieval_config.get("lexical_limit", 12))
-    if retrieval_mode == "rules":
+    evidence_search = None
+    if retrieval_backend == "evidence_segments":
+        dimension = int(retrieval_config.get("embedding_dimension", 1024))
+        qdrant_url = _expand_env_default(
+            str(
+                retrieval_config.get(
+                    "qdrant_url",
+                    os.getenv("MUSEUM_QDRANT_URL", "http://qdrant:6333"),
+                )
+            )
+        )
+        embedder = DashScopeTextEmbedder(
+            api_key=os.getenv("DASHSCOPE_API_KEY", ""),
+            model=str(
+                retrieval_config.get("embedding_model", "text-embedding-v4")
+            ),
+            dimension=dimension,
+            timeout_seconds=float(
+                retrieval_config.get("embedding_timeout_seconds", 3)
+            ),
+        )
+        index = QdrantEvidenceIndex(
+            url=qdrant_url,
+            collection_name=str(
+                retrieval_config.get(
+                    "evidence_qdrant_collection",
+                    retrieval_config.get(
+                        "qdrant_collection", "museum_evidence_v1"
+                    ),
+                )
+            ),
+            dimension=dimension,
+            timeout_seconds=float(
+                retrieval_config.get("qdrant_timeout_seconds", 2)
+            ),
+        )
+        evidence_search = EvidenceSearchService(
+            store=store,
+            embedder=embedder,
+            index=index,
+            lexical_limit=lexical_limit,
+            dense_limit=int(retrieval_config.get("dense_limit", 12)),
+            dense_score_threshold=float(
+                retrieval_config.get("dense_score_threshold", 0.5)
+            ),
+            rrf_k=int(retrieval_config.get("rrf_k", 60)),
+        )
+        retriever = SqliteEvidenceRetriever(
+            store,
+            candidate_limit=lexical_limit,
+        )
+    elif retrieval_mode == "rules":
         retriever = SqliteEvidenceRetriever(
             store,
             candidate_limit=lexical_limit,
@@ -131,6 +191,7 @@ def create_conversation_runtime(
         ),
         exhibit_context_mode=exhibit_context_mode,
         retriever=retriever,
+        evidence_search=evidence_search,
     )
 
 

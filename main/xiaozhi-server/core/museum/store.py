@@ -12,7 +12,9 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from core.museum.contracts import (
+    AnswerClaim,
     EvidenceFact,
+    EvidencePack,
     EvidenceSnapshot,
     ExhibitContext,
     VisitorSession,
@@ -72,8 +74,57 @@ CREATE TABLE IF NOT EXISTS source_document (
     publisher TEXT NOT NULL DEFAULT '',
     published_date TEXT NOT NULL DEFAULT '',
     accessed_at TEXT NOT NULL DEFAULT '',
-    language TEXT NOT NULL DEFAULT 'zh-CN'
+    language TEXT NOT NULL DEFAULT 'zh-CN',
+    checksum TEXT NOT NULL DEFAULT '',
+    source_level TEXT NOT NULL DEFAULT 'demo_curated' CHECK (
+        source_level IN (
+            'primary_public_source',
+            'secondary_public_source',
+            'demo_curated',
+            'synthetic_demo',
+            'unverified'
+        )
+    ),
+    rights_status TEXT NOT NULL DEFAULT 'demo_authorized',
+    original_path TEXT NOT NULL DEFAULT '',
+    parser_version TEXT NOT NULL DEFAULT '',
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL DEFAULT 'published' CHECK (
+        status IN ('published', 'withdrawn')
+    ),
+    content_version INTEGER NOT NULL DEFAULT 1,
+    active_version_id TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL DEFAULT ''
 );
+
+CREATE TABLE IF NOT EXISTS source_document_version (
+    id TEXT PRIMARY KEY,
+    source_id TEXT NOT NULL REFERENCES source_document(id),
+    version_no INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    source_type TEXT NOT NULL,
+    locator TEXT NOT NULL,
+    rights_note TEXT NOT NULL,
+    publisher TEXT NOT NULL DEFAULT '',
+    published_date TEXT NOT NULL DEFAULT '',
+    accessed_at TEXT NOT NULL DEFAULT '',
+    language TEXT NOT NULL DEFAULT 'zh-CN',
+    checksum TEXT NOT NULL DEFAULT '',
+    source_level TEXT NOT NULL DEFAULT 'demo_curated',
+    rights_status TEXT NOT NULL DEFAULT 'demo_authorized',
+    original_path TEXT NOT NULL DEFAULT '',
+    parser_version TEXT NOT NULL DEFAULT '',
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL CHECK (status IN ('published', 'withdrawn')),
+    created_at TEXT NOT NULL,
+    withdrawn_at TEXT NOT NULL DEFAULT '',
+    withdrawal_reason TEXT NOT NULL DEFAULT '',
+    UNIQUE (source_id, version_no)
+);
+
+CREATE INDEX IF NOT EXISTS source_document_version_by_source
+ON source_document_version(source_id, version_no);
 
 CREATE TABLE IF NOT EXISTS content_revision (
     id TEXT PRIMARY KEY,
@@ -124,6 +175,74 @@ CREATE TABLE IF NOT EXISTS fact_source (
     fact_id TEXT NOT NULL REFERENCES exhibit_fact(id),
     source_id TEXT NOT NULL REFERENCES source_document(id),
     PRIMARY KEY (fact_id, source_id)
+);
+
+CREATE TABLE IF NOT EXISTS source_segment (
+    id TEXT PRIMARY KEY,
+    source_id TEXT NOT NULL REFERENCES source_document(id),
+    source_version_id TEXT NOT NULL DEFAULT '',
+    text TEXT NOT NULL,
+    locator TEXT NOT NULL,
+    section TEXT NOT NULL DEFAULT '',
+    page INTEGER,
+    ordinal INTEGER NOT NULL,
+    content_hash TEXT NOT NULL,
+    parser_version TEXT NOT NULL,
+    ocr_confidence REAL,
+    status TEXT NOT NULL DEFAULT 'published' CHECK (
+        status IN ('draft', 'published', 'withdrawn')
+    ),
+    content_version INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS source_segment_by_source
+ON source_segment(source_id, status, ordinal);
+
+CREATE TABLE IF NOT EXISTS source_segment_exhibit (
+    segment_id TEXT NOT NULL REFERENCES source_segment(id),
+    exhibit_id TEXT NOT NULL REFERENCES exhibit(id),
+    PRIMARY KEY (segment_id, exhibit_id)
+);
+
+CREATE INDEX IF NOT EXISTS source_segment_exhibit_by_exhibit
+ON source_segment_exhibit(exhibit_id, segment_id);
+
+CREATE TABLE IF NOT EXISTS knowledge_claim_support (
+    fact_id TEXT NOT NULL REFERENCES exhibit_fact(id),
+    segment_id TEXT NOT NULL REFERENCES source_segment(id),
+    PRIMARY KEY (fact_id, segment_id)
+);
+
+CREATE TABLE IF NOT EXISTS knowledge_claim_conflict (
+    fact_id TEXT NOT NULL REFERENCES exhibit_fact(id),
+    segment_id TEXT NOT NULL REFERENCES source_segment(id),
+    reason TEXT NOT NULL DEFAULT '',
+    PRIMARY KEY (fact_id, segment_id)
+);
+
+CREATE TABLE IF NOT EXISTS ingestion_run (
+    id TEXT PRIMARY KEY,
+    dataset_id TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (
+        status IN ('running', 'succeeded', 'failed')
+    ),
+    manifest_path TEXT NOT NULL,
+    source_count INTEGER NOT NULL DEFAULT 0,
+    segment_count INTEGER NOT NULL DEFAULT 0,
+    error_json TEXT NOT NULL DEFAULT '[]',
+    started_at TEXT NOT NULL,
+    finished_at TEXT
+);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS source_segment_fts USING fts5(
+    segment_id UNINDEXED,
+    source_id UNINDEXED,
+    exhibit_ids UNINDEXED,
+    title,
+    section,
+    text,
+    tokenize = 'unicode61'
 );
 
 CREATE TABLE IF NOT EXISTS device_placement (
@@ -344,6 +463,43 @@ class MuseumStore:
             connection.executescript(_SCHEMA)
             _ensure_column(
                 connection,
+                "source_document",
+                "status",
+                "TEXT NOT NULL DEFAULT 'published'",
+            )
+            _ensure_column(
+                connection,
+                "source_document",
+                "content_version",
+                "INTEGER NOT NULL DEFAULT 1",
+            )
+            _ensure_column(
+                connection,
+                "source_document",
+                "active_version_id",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            _ensure_column(
+                connection,
+                "source_document",
+                "created_at",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            _ensure_column(
+                connection,
+                "source_document",
+                "updated_at",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            _ensure_column(
+                connection,
+                "source_segment",
+                "source_version_id",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            _backfill_source_document_versions(connection)
+            _ensure_column(
+                connection,
                 "interaction_trace",
                 "guard_result",
                 "TEXT NOT NULL DEFAULT 'not_evaluated'",
@@ -443,6 +599,42 @@ class MuseumStore:
                 "source_document",
                 "language",
                 "TEXT NOT NULL DEFAULT 'zh-CN'",
+            )
+            _ensure_column(
+                connection,
+                "source_document",
+                "checksum",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            _ensure_column(
+                connection,
+                "source_document",
+                "source_level",
+                "TEXT NOT NULL DEFAULT 'demo_curated'",
+            )
+            _ensure_column(
+                connection,
+                "source_document",
+                "rights_status",
+                "TEXT NOT NULL DEFAULT 'demo_authorized'",
+            )
+            _ensure_column(
+                connection,
+                "source_document",
+                "original_path",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            _ensure_column(
+                connection,
+                "source_document",
+                "parser_version",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            _ensure_column(
+                connection,
+                "source_document",
+                "metadata_json",
+                "TEXT NOT NULL DEFAULT '{}'",
             )
             _ensure_column(
                 connection,
@@ -1241,7 +1433,9 @@ class MuseumStore:
         exhibit_id: str | None,
         user_text: str,
         grounding_status: str,
-        evidence: EvidenceSnapshot | None,
+        evidence: EvidenceSnapshot | EvidencePack | None,
+        cited_evidence_ids: tuple[str, ...] = (),
+        answer_claims: tuple[AnswerClaim, ...] = (),
         answer_text: str,
         unanswered_reason: str | None,
         coarse_intent: str = "",
@@ -1264,14 +1458,11 @@ class MuseumStore:
     ) -> str:
         trace_id = uuid.uuid4().hex
         evidence_json = json.dumps(
-            {
-                "content_revision_id": (
-                    evidence.content_revision_id if evidence else None
-                ),
-                "content_version": evidence.content_version if evidence else None,
-                "fact_ids": list(evidence.fact_ids) if evidence else [],
-                "source_ids": list(evidence.source_ids) if evidence else [],
-            },
+            _evidence_audit_payload(
+                evidence,
+                cited_evidence_ids=cited_evidence_ids,
+                answer_claims=answer_claims,
+            ),
             ensure_ascii=False,
         )
         with self.connection() as connection:
@@ -1509,7 +1700,10 @@ def _classify_unanswered_trace(
     if (
         row["exhibit_id"] is not None
         and grounding_status == "unsupported"
-        and recorded_reason == "no_published_fact_match"
+        and recorded_reason in {
+            "no_published_fact_match",
+            "no_evidence_match",
+        }
     ):
         return "fact_not_covered"
     return None
@@ -1571,6 +1765,84 @@ def _edit_distance(left: str, right: str) -> int:
     return previous[-1]
 
 
+def _evidence_audit_payload(
+    evidence: EvidenceSnapshot | EvidencePack | None,
+    *,
+    cited_evidence_ids: tuple[str, ...] = (),
+    answer_claims: tuple[AnswerClaim, ...] = (),
+) -> dict[str, object]:
+    if evidence is None:
+        return {
+            "content_revision_id": None,
+            "content_version": None,
+            "fact_ids": [],
+            "source_ids": [],
+        }
+    if isinstance(evidence, EvidencePack):
+        cited_id_set = set(cited_evidence_ids)
+        cited_items = tuple(
+            item for item in evidence.items if item.id in cited_id_set
+        )
+        return {
+            "kind": "segments",
+            "query_id": evidence.query_id,
+            "index_version": evidence.index_version,
+            "exhibit_ids": list(evidence.exhibit_ids),
+            "evidence_ids": list(cited_evidence_ids),
+            "candidate_evidence_ids": list(evidence.evidence_ids),
+            "source_ids": list(
+                dict.fromkeys(
+                    item.source_id for item in cited_items if item.source_id
+                )
+            ),
+            "candidate_source_ids": list(evidence.source_ids),
+            "answer_claims": [
+                {
+                    "text": claim.text,
+                    "evidence_ids": list(claim.evidence_ids),
+                }
+                for claim in answer_claims
+            ],
+            "items": [
+                {
+                    "id": item.id,
+                    "kind": item.kind,
+                    "source_id": item.source_id,
+                    "segment_id": item.segment_id,
+                    "source_title": item.source_title,
+                    "locator": item.locator,
+                    "score": item.score,
+                    "rank": item.rank,
+                    "source_level": item.source_level,
+                    "content_version": item.content_version,
+                    "text": item.text,
+                }
+                for item in evidence.items
+            ],
+            "claims": [
+                {
+                    "id": claim.id,
+                    "exhibit_id": claim.exhibit_id,
+                    "fact_type": claim.fact_type,
+                    "statement": claim.statement,
+                    "source_ids": list(claim.source_ids),
+                    "certainty": claim.certainty,
+                    "supporting_evidence_ids": list(
+                        claim.supporting_evidence_ids
+                    ),
+                }
+                for claim in evidence.claims
+            ],
+            "conflict_groups": [list(group) for group in evidence.conflict_groups],
+        }
+    return {
+        "content_revision_id": evidence.content_revision_id,
+        "content_version": evidence.content_version,
+        "fact_ids": list(evidence.fact_ids),
+        "source_ids": list(evidence.source_ids),
+    }
+
+
 def _json_object(value: object) -> dict:
     try:
         decoded = json.loads(str(value or "{}"))
@@ -1615,6 +1887,90 @@ def _ensure_column(
     if column_name not in columns:
         connection.execute(
             f"ALTER TABLE {table_name} ADD COLUMN {column_name} {declaration}"
+        )
+
+
+def _backfill_source_document_versions(connection: sqlite3.Connection) -> None:
+    rows = connection.execute(
+        """
+        SELECT id, title, source_type, locator, rights_note, publisher,
+               published_date, accessed_at, language, checksum, source_level,
+               rights_status, original_path, parser_version, metadata_json,
+               status, content_version, active_version_id, created_at, updated_at
+        FROM source_document
+        """
+    ).fetchall()
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    for row in rows:
+        source_id = str(row["id"])
+        active_version_id = str(row["active_version_id"] or "")
+        if not active_version_id:
+            identity = json.dumps(
+                {
+                    "source_id": source_id,
+                    "checksum": str(row["checksum"] or ""),
+                    "locator": str(row["locator"] or ""),
+                    "parser_version": str(row["parser_version"] or ""),
+                    "metadata_json": str(row["metadata_json"] or "{}"),
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            suffix = uuid.uuid5(uuid.NAMESPACE_URL, identity).hex[:24]
+            active_version_id = f"{source_id}-v-{suffix}"
+        created_at = str(row["created_at"] or now)
+        updated_at = str(row["updated_at"] or created_at)
+        version_no = max(1, int(row["content_version"] or 1))
+        status = str(row["status"] or "published")
+        connection.execute(
+            """
+            INSERT OR IGNORE INTO source_document_version(
+                id, source_id, version_no, title, source_type, locator,
+                rights_note, publisher, published_date, accessed_at, language,
+                checksum, source_level, rights_status, original_path,
+                parser_version, metadata_json, status, created_at,
+                withdrawn_at, withdrawal_reason
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '')
+            """,
+            (
+                active_version_id,
+                source_id,
+                version_no,
+                str(row["title"]),
+                str(row["source_type"]),
+                str(row["locator"]),
+                str(row["rights_note"]),
+                str(row["publisher"] or ""),
+                str(row["published_date"] or ""),
+                str(row["accessed_at"] or ""),
+                str(row["language"] or "zh-CN"),
+                str(row["checksum"] or ""),
+                str(row["source_level"] or "demo_curated"),
+                str(row["rights_status"] or "demo_authorized"),
+                str(row["original_path"] or ""),
+                str(row["parser_version"] or ""),
+                str(row["metadata_json"] or "{}"),
+                status,
+                created_at,
+                updated_at if status == "withdrawn" else "",
+            ),
+        )
+        connection.execute(
+            """
+            UPDATE source_document
+            SET active_version_id = ?, content_version = ?,
+                created_at = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (active_version_id, version_no, created_at, updated_at, source_id),
+        )
+        connection.execute(
+            """
+            UPDATE source_segment
+            SET source_version_id = ?
+            WHERE source_id = ? AND source_version_id = ''
+            """,
+            (active_version_id, source_id),
         )
 
 

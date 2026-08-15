@@ -151,12 +151,12 @@ def test_unsupported_question_returns_explicit_fallback(tmp_path):
     )
 
     assert outcome.handled is True
-    assert "不能替馆方补写答案" in outcome.spoken_text
+    assert "不能替演示资料补写答案" in outcome.spoken_text
     assert outcome.audit_record["knowledge_status"] == "unsupported"
     assert outcome.audit_record["fact_ids"] == []
     assert outcome.display_state["grounding"]["status"] == "unsupported"
 
-    assert "已发布的讲解暂时没有覆盖这个问题" in outcome.spoken_text
+    assert "演示知识库已发布的讲解暂时没有覆盖这个问题" in outcome.spoken_text
     assert "馆方没有资料" not in outcome.spoken_text
 
     social = runtime.handle_turn(_request(text="你好讲解员。"))
@@ -176,7 +176,7 @@ def test_unsupported_question_returns_explicit_fallback(tmp_path):
         _request(text="战国水晶杯是什么材质做的？")
     )
     assert no_sourced_facts.audit_record["knowledge_status"] == "unsupported"
-    assert "不能替馆方补写答案" in no_sourced_facts.spoken_text
+    assert "不能替演示资料补写答案" in no_sourced_facts.spoken_text
 
 
 def test_detailed_overview_uses_multiple_facts_without_requiring_llm(tmp_path):
