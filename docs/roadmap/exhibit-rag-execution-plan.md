@@ -4,19 +4,20 @@
 
 - 状态：`in-progress`
 - 编制日期：2026 年 8 月 11 日
+- 最近更新：2026 年 8 月 15 日
 - 产品依据：[`../product/PRD.md`](../product/PRD.md)
 - 架构依据：[`../architecture/exhibit-rag-design.md`](../architecture/exhibit-rag-design.md)
 - 当前代码依据：`main/xiaozhi-server/core/museum/`
 - 实施范围：展品解析、临时会话、事实级 RAG、回答守卫、内容发布和真机语音验收
-- 2026 年 8 月 11 日进度：服务端文本自由对话和真实 DeepSeek LLM 验收已完成；真机语音链路仍待现场验证
+- 当前进度：服务端展品解析、事实级与片段级 Hybrid RAG、声明级引用校验和四档回答已实现；3 件重点展品证据包已完成，真机语音链路仍待现场验证
 
 本文是执行计划，不是产品说明。每项工作都必须对应代码、测试或验收证据。没有完成定义和测试证据的任务，不得标记为完成。
 
 ## 1. 实施结论
 
-下一阶段只解决一个核心问题：
+本计划的早期阶段只解决一个核心问题；当前实现已在此基础上增加原文证据层：
 
-> 游客直接说出展品并提问，服务端能够可靠识别展品、检索该展品的已发布事实、生成不越界的短回答，并允许游客自然追问和切换展品。
+> 游客直接说出展品并提问，服务端能够可靠识别展品、检索该展品的已发布事实或可定位原文片段、按回答档位生成不越界的回答，并允许游客自然追问和切换展品。
 
 设备点位、路线推进、下一站和复杂触摸页面不属于这条主链路。现有 `device_placement` 和 `auto_assign_unknown_devices` 只能保留为开发演示兼容能力，生产默认必须关闭。
 
@@ -44,19 +45,19 @@ ASR 文本
 | 运行时工厂 | `core/business_runtime_factory.py` | 继续创建 `MuseumRuntime` |
 | 博物馆编排 | `core/museum/runtime.py` | 在入口处接入展品解析 |
 | SQLite 内容模型 | `core/museum/store.py` | 增加迁移和解析索引，不重写存储层 |
-| 事实检索 | `core/museum/store.py` | 保留 FTS5，先不引入向量数据库 |
+| 事实检索 | `core/museum/store.py`、`core/museum/evidence_retrieval.py` | SQLite FTS5 + Qdrant RRF Hybrid，最终回到事实/证据状态校验 |
 | 回答和守卫 | `core/museum/answering.py` | 继续以 `EvidenceSnapshot` 为边界 |
 | WebSocket/TTS | `core/connection.py` 及现有 TTS | 不重新设计音频协议 |
 | 业务测试 | `tests/test_museum_runtime.py` | 改为显式展品问题并扩展场景 |
 
-### 2.2 当前阻塞点
+### 2.2 启动期阻塞点与当前剩余工作
 
-1. `MuseumRuntime._resolve_context()` 依赖设备点位或外部展品 ID。
-2. 显式模式必须把“刚开始还不知道展品”作为请求级 `missing_context` 处理，不创建可继承会话；当前非空字段与这一懒创建策略一致。
-3. `MuseumStore.retrieve_evidence()` 需要先拿到展品 ID，当前没有问题到展品的解析模块。
-4. `interaction_trace` 没有记录展品解析状态、匹配文本和候选展品。
-5. 现有测试通过“演示设备默认展品”隐式建立上下文，不能证明真实硬件场景。
-6. 当前内容只有演示展品，缺少批量导入、别名冲突检查和发布校验工具。
+启动期的设备点位依赖、问题到展品解析、交互审计和内容导入门禁已经在后续提交中解决。当前剩余工作是：
+
+1. 将下一批常规多维展品补齐原文证据包、`claim_support` 和引用评测；
+2. 建立覆盖 101 件候选内容的黄金问题集和持续质量指标；
+3. 让来源撤回自动触发证据向量重建；
+4. 按当前服务端与固件提交完成真机 ASR/RAG/TTS、打断、重连和屏幕状态验收。
 
 ## 3. 任务总览
 

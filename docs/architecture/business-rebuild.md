@@ -2,7 +2,7 @@
 
 ## 状态
 
-设计日期：2026 年 8 月 9 日。本文描述目标架构，尚未表示代码已经实现。产品范围、用户体验和优先级以 [`../product/PRD.md`](../product/PRD.md) 为上位依据。现有调用链以 [`current-runtime-audit.md`](current-runtime-audit.md) 为准，具体实施顺序以 [`../roadmap/business-rebuild-execution-plan.md`](../roadmap/business-rebuild-execution-plan.md) 为准。
+设计日期：2026 年 8 月 9 日。本文主要保留业务层重建的目标边界；截至 2026 年 8 月 15 日，服务端文本 RAG 已进一步实现原文片段摄取、Qdrant Hybrid 检索、声明级引用和四档回答，详细现状以 [`exhibit-rag-design.md`](exhibit-rag-design.md) 和 [`../../README.md`](../../README.md) 为准。产品范围、用户体验和优先级以 [`../product/PRD.md`](../product/PRD.md) 为上位依据。现有调用链以 [`current-runtime-audit.md`](current-runtime-audit.md) 为准，具体实施顺序以 [`../roadmap/business-rebuild-execution-plan.md`](../roadmap/business-rebuild-execution-plan.md) 为准。
 
 ## 1. 重建判断
 
@@ -129,13 +129,13 @@ build_evidence_snapshot(exhibit_id, question)
 
 ### MuseumRetrieval
 
-第一版使用 SQLite 和 FTS5，根据展品 ID、别名、事实类别和问题关键词检索。20 至 30 件展品不需要外部向量数据库。检索结果必须返回事实 ID、来源 ID和内容版本，而不是只返回拼接文本。
+早期版本使用 SQLite 和 FTS5，根据展品 ID、别名、事实类别和问题关键词检索；当前服务端已增加 Qdrant 向量和 RRF 融合，并为 3 件重点展品增加原文片段证据检索。无论使用哪种后端，检索结果都必须返回事实或证据 ID、来源 ID 和内容版本，而不是只返回拼接文本。
 
 ### MuseumAnswerPolicy
 
 把依据快照、统一回答策略和路线状态编译成模型输入。它规定：
 
-- 默认 2 至 4 句；
+- 支持 `brief`、`standard`、`guided`、`detailed` 四档，篇幅由本轮问题和资料量共同决定；
 - 一轮最多一个观察任务或下一站建议；
 - 使用短句、具体词语和低术语密度；
 - 游客可以通过自然语言临时要求更简单或更详细，但仍受依据快照限制；
